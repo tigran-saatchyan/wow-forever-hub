@@ -1,33 +1,22 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { isMilestone, runsOf, type OrderProblem } from "../../engine";
-import { iconStyle, type AbilityRow, type Icons } from "../../lib/gameData";
+import { iconStyle, type Icons } from "../../lib/gameData";
 import { useI18n } from "../../lib/i18n";
-import { store } from "../../lib/store";
 import type { Calc } from "./useCalculator";
 
 interface Props {
   calc: Calc;
   icons?: Icons;
-  abilities: AbilityRow[];
   touch: boolean;
   onClose: () => void;
   onRowHover: (id: number | null) => void;
-  onAbility: (a: AbilityRow | null, el?: HTMLElement) => void;
   onProblem: (p: OrderProblem) => void;
   onAuto: () => void;
 }
 
-/** Trainer spells grouped by level, for levels from..to. */
-function abRows(rows: AbilityRow[], from: number, to: number) {
-  const by = new Map<number, AbilityRow[]>();
-  for (const x of rows) if (x.l >= from && x.l <= to) (by.get(x.l) ?? by.set(x.l, []).get(x.l)!).push(x);
-  return [...by.entries()];
-}
-
-export function Planner({ calc, icons, abilities, touch, onClose, onRowHover, onAbility, onProblem, onAuto }: Props) {
+export function Planner({ calc, icons, touch, onClose, onRowHover, onProblem, onAuto }: Props) {
   const { t } = useI18n();
   const { s, c, M, start, total, preview } = calc;
-  const [showAb, setShowAb] = useState(() => store.get<boolean>("plAbil", true) !== false);
   const [info, setInfo] = useState(false);
   const [drag, setDrag] = useState<number | null>(null);
   const [drop, setDrop] = useState<number | null>(null);
@@ -60,37 +49,6 @@ export function Planner({ calc, icons, abilities, touch, onClose, onRowHover, on
 
   if (!s || !c) return null;
   const runs = runsOf(s.order);
-  // talent-only ranks (Mutilate, Hemorrhage...) show up only if the build has the talent
-  const ab = showAb ? abilities.filter((x) => !x.t || (s.ranks[x.t] || 0) > 0) : [];
-  let abFrom = 2;
-  const abUpTo = (lv: number): ReactNode[] => {
-    const rows = abRows(ab, abFrom, lv);
-    abFrom = Math.max(abFrom, lv + 1);
-    return rows.map(([l, xs]) => (
-      <li key={"a" + l} className="grid grid-cols-[44px_minmax(0,1fr)] items-start gap-1.5 px-1.5 py-[3px]">
-        <span className="font-mono text-[11.5px] leading-[22px] text-muted">{l}</span>
-        <span className="flex flex-wrap gap-1">
-          {xs.map((x) => (
-            <span
-              key={x.s}
-              className="ab"
-              tabIndex={0}
-              onMouseEnter={(e) => !touch && onAbility(x, e.currentTarget)}
-              onMouseLeave={() => !touch && onAbility(null)}
-              onFocus={(e) => onAbility(x, e.currentTarget)}
-              onBlur={() => onAbility(null)}
-              onClick={(e) => touch && (e.stopPropagation(), onAbility(x, e.currentTarget))}
-            >
-              <span className="h-[18px] w-[18px] flex-none rounded-[3px]" style={iconStyle(icons, x.i)} />
-              <span className="truncate">{x.n}</span>
-              {x.r > 1 && <i className="font-mono text-[10.5px] not-italic text-muted">{x.r}</i>}
-            </span>
-          ))}
-        </span>
-      </li>
-    ));
-  };
-
   const split = [0, 0, 0];
   const move = (from: number, before: number) => {
     const p = calc.move(from, before);
@@ -99,7 +57,7 @@ export function Planner({ calc, icons, abilities, touch, onClose, onRowHover, on
   const free = total - s.order.length;
   const lastLv = Math.min(60, start + 50);
 
-  const items: ReactNode[] = [...abUpTo(start - 1)];
+  const items: ReactNode[] = [];
   runs.forEach((r, k) => {
     const x = M[r.id];
     const before = s.order.slice(0, r.start).filter((v) => v === r.id).length;
@@ -153,9 +111,7 @@ export function Planner({ calc, icons, abilities, touch, onClose, onRowHover, on
         </span>
       </li>,
     );
-    items.push(...abUpTo(b));
   });
-  if (s.order.length) items.push(...abUpTo(60));
 
   return (
     <div ref={box} className="planner">
@@ -175,12 +131,6 @@ export function Planner({ calc, icons, abilities, touch, onClose, onRowHover, on
           <button className="btn px-2 py-1 text-xs" title={t("pl_hide")} aria-label={t("pl_hide")} aria-expanded="true" onClick={onClose}>»</button>
         </div>
       </header>
-      {s.order.length > 0 && (
-        <label className="mb-2 mt-0.5 flex items-center gap-1.5 text-[12.5px] text-muted" title={t("ab_toggle_t")}>
-          <input type="checkbox" checked={showAb} onChange={(e) => (store.set("plAbil", e.target.checked), setShowAb(e.target.checked))} />
-          <span>{t("ab_toggle")}</span>
-        </label>
-      )}
       {s.order.length ? (
         <ol className="text-sm">
           {items}

@@ -135,12 +135,17 @@ export function TalentTip({ x, c, M, ranks, order, start, planner, changedIn, pe
   );
 }
 
-export function AbilityTip({ a, M, ranks }: { a: AbilityRow; M: TalentIndex; ranks: Ranks }) {
+export function AbilityTip({ a, M, ranks }: { a: AbilityRow & { fromTalent?: number }; M: TalentIndex; ranks: Ranks }) {
   const { t } = useI18n();
+  const tal = a.fromTalent != null ? M[a.fromTalent] : undefined;
   return (
     <>
       <h4>{a.n}</h4>
-      <div className="r">{t("ab_rank", { r: a.r, l: a.l })}{a.t ? " · " + t("ab_talent") : ""}</div>
+      <div className="r">
+        {tal ? t("sk_tal_rank", { l: a.l }) : t("ab_rank", { r: a.r, l: a.l })}
+        {a.t ? " · " + t("ab_talent") : ""}
+      </div>
+      {tal && <div className="lvls !mt-0 mb-1.5">{t("sk_from_tal")}</div>}
       <div className="d"><Desc s={a.d || ""} /></div>
       <Affects ids={a.a || []} M={M} ranks={ranks} />
     </>

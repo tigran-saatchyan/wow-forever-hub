@@ -3,13 +3,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { canAdd, canRemove, npAvailable, pendingNotes, type OrderProblem, type PlacedTalent } from "../engine";
 import {
-  iconStyle, useAbilities, useDiffs, useIcons, useIndex, useNews, useNotes, useTalents, type AbilityRow,
+  iconStyle, useAbilities, useDiffs, useIcons, useIndex, useNews, useNotes, useTalents,
 } from "../lib/gameData";
 import { useI18n } from "../lib/i18n";
 import { store } from "../lib/store";
 import { useTheme } from "../theme/ThemeProvider";
 import { ClassNotes, NotesBar } from "./talents/ClassNotes";
 import { PlanBar, Planner } from "./talents/Planner";
+import { Skills, type SkillRow } from "./talents/Skills";
 import { Saves } from "./talents/Saves";
 import { TalentTree, type TreeMarks } from "./talents/TalentTree";
 import { AbilityTip, TalentTip, TipBox } from "./talents/Tooltip";
@@ -18,7 +19,7 @@ import { useCalculator } from "./talents/useCalculator";
 const touchDevice = () => matchMedia("(hover: none)").matches;
 const smooth = (): ScrollBehavior => (matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth");
 
-type Tip = { kind: "tal"; x: PlacedTalent; el: HTMLElement } | { kind: "ab"; a: AbilityRow; el: HTMLElement };
+type Tip = { kind: "tal"; x: PlacedTalent; el: HTMLElement } | { kind: "ab"; a: SkillRow; el: HTMLElement };
 
 export function Talents() {
   const { t, lang } = useI18n();
@@ -35,6 +36,7 @@ export function Talents() {
   const [mobileTab, setMobileTab] = useState(0);
   const [msg, setMsg] = useState<string | null>(null);
   const [planner, setPlannerState] = useState(() => store.get("planner", true));
+  const [skillsOpen, setSkillsState] = useState(() => store.get("skills", true));
   const [rowHover, setRowHover] = useState<number | null>(null);
   const [flash, setFlash] = useState<number | null>(null);
   const [notesOpen, setNotesOpenState] = useState(() => store.get("cnOpen", false));
@@ -87,6 +89,7 @@ export function Talents() {
     setPlannerState(on);
     if (!on) calc.setPreview(null);
   };
+  const setSkills = (on: boolean) => (store.set("skills", on), setSkillsState(on));
   const setNotesOpen = (on: boolean) => (store.set("cnOpen", on), setNotesOpenState(on));
   const add = (id: number) => {
     const r = calc.add(id);
@@ -110,12 +113,14 @@ export function Talents() {
   };
 
   const active = tip ?? sheet;
-  const aff = new Set<number>(active?.kind === "ab" ? active.a.a || [] : active?.kind === "tal" ? links[active.x.id] || [] : []);
+  // only a spell hovered in the skills list lights up the talents that modify it
+  const aff = new Set<number>(active?.kind === "ab" ? active.a.a || [] : []);
+  const skillTalent = active?.kind === "ab" ? active.a.fromTalent ?? null : null;
   const marks: TreeMarks = {
     levels: new Map(planner && preview == null ? s.order.map((id, i) => [id, start + i] as const).reverse() : []),
     changed: new Set(changed.keys()),
     pending: new Set(calc.np ? [] : Object.keys(M).map(Number).filter((id) => pendingNotes(notes, c.token, id).length)),
-    flags, hl: rowHover, flash, aff,
+    flags, hl: rowHover ?? skillTalent, flash, aff,
   };
   const flagsLive = flags && [...flags.items.values()].some((f) => !(s.ranks[f.id] || 0));
   const npOk = npAvailable(notes, c.token);
@@ -126,7 +131,7 @@ export function Talents() {
   const talentTip = (x: PlacedTalent, hint: boolean) => (
     <TalentTip
       x={x} c={c} M={M} ranks={shown} order={s.order} start={start} planner={planner && !!s.ranks[x.id]}
-      changedIn={changed.get(x.id)} pending={calc.np ? [] : pendingNotes(notes, c.token, x.id)} links={links[x.id] || []}
+      changedIn={changed.get(x.id)} pending={calc.np ? [] : pendingNotes(notes, c.token, x.id)} links={[]}
       flag={flags?.items.get(x.id)} flagName={flags?.name} hint={hint}
     />
   );
@@ -162,6 +167,7 @@ export function Talents() {
         </label>
         <div className="ml-auto flex flex-wrap gap-2">
           {!planner && <button className="btn xl:hidden" onClick={() => setPlanner(true)}>{t("pl_title")}</button>}
+          {!skillsOpen && <button className="btn xl:hidden" onClick={() => setSkills(true)}>{t("sk_title")}</button>}
           {(npOk || calc.np) && (
             <button className="btn" aria-pressed={calc.np} onClick={() => (calc.np ? calc.leaveNp() : calc.enterNp(), sfx("open"))}>
               {t(calc.np ? "np_off" : "np_on")}
@@ -233,7 +239,7 @@ export function Talents() {
       {left < 0 && <p className="text-sm text-bad">{t("over_budget", { l: s.level, n: -left })}</p>}
 
       {/* trees + plan rail, the plan exactly as tall as the trees */}
-      <div className={`grid gap-3 ${planner ? "xl:grid-cols-[minmax(0,1fr)_330px]" : "xl:grid-cols-[minmax(0,1fr)_44px]"}`}>
+      <div className={`grid gap-3 ${planner || skillsOpen ? "xl:grid-cols-[minmax(0,1fr)_330px]" : "xl:grid-cols-[minmax(0,1fr)_44px]"}`}>
         <div className="min-w-0">
           <div className="mb-2 flex gap-1 md:hidden">
             {c.tabs.map((tb, i) => (
@@ -257,21 +263,50 @@ export function Talents() {
           </div>
         </div>
 
-        {planner ? (
-          <aside className="relative min-h-[420px] overflow-hidden rounded-lg border border-edge/70 bg-panel/90 max-xl:max-h-[520px]">
-            <Planner
-              calc={calc} icons={icons} abilities={abil?.classes?.[c.token] || []} touch={touch}
-              onClose={() => setPlanner(false)} onRowHover={setRowHover} onProblem={problem}
-              onAbility={(a, el) => (touch ? setSheet(a && el ? { kind: "ab", a, el } : null) : setTip(a && el ? { kind: "ab", a, el } : null))}
-              onAuto={() => (calc.autoOrder(), toast(t("pl_auto_done")), sfx("click"))}
-            />
+        {planner || skillsOpen ? (
+          <aside className="relative min-h-[420px] max-xl:h-[600px]">
+            <div className="absolute inset-0 flex flex-col gap-2">
+              {planner ? (
+                <section className="relative min-h-0 flex-1 overflow-hidden rounded-lg border border-edge/70 bg-panel/90">
+                  <Planner
+                    calc={calc} icons={icons} touch={touch}
+                    onClose={() => setPlanner(false)} onRowHover={setRowHover} onProblem={problem}
+                    onAuto={() => (calc.autoOrder(), toast(t("pl_auto_done")), sfx("click"))}
+                  />
+                </section>
+              ) : (
+                <button className="bar-collapsed" onClick={() => setPlanner(true)}>
+                  <span className="text-gold" aria-hidden="true">«</span>{t("pl_title")}
+                  <span className="ml-auto font-mono text-xs text-[#ffd100]">{s.order.length || ""}</span>
+                </button>
+              )}
+              {skillsOpen ? (
+                <section className="relative min-h-0 flex-1 overflow-hidden rounded-lg border border-edge/70 bg-panel/90">
+                  <Skills
+                    calc={calc} icons={icons} abilities={abil?.classes?.[c.token] || []} links={links} touch={touch}
+                    onClose={() => setSkills(false)}
+                    onSkill={(a, el) => (touch ? setSheet(a && el ? { kind: "ab", a, el } : null) : setTip(a && el ? { kind: "ab", a, el } : null))}
+                  />
+                </section>
+              ) : (
+                <button className="bar-collapsed" onClick={() => setSkills(true)}>
+                  <span className="text-gold" aria-hidden="true">«</span>{t("sk_title")}
+                </button>
+              )}
+            </div>
           </aside>
         ) : (
-          <button className="rail hidden xl:flex" onClick={() => setPlanner(true)}>
-            <span className="text-lg leading-none text-gold" aria-hidden="true">«</span>
-            <span className="text-[13.5px] font-medium [writing-mode:vertical-rl]">{t("pl_title")}</span>
-            <span className="font-mono text-xs text-[#ffd100]">{s.order.length || ""}</span>
-          </button>
+          <div className="hidden flex-col gap-2 xl:flex">
+            <button className="rail flex flex-1" onClick={() => setPlanner(true)}>
+              <span className="text-lg leading-none text-gold" aria-hidden="true">«</span>
+              <span className="text-[13.5px] font-medium [writing-mode:vertical-rl]">{t("pl_title")}</span>
+              <span className="font-mono text-xs text-[#ffd100]">{s.order.length || ""}</span>
+            </button>
+            <button className="rail flex flex-1" onClick={() => setSkills(true)}>
+              <span className="text-lg leading-none text-gold" aria-hidden="true">«</span>
+              <span className="text-[13.5px] font-medium [writing-mode:vertical-rl]">{t("sk_title")}</span>
+            </button>
+          </div>
         )}
       </div>
 

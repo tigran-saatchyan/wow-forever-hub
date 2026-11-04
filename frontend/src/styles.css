@@ -471,6 +471,19 @@ body {
   .ab:focus-visible {
     @apply border-gold/60 text-ink outline-none;
   }
+  .ab-tal {
+    border-color: #ffd10088;
+    background: linear-gradient(90deg, #ffd1001a, rgb(var(--bg)));
+    color: #f4e3b5;
+  }
+  .ab-badge {
+    @apply ml-0.5 rounded-[3px] border px-1 font-mono text-[9.5px] font-bold leading-[13px];
+    border-color: #ffd10088;
+    color: #ffd100;
+  }
+  .bar-collapsed {
+    @apply flex flex-none items-center gap-2 rounded-lg border border-edge/70 bg-panel/90 px-3 py-2 text-left font-display text-sm text-ink hover:border-gold/60;
+  }
   .st {
     @apply inline-block whitespace-nowrap rounded border px-1.5 text-[10.5px] font-semibold uppercase leading-[18px] tracking-wide;
   }
