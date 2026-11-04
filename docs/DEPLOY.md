@@ -35,7 +35,7 @@
 1. Railway → **New** → **Deploy from GitHub repo** → `tigran-saatchyan/wow-forever-hub`.
 2. Проект переименовать в `forever-hub`, сервис — в `hub` (Settings → Service Name).
 3. Settings → **Source**:
-   - **Branch**: `claude/sharp-bardeen-no57jz` (пока это единственная ветка; после слияния в `main` переключить на `main`).
+   - **Branch**: `main`. Каждый пуш в `main` выкатывается автоматически.
    - **Root Directory**: пусто (корень репозитория). Образу нужны `backend/`, `frontend/` и `data/` сразу.
    - Watch Paths и healthcheck заданы в `railway.json`, руками их не трогать.
 4. Builder трогать не нужно: в корне лежит `Dockerfile`, `railway.json` указывает на него.
