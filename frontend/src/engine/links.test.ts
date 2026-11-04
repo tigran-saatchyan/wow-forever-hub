@@ -23,3 +23,29 @@ describe("talent -> spell links", () => {
     });
   }
 });
+
+describe("trainer list", () => {
+  for (const lang of ["en", "ru"]) {
+    it(`has each spell once per level, with ranks rising by level (${lang})`, () => {
+      const ab = readJSON<{ classes: Record<string, { n: string; s: number; l: number; r: number; d?: string }[]> }>(
+        `data/abilities/1.60.1.70755/${lang}.json`,
+      );
+      for (const rows of Object.values(ab.classes)) {
+        const seen = new Set<string>();
+        const last: Record<string, number> = {};
+        for (const r of [...rows].sort((a, b) => a.l - b.l || a.r - b.r)) {
+          const k = `${r.l}|${r.n}|${r.r}`;
+          expect(seen.has(k), k).toBe(false);
+          seen.add(k);
+          expect(r.r, `${r.n} at ${r.l}`).toBeGreaterThan(last[r.n] ?? 0);
+          last[r.n] = r.r;
+        }
+      }
+      const priest = ab.classes.PRIEST;
+      // Smite: rank 1 comes at level 1, so level 6 is rank 2
+      expect(priest.find((r) => r.s === 591)?.r).toBe(2);
+      // Shadowguard is listed once on level 20 (its bolt is a helper spell)
+      expect(priest.filter((r) => r.l === 20 && r.s === 28377)).toHaveLength(0);
+    });
+  }
+});

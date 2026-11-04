@@ -95,6 +95,7 @@ def update_talents(builds: list[dict], keep: int = 10) -> dict:
                 built_ab[lang] = abilities.build_abilities(latest, lang, loc, prev_ds[lang], icon_map)
             except Exception as e:  # noqa: BLE001
                 log.warning("abilities %s/%s: %s", latest, lang, e)
+        abilities.clean_abilities(built_ab)  # helper spells out, ranks rebuilt by level
         if "en" in prev_ds:
             log.info("abilities: %d links dropped by the school check", abilities.prune_school_conflicts(built_ab, prev_ds["en"]))
         for lang, ab in built_ab.items():

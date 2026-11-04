@@ -75,7 +75,7 @@ export function Skills({ calc, icons, abilities, links, touch, onClose, onSkill 
                   >
                     <span className="h-[18px] w-[18px] flex-none rounded-[3px]" style={iconStyle(icons, x.i)} />
                     <span className="truncate">{x.n}</span>
-                    {x.r > 1 && <i className="font-mono text-[10.5px] not-italic text-muted">{x.r}</i>}
+                    {!x.fromTalent && <span className="ab-rank" title={t("ab_rank", { r: x.r, l: x.l })}>{t("sk_rank", { r: x.r })}</span>}
                     {(x.fromTalent || x.t) && <span className="ab-badge" title={t(x.fromTalent ? "sk_from_tal" : "ab_talent")}>{t("sk_badge")}</span>}
                   </span>
                 ))}

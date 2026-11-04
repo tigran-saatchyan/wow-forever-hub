@@ -481,6 +481,10 @@ body {
     border-color: #ffd10088;
     color: #ffd100;
   }
+  .ab-rank {
+    @apply flex-none font-mono text-[10.5px] font-semibold;
+    color: #9aa0aa;
+  }
   .bar-collapsed {
     @apply flex flex-none items-center gap-2 rounded-lg border border-edge/70 bg-panel/90 px-3 py-2 text-left font-display text-sm text-ink hover:border-gold/60;
   }

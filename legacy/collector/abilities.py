@@ -243,3 +243,80 @@ def prune_school_conflicts(abil_by_lang: dict[str, dict], talents_en: dict) -> i
                 else:
                     del links[k]
     return n
+
+
+# ---------------------------------------------------------------------------------------------
+# Clean-up of the trainer list. Two problems of the raw rows:
+#  * helper spells share the name of the spell that uses them (Shadowguard's bolt, the burn of
+#    Immolation Trap, the heal of Holy Nova): one spell shows twice on the same level;
+#  * for many classes the files do not link ranks (SupercedesSpell), so every rank reads "1".
+# Ranks are rebuilt by level; rank 1 of the spells a class starts with is learned at level 1,
+# which the list leaves out, so their first row here is rank 2. Classes whose chains are
+# linked (warrior, rogue) agree with this rule, which the tests check.
+# ---------------------------------------------------------------------------------------------
+STARTERS = {
+    "WARRIOR": {"Heroic Strike"},
+    "PALADIN": {"Holy Light", "Seal of Righteousness", "Devotion Aura"},
+    "HUNTER": {"Raptor Strike"},
+    "ROGUE": {"Sinister Strike", "Eviscerate", "Stealth"},
+    "PRIEST": {"Smite", "Lesser Heal", "Power Word: Fortitude"},
+    "SHAMAN": {"Lightning Bolt", "Healing Wave", "Rockbiter Weapon"},
+    "MAGE": {"Fireball", "Frost Armor", "Arcane Intellect"},
+    "WARLOCK": {"Shadow Bolt", "Demon Skin"},
+    "DRUID": {"Wrath", "Healing Touch", "Mark of the Wild"},
+}
+
+
+def _prefix(r: dict) -> str:
+    return (r.get("d") or "")[:25]
+
+
+def clean_rows(token: str, rows_en: list[dict]) -> dict[int, int]:
+    """English rows of one class -> {spell id: rank} of the rows to keep."""
+    by_name: dict[str, list[dict]] = {}
+    for r in rows_en:
+        by_name.setdefault(r["n"], []).append(r)
+    keep: dict[int, int] = {}
+    for name, rows in by_name.items():
+        # the spell's own text: the prefix seen on most levels, ties to the longer text; never an empty one
+        score: dict[str, tuple[int, int]] = {}
+        for r in rows:
+            p = _prefix(r)
+            if p:
+                n, ln = score.get(p, (0, 0))
+                score[p] = (n + 1, max(ln, len(r["d"])))
+        main = max(score, key=lambda p: score[p]) if score else ""
+        by_lv: dict[int, list[dict]] = {}
+        for r in rows:
+            by_lv.setdefault(r["l"], []).append(r)
+        chain: list[dict] = []
+        for lv in sorted(by_lv):
+            xs = by_lv[lv]
+            mine = [r for r in xs if _prefix(r) == main] or [r for r in xs if r.get("d")] or xs
+            if len({r.get("d") for r in mine}) == 1:  # same text twice: one spell, keep the lower id
+                mine = [min(mine, key=lambda r: r["s"])]
+            chain += sorted(mine, key=lambda r: r["s"])
+        linked = any(r["r"] > 1 for r in chain)
+        first = chain[0]["r"] if linked else 1 + (name in STARTERS.get(token, set())) + bool(chain[0].get("t"))
+        for i, r in enumerate(chain):
+            keep[r["s"]] = first + i
+    return keep
+
+
+def clean_abilities(abil_by_lang: dict[str, dict]) -> int:
+    """Apply clean_rows (decided on English) to every language. Returns the number of rows dropped."""
+    en = abil_by_lang.get("en")
+    if not en:
+        return 0
+    plan = {token: clean_rows(token, rows) for token, rows in en.get("classes", {}).items()}
+    dropped = 0
+    for ab in abil_by_lang.values():
+        for token, rows in ab.get("classes", {}).items():
+            keep = plan.get(token, {})
+            out = []
+            for r in rows:
+                if r["s"] in keep:
+                    out.append({**r, "r": keep[r["s"]]})
+            dropped += len(rows) - len(out)
+            ab["classes"][token] = out
+    return dropped

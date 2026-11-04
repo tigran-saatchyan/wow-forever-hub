@@ -94,6 +94,7 @@ def run(state: Path) -> dict:
                 except Exception as e:  # noqa: BLE001
                     notes.append(f"abilities {latest}/{lang}: {e}")
             # class masks over-match (Holy Precision on Shadow spells): drop links whose schools contradict
+            abilities.clean_abilities(built_ab)  # helper spells out, ranks rebuilt by level
             if "en" in prev:
                 abilities.prune_school_conflicts(built_ab, prev["en"])
             for lang, ab in built_ab.items():
