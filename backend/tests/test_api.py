@@ -34,6 +34,8 @@ def test_health_and_data(client):
 def test_auth(client):
     assert client.get("/api/auth/me").status_code == 401
     assert client.post("/api/auth/login", json={"email": "boss@test", "password": "nope"}).status_code == 401
+    # browsers and password managers may add case changes or stray spaces to the email
+    assert client.post("/api/auth/login", json={"email": " Boss@Test ", "password": "s3cret"}).status_code == 200
     me = login(client)
     assert me["role"] == "superadmin"
     assert client.get("/api/auth/me").json()["email"] == "boss@test"

@@ -1,3 +1,4 @@
+import logging
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
@@ -15,6 +16,7 @@ from .db import SessionLocal, User, get_session
 COOKIE = "fh_session"
 hasher = PasswordHash.recommended()
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+log = logging.getLogger("uvicorn.error")
 
 
 class LoginIn(BaseModel):
@@ -53,7 +55,7 @@ CurrentUser = Annotated[User, Depends(current_user)]
 
 @router.post("/login", response_model=UserOut)
 async def login(body: LoginIn, response: Response, session: Annotated[AsyncSession, Depends(get_session)]):
-    user = (await session.execute(select(User).where(User.email == body.email.lower()))).scalar_one_or_none()
+    user = (await session.execute(select(User).where(User.email == body.email.strip().lower()))).scalar_one_or_none()
     if not user or not hasher.verify(body.password, user.password_hash):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "wrong email or password")
     s = get_settings()
@@ -82,10 +84,14 @@ async def ensure_superadmin() -> None:
     """Create the single superadmin from FH_ADMIN_EMAIL / FH_ADMIN_PASSWORD, or refresh their password."""
     s = get_settings()
     async with SessionLocal() as session:
-        email = s.admin_email.lower()
+        email = s.admin_email.strip().lower()
         user = (await session.execute(select(User).where(User.email == email))).scalar_one_or_none()
         if user is None:
             session.add(User(email=email, password_hash=hasher.hash(s.admin_password), role="superadmin"))
         elif not hasher.verify(s.admin_password, user.password_hash):
             user.password_hash = hasher.hash(s.admin_password)
         await session.commit()
+    # never log the password itself; length and edges help spot stray quotes or spaces in env values
+    pw = s.admin_password
+    edge = "quotes" if pw[:1] in "\"'" or pw[-1:] in "\"'" else "spaces" if pw != pw.strip() else "ok"
+    log.info("superadmin: %s (password length %d, edges: %s)", email, len(pw), edge)
