@@ -1,0 +1,365 @@
+{
+ "_about": "Curated error knowledge base. Sources checked 2026-10-08. category: server | network | account | client. 'server' codes are matched against active maintenance on the site.",
+ "codes": {
+  "BLZ51901016": {
+   "category": "server",
+   "official": "https://us.support.blizzard.com/en/help/article/28966",
+   "title": {
+    "en": "You have been disconnected",
+    "ru": "Вы были отключены"
+   },
+   "meaning": {
+    "ru": "Клиент не смог войти и сразу отключился. На Forever это почти всегда значит, что серверы закрыты на работы, выкатывается новая сборка или серверы ещё не открыты. В общей статье Blizzard также называет слабый ПК и плохое соединение.",
+    "en": "The client was refused at login and disconnected right away. On Forever this almost always means the servers are down for maintenance, a new build is being deployed, or the servers are not open yet. Blizzard's general article also lists low specs and bad connections as causes."
+   },
+   "fixes": {
+    "en": [
+     "Check the status page: if maintenance is on, wait for the announced end time",
+     "Fully quit and restart the Battle.net app so it pulls the new client build",
+     "In the launcher, check that the WoW account with WoW: Forever access is selected (during the beta people mixed up WoW1 and WoW9)",
+     "Run Scan and Repair on WoW: Forever",
+     "If servers are up for everyone else: reset the UI (rename Cache, Interface, WTF) and restart your router"
+    ],
+    "ru": [
+     "Проверьте статус: если идут работы, ждите объявленного времени окончания",
+     "Полностью закройте и перезапустите Battle.net, чтобы он скачал новую сборку клиента",
+     "Проверьте в лаунчере, что выбрана учётная запись WoW с доступом к WoW: Forever (на бете путали WoW1 и WoW9)",
+     "Запустите «Проверить и восстановить» для WoW: Forever",
+     "Если у остальных всё работает: сбросьте интерфейс (переименуйте Cache, Interface, WTF) и перезагрузите роутер"
+    ]
+   },
+   "community": {
+    "ru": "На бете волны жалоб 17 и 24 сентября, 1 и 8 октября точно совпали с объявленными работами. У части игроков после обновления лаунчер переключался на чужую учётную запись WoW.",
+    "en": "During the beta, waves of reports on Sep 17, Sep 24, Oct 1 and Oct 8 matched announced maintenance one to one. A few players also had the launcher switch to the wrong WoW account after an update."
+   }
+  },
+  "WOW51900309": {
+   "category": "server",
+   "official": "https://us.support.blizzard.com/en/help/article/19949",
+   "title": {
+    "en": "No realms are currently available",
+    "ru": "Нет доступных игровых миров"
+   },
+   "meaning": {
+    "en": "The realm list has no open realm for the version or ruleset you chose. Usually realms are down for maintenance or your client is older than the server build.",
+    "ru": "В списке нет открытого мира для выбранной версии или правил. Обычно миры закрыты на работы или ваш клиент старее серверной сборки."
+   },
+   "fixes": {
+    "en": [
+     "Wait for maintenance to end",
+     "Quit the game and Battle.net completely and relaunch so the client updates",
+     "End any leftover Wow.exe / WowB.exe process in Task Manager",
+     "Pick an open ruleset (Normal or PvP); RP and Hardcore can show in the list while closed",
+     "Run Scan and Repair"
+    ],
+    "ru": [
+     "Дождитесь конца работ",
+     "Полностью закройте игру и Battle.net и запустите снова, чтобы клиент обновился",
+     "Завершите оставшийся процесс Wow.exe / WowB.exe в диспетчере задач",
+     "Выберите открытые правила (Normal или PvP): RP и Hardcore могут висеть в списке закрытыми",
+     "Запустите «Проверить и восстановить»"
+    ]
+   },
+   "community": {
+    "ru": "На бете появлялась после каждых работ и держалась от нескольких часов до суток. Большинству помогало обновление до новой сборки или завершение зависшего Wow.exe.",
+    "en": "During the beta it appeared after every maintenance and lasted from hours to a day. Patching to the new build or killing a stuck Wow.exe fixed it for most."
+   }
+  },
+  "WOW51900319": {
+   "category": "network",
+   "official": "https://us.support.blizzard.com/en/help/article/21758",
+   "title": {
+    "en": "You have been disconnected from the server",
+    "ru": "Соединение с сервером потеряно"
+   },
+   "meaning": {
+    "en": "The connection to the game server dropped during play or while loading the character list.",
+    "ru": "Соединение с игровым сервером оборвалось во время игры или при загрузке списка персонажей."
+   },
+   "fixes": {
+    "en": [
+     "Check the status page for a restart or new build",
+     "Disable unused network adapters (Wi-Fi while on cable) and network-management software such as Killer",
+     "Reset the UI and disable addons",
+     "Test another connection (phone hotspot) to rule out routing",
+     "Toggle 'Enable IPv6 when available' in the game's Network settings",
+     "If one character always drops, log in with another one"
+    ],
+    "ru": [
+     "Проверьте статус: возможно, был рестарт или вышла новая сборка",
+     "Отключите неиспользуемые сетевые адаптеры (Wi-Fi при кабеле) и программы вроде Killer",
+     "Сбросьте интерфейс и отключите аддоны",
+     "Попробуйте другое подключение (точку доступа с телефона), чтобы исключить маршрутизацию",
+     "Переключите «Использовать IPv6» в сетевых настройках игры",
+     "Если отключает только одного персонажа, зайдите другим"
+    ]
+   },
+   "community": {
+    "ru": "На бете появлялась сразу после обновлений клиента (зависание на «Получение списка персонажей») и в некоторых сломанных заданиях или зонах.",
+    "en": "During the beta it showed up right after client updates (stuck on 'Retrieving character list') and in some bugged quests or zones."
+   }
+  },
+  "BLZ51914403": {
+   "category": "account",
+   "official": null,
+   "title": {
+    "en": "Login rejected",
+    "ru": "Вход отклонён"
+   },
+   "meaning": {
+    "en": "Unconfirmed: the login was rejected when signing in directly in the game client (WoW.exe, Steam or login.txt) instead of through the Battle.net app. A Sep 23–24 outbreak was fixed on Blizzard's side.",
+    "ru": "Не подтверждено: вход отклоняется при авторизации прямо в клиенте (WoW.exe, Steam или login.txt), а не через приложение Battle.net. Массовый сбой 23–24 сентября Blizzard исправили на своей стороне."
+   },
+   "fixes": {
+    "en": [
+     "Launch the game through the Battle.net app",
+     "Delete login.txt with saved credentials from the WoW folder",
+     "For a second account, enable 'Allow multiple instances of Battle.net' and use a separate launcher",
+     "Restart or update the Battle.net app",
+     "If everyone has it, wait for a server-side fix"
+    ],
+    "ru": [
+     "Запускайте игру через приложение Battle.net",
+     "Удалите login.txt с сохранёнными данными из папки WoW",
+     "Для второй учётной записи включите «Разрешить несколько копий Battle.net» и войдите в отдельном лаунчере",
+     "Перезапустите или обновите Battle.net",
+     "Если ошибка у всех, ждите исправления на сервере"
+    ]
+   },
+   "community": {
+    "ru": "На бете 23–24 сентября сильнее всего задело мультибоксеров и общие ПК. Очистка кэша не помогала; исправили вместе с новой сборкой.",
+    "en": "During the beta, multiboxers and shared PCs were hit hardest on Sep 23–24. Clearing the cache did not help; it was fixed together with a new build."
+   }
+  },
+  "WOW51900337": {
+   "category": "account",
+   "official": null,
+   "title": {
+    "en": "No valid access license",
+    "ru": "Нет лицензии на доступ"
+   },
+   "meaning": {
+    "ru": "У выбранной учётной записи WoW нет доступа к WoW: Forever или лицензия не распознаётся.",
+    "en": "The selected WoW account has no WoW: Forever access, or the license is not recognized."
+   },
+   "fixes": {
+    "en": [
+     "In the launcher, select the WoW account that has WoW: Forever access",
+     "Check that access is actually active (subscription or purchase); being able to install the client does not grant it",
+     "Restart Battle.net and the PC",
+     "If the license is missing after purchase, contact Blizzard support"
+    ],
+    "ru": [
+     "Выберите в лаунчере учётную запись WoW, у которой есть доступ к WoW: Forever",
+     "Проверьте, что доступ действительно активен (подписка или покупка): возможность скачать клиент его не даёт",
+     "Перезапустите Battle.net и компьютер",
+     "Если доступа нет после покупки, напишите в поддержку Blizzard"
+    ]
+   },
+   "community": {
+    "ru": "На бете часто встречалась в первые дни и 24–25 сентября, обычно вместе со сбоем выбора учётной записи.",
+    "en": "During the beta it was common in the first days and around Sep 24–25, often together with the broken account selector."
+   }
+  },
+  "WOW51900328": {
+   "category": "server",
+   "official": "https://us.support.blizzard.com/en/help/article/21829",
+   "title": {
+    "en": "Disconnected while logging in to the game server",
+    "ru": "Отключение при входе на игровой сервер"
+   },
+   "meaning": {
+    "en": "The client could not finish connecting to the realm. Typical right after a patch or during realm problems.",
+    "ru": "Клиент не смог завершить подключение к миру. Типично сразу после патча или при проблемах с миром."
+   },
+   "fixes": {
+    "en": [
+     "Check that the realm is online on the status page",
+     "Restart the computer",
+     "Reset the UI (rename Cache, Interface, WTF)",
+     "Add Blizzard apps to your antivirus exceptions",
+     "Check firewall and proxy settings"
+    ],
+    "ru": [
+     "Проверьте на странице статуса, что мир работает",
+     "Перезагрузите компьютер",
+     "Сбросьте интерфейс (переименуйте Cache, Interface, WTF)",
+     "Добавьте приложения Blizzard в исключения антивируса",
+     "Проверьте настройки брандмауэра и прокси"
+    ]
+   },
+   "community": {
+    "en": "Mostly after maintenance and for players on long routes; usually clears up by itself.",
+    "ru": "В основном после работ и у игроков с длинным маршрутом до серверов; обычно проходит само."
+   }
+  },
+  "BLZ51900052": {
+   "category": "account",
+   "official": "https://us.support.blizzard.com/en/help/article/20182",
+   "title": {
+    "en": "Account suspended or banned",
+    "ru": "Учётная запись заблокирована"
+   },
+   "meaning": {
+    "en": "This is an account restriction, not a technical error.",
+    "ru": "Это ограничение учётной записи, а не техническая ошибка."
+   },
+   "fixes": {
+    "en": [
+     "Check your email and the Account Restrictions page for the reason and length",
+     "Appeal only through the Account Restrictions page",
+     "If you think the account was compromised, secure your PC and account and contact support"
+    ],
+    "ru": [
+     "Проверьте почту и страницу ограничений учётной записи: там причина и срок",
+     "Обжаловать можно только через страницу ограничений",
+     "Если подозреваете взлом, защитите ПК и учётную запись и напишите в поддержку"
+    ]
+   },
+   "community": {
+    "en": "Recent threads are all suspensions; forum staff cannot lift them.",
+    "ru": "Все свежие темы связаны с блокировками; модераторы форума их не снимают."
+   }
+  },
+  "BLZ51934200": {
+   "category": "server",
+   "official": null,
+   "title": {
+    "en": "No servers are currently available",
+    "ru": "Нет доступных серверов"
+   },
+   "meaning": {
+    "en": "The login service has no game server to hand you, almost always because of maintenance or an outage.",
+    "ru": "Сервис входа не может выдать игровой сервер, почти всегда из-за работ или сбоя."
+   },
+   "fixes": {
+    "en": [
+     "Wait for the announced end of maintenance",
+     "Go by Blizzard's posted times: during maintenance realms can briefly show as up while still in internal testing",
+     "Restart the game and Battle.net after maintenance",
+     "If it persists: restart the router and flush DNS"
+    ],
+    "ru": [
+     "Дождитесь объявленного конца работ",
+     "Ориентируйтесь на время из постов Blizzard: во время работ миры могут ненадолго показываться открытыми, пока идёт внутреннее тестирование",
+     "После работ перезапустите игру и Battle.net",
+     "Если не проходит: перезагрузите роутер и сбросьте кэш DNS"
+    ]
+   },
+   "community": {
+    "en": "Reports line up with maintenance windows.",
+    "ru": "Жалобы совпадают с окнами работ."
+   }
+  },
+  "BLZ51914400": {
+   "category": "account",
+   "official": "https://us.support.blizzard.com/en/help/article/354448",
+   "title": {
+    "en": "Disconnected during login",
+    "ru": "Отключение при входе"
+   },
+   "meaning": {
+    "en": "The connection was lost during authentication. Often after several wrong passwords (captcha or lockout) or a direct login through Steam or the client.",
+    "ru": "Соединение оборвалось во время авторизации. Часто после нескольких неверных паролей (капча или временная блокировка) или прямого входа через Steam или клиент."
+   },
+   "fixes": {
+    "en": [
+     "Check the status page for server issues",
+     "Make sure the game is fully updated",
+     "Log in through the Battle.net app",
+     "After a lockout, wait or reset the password in Account Management",
+     "Reinstall the Battle.net app"
+    ],
+    "ru": [
+     "Проверьте статус серверов",
+     "Убедитесь, что игра полностью обновлена",
+     "Входите через приложение Battle.net",
+     "После блокировки подождите или смените пароль в управлении учётной записью",
+     "Переустановите приложение Battle.net"
+    ]
+   },
+   "community": {
+    "en": "In Sep–Oct 2026 mostly after mistyped passwords; it cleared after a timeout.",
+    "ru": "В сентябре–октябре 2026 в основном после ошибок в пароле; проходило через некоторое время."
+   }
+  },
+  "BLZ51903006": {
+   "category": "network",
+   "official": "https://us.support.blizzard.com/en/help/article/21839",
+   "title": {
+    "en": "Disconnected while retrieving realm list",
+    "ru": "Отключение при получении списка миров"
+   },
+   "meaning": {
+    "en": "Blizzard calls it a connection issue, but it usually appears in waves during server incidents and on patch days.",
+    "ru": "Blizzard называют это проблемой соединения, но обычно ошибка идёт волнами во время сбоев на серверах и в дни патчей."
+   },
+   "fixes": {
+    "en": [
+     "If many players report it at once, wait",
+     "Restart network devices, flush DNS and renew the IP",
+     "If it persists, run WinMTR and post the result on the tech support forum"
+    ],
+    "ru": [
+     "Если жалуются многие одновременно, подождите",
+     "Перезагрузите сетевое оборудование, сбросьте DNS и обновите IP",
+     "Если не проходит, запустите WinMTR и выложите результат на форуме техподдержки"
+    ]
+   },
+   "community": {
+    "en": "No notable Forever-specific threads yet.",
+    "ru": "Заметных тем именно по Forever пока нет."
+   }
+  },
+  "BLZ51901023": {
+   "category": "server",
+   "official": "https://us.support.blizzard.com/en/help/article/110008",
+   "title": {
+    "en": "Disconnected",
+    "ru": "Отключение"
+   },
+   "meaning": {
+    "en": "A general disconnect. Blizzard says it is mainly caused by services being in maintenance.",
+    "ru": "Общая ошибка отключения. По словам Blizzard, чаще всего означает, что сервисы на обслуживании."
+   },
+   "fixes": {
+    "en": [
+     "Check for maintenance and retry later",
+     "Restart network devices and avoid weak Wi-Fi",
+     "Flush DNS and renew the IP",
+     "Disable addons and add Blizzard apps to antivirus exceptions"
+    ],
+    "ru": [
+     "Проверьте, нет ли работ, и попробуйте позже",
+     "Перезагрузите сетевое оборудование, по возможности не используйте слабый Wi-Fi",
+     "Сбросьте DNS и обновите IP",
+     "Отключите аддоны и добавьте приложения Blizzard в исключения антивируса"
+    ]
+   },
+   "community": {
+    "en": "Rare in 2025–2026; reports match Battle.net-wide login maintenance.",
+    "ru": "В 2025–2026 редкая; жалобы совпадают с работами над входом в Battle.net."
+   }
+  }
+ },
+ "generic": {
+  "fixes": {
+   "en": [
+    "Check the status page: most widespread login errors come from server maintenance",
+    "Fully restart the Battle.net app so the client updates",
+    "Check the selected WoW account in the launcher",
+    "Run Scan and Repair",
+    "Reset the UI (rename Cache, Interface, WTF) and disable addons",
+    "Restart the router; try a phone hotspot to rule out your network"
+   ],
+   "ru": [
+    "Проверьте статус: большинство массовых ошибок входа вызваны работами на серверах",
+    "Полностью перезапустите Battle.net, чтобы клиент обновился",
+    "Проверьте выбранную учётную запись WoW в лаунчере",
+    "Запустите «Проверить и восстановить»",
+    "Сбросьте интерфейс (переименуйте Cache, Interface, WTF) и отключите аддоны",
+    "Перезагрузите роутер; попробуйте точку доступа с телефона, чтобы исключить свою сеть"
+   ]
+  }
+ }
+}

@@ -1,0 +1,123 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  /* defaults; ThemeProvider overwrites these per theme */
+  --bg: 8 10 12;
+  --panel: 18 22 24;
+  --edge: 58 72 66;
+  --ink: 222 230 220;
+  --muted: 136 152 142;
+  --accent: 122 196 96;
+  --accent2: 150 110 200;
+  --gold: 200 190 140;
+  --good: 140 220 110;
+  --bad: 220 80 110;
+  --glow: rgba(130, 210, 100, 0.45);
+  --backdrop: #080a0c;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+body {
+  @apply font-body text-ink antialiased;
+  background: var(--backdrop);
+  background-color: rgb(var(--bg));
+  background-attachment: fixed;
+}
+
+@layer components {
+  /* Carved panel: dark inset, gilded double frame, soft inner glow */
+  .panel {
+    @apply relative rounded-lg border border-edge/70 bg-panel/85 backdrop-blur-sm;
+    box-shadow:
+      inset 0 1px 0 rgb(var(--gold) / 0.12),
+      inset 0 0 0 1px rgb(0 0 0 / 0.6),
+      0 10px 30px -10px rgb(0 0 0 / 0.8);
+  }
+  .panel::before {
+    content: "";
+    @apply pointer-events-none absolute inset-[3px] rounded-md border border-gold/10;
+  }
+  .panel-title {
+    @apply font-display text-sm font-semibold uppercase tracking-[0.18em] text-gold;
+    text-shadow: 0 0 12px var(--glow);
+  }
+  .eyebrow {
+    @apply text-[11px] uppercase tracking-[0.14em] text-muted;
+  }
+  .btn {
+    @apply inline-flex items-center gap-2 rounded-md border border-edge bg-gradient-to-b from-panel to-bg px-3 py-1.5
+      text-sm text-ink transition hover:border-gold/60 hover:text-gold focus-visible:outline-none
+      focus-visible:ring-2 focus-visible:ring-gold/50 disabled:opacity-40;
+  }
+  .btn-primary {
+    @apply btn border-gold/60 text-gold;
+    background-image: linear-gradient(180deg, rgb(var(--accent) / 0.35), rgb(var(--bg)));
+    box-shadow: 0 0 14px -4px var(--glow);
+  }
+  .chip {
+    @apply rounded-full border border-edge/80 px-2 py-0.5 text-xs text-muted;
+  }
+  .dot {
+    @apply inline-block h-2.5 w-2.5 rounded-full bg-muted;
+  }
+  .dot.good {
+    @apply bg-good;
+    box-shadow: 0 0 10px rgb(var(--good));
+  }
+  .dot.warn {
+    @apply bg-accent2;
+    box-shadow: 0 0 10px rgb(var(--accent2));
+  }
+  .dot.bad {
+    @apply bg-bad;
+    box-shadow: 0 0 10px rgb(var(--bad));
+  }
+  .input {
+    @apply rounded-md border border-edge bg-bg/80 px-3 py-1.5 text-sm text-ink placeholder:text-muted/60
+      focus:border-gold/60 focus:outline-none;
+  }
+
+  /* Talent slot frame states, as in the prototype: green can learn, gold has points, grey locked */
+  .slot {
+    @apply relative h-11 w-11 rounded-md border-2 bg-black/60 bg-cover transition sm:h-12 sm:w-12;
+  }
+  .slot.can {
+    border-color: rgb(var(--good));
+    box-shadow: 0 0 10px -2px rgb(var(--good) / 0.8);
+  }
+  .slot.has {
+    border-color: rgb(var(--gold));
+    box-shadow: 0 0 12px -2px rgb(var(--gold) / 0.9);
+  }
+  .slot.locked {
+    @apply border-zinc-600;
+    filter: grayscale(1) brightness(0.55);
+  }
+  .slot.milestone::after {
+    content: "";
+    @apply pointer-events-none absolute -inset-[5px] rounded-lg border border-dashed border-gold/70;
+  }
+  .slot .rk {
+    @apply absolute -bottom-2 -right-2 rounded border border-edge bg-bg px-1 font-mono text-[10px] leading-4 text-ink;
+  }
+  .slot.has .rk {
+    @apply border-gold/70 text-gold;
+  }
+  .slot.can .rk {
+    @apply border-good/70 text-good;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -1,0 +1,2454 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forever Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+SC:wght@600;700&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: sticky top bar + one routed view (Status · Changes · Talents). Talents = 3 trees side by side, stacked with a tab switch on phones.
+   Deliberately single dark theme: it mirrors the in-game UI the tool is about. */
+:root {
+  color-scheme: dark;
+  --ink: #0c0f15;          /* page ground, night blue-black */
+  --panel: #141922;        /* raised surfaces */
+  --panel-2: #1b2230;      /* hover / inner */
+  --line: #283141;         /* hairlines */
+  --fg: #e8e3d6;           /* parchment-white text */
+  --muted: #8f97a6;        /* secondary text */
+  --gold: #d6aa4c;         /* accent: talent rims, maxed ranks */
+  --gold-dim: #8a6d33;
+  --good: #63c46d;         /* available / online (game convention) */
+  --warn: #e4a53c;         /* maintenance */
+  --bad: #e0625b;          /* locked requirement / error */
+  --epic: #b383f0;         /* changed in latest build */
+  --f-display: "Cormorant SC", "Trajan Pro", Georgia, serif;
+  --f-body: "Golos Text", "Segoe UI", system-ui, sans-serif;
+  --f-data: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --cell: 46px;
+  --gap: 12px;
+  --class: var(--gold);
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { background: var(--ink); color: var(--fg); }
+body { font: 15px/1.55 var(--f-body); margin: 0; padding-inline: 16px; padding-block: 0 48px; }
+a { color: var(--gold); text-underline-offset: 3px; }
+a:hover { color: #f0c86a; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 700; letter-spacing: .02em; text-wrap: balance; margin: 0; line-height: 1.1; }
+.wrap { max-width: 1180px; margin-inline: auto; }
+.mono { font-family: var(--f-data); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.eyebrow { font: 600 11px/1 var(--f-body); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+
+/* ---------- top bar ---------- */
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; margin-inline: -16px; padding: 10px 16px;
+  background: color-mix(in oklab, var(--ink) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.bar .wrap { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.brand { display: flex; align-items: baseline; gap: 10px; text-decoration: none; color: var(--fg); }
+.brand b { font: 700 24px/1 var(--f-display); color: var(--gold); letter-spacing: .04em; }
+.brand span { font: 500 12px/1 var(--f-body); color: var(--muted); }
+nav { display: flex; gap: 4px; }
+nav a { text-decoration: none; color: var(--muted); padding: 7px 12px; border-radius: 6px; font-weight: 500; }
+nav a:hover { color: var(--fg); background: var(--panel); }
+nav a[aria-current="page"] { color: var(--fg); background: var(--panel-2); box-shadow: inset 0 -2px 0 var(--gold); }
+.bar .right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); font: 500 12px/1.4 var(--f-data); color: var(--muted); white-space: nowrap; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
+.dot.good { background: var(--good); box-shadow: 0 0 0 3px color-mix(in oklab, var(--good) 25%, transparent); }
+.dot.warn { background: var(--warn); box-shadow: 0 0 0 3px color-mix(in oklab, var(--warn) 25%, transparent); }
+.dot.bad { background: var(--bad); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { background: none; border: 0; padding: 4px 10px; cursor: pointer; font: 600 12px/1.4 var(--f-body); color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--panel-2); color: var(--fg); }
+
+main { padding-top: 28px; }
+.view[hidden] { display: none !important; }
+.section { display: grid; gap: 14px; margin-top: 36px; }
+.section > header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.section h2 { font-size: 26px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+.note { font-size: 13px; color: var(--muted); max-width: 70ch; }
+
+/* ---------- status ---------- */
+.status-hero { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; }
+.state { padding: 24px; display: grid; gap: 14px; align-content: start; }
+.state .big { display: flex; align-items: center; gap: 14px; }
+.state .big .dot { width: 14px; height: 14px; }
+.state h1 { font-size: clamp(30px, 5vw, 44px); }
+.state p { margin: 0; max-width: 60ch; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line); border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
+.fact { background: var(--panel); padding: 14px 16px; display: grid; gap: 4px; }
+.fact .v { font: 600 20px/1.2 var(--f-data); font-variant-numeric: tabular-nums; }
+.fact .s { font-size: 12px; color: var(--muted); }
+.countdowns { padding: 20px 24px; display: grid; gap: 18px; align-content: start; }
+.cd { display: grid; gap: 6px; }
+.cd .t { font: 600 26px/1 var(--f-data); font-variant-numeric: tabular-nums; }
+a.cd.arch { color: inherit; text-decoration: none; padding-top: 16px; border-top: 1px solid var(--line); }
+a.cd.arch .s { color: var(--gold); font-size: 13.5px; }
+a.cd.arch:hover .s { text-decoration: underline; text-underline-offset: 3px; }
+.track { height: 6px; background: var(--panel-2); border-radius: 4px; overflow: hidden; }
+.track i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold-dim), var(--gold)); }
+.list { display: grid; }
+.crowd { display: grid; gap: 6px; padding: 12px 14px; border-radius: 8px; background: var(--panel-2); font-size: 13.5px; }
+.crowd a { text-decoration: none; }
+.crowd a b { font-weight: 500; color: var(--fg); }
+.crowd a:hover b { color: var(--gold); }
+.crowd span { font: 500 12px var(--f-data); color: var(--muted); }
+.row { display: grid; grid-template-columns: 140px minmax(0, 1fr) auto; gap: 14px; padding: 12px 16px; border-top: 1px solid var(--line); align-items: baseline; }
+.row:first-child { border-top: 0; }
+.row .when { font: 500 13px/1.4 var(--f-data); color: var(--muted); }
+.row .what { min-width: 0; }
+.row .what b { font-weight: 600; }
+.row .what p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.builds { display: flex; gap: 0; overflow-x: auto; padding: 18px 16px 14px; }
+.build { position: relative; flex: 1 0 150px; padding: 18px 10px 0 0; border-top: 2px solid var(--line); }
+.build::before { content: ""; position: absolute; top: -7px; left: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--panel-2); border: 2px solid var(--line); }
+.build.has::before { border-color: var(--epic); background: color-mix(in oklab, var(--epic) 30%, var(--panel)); }
+.build.cur::before { border-color: var(--gold); background: var(--gold); }
+.build .n { font: 600 14px/1.3 var(--f-data); }
+.build .d { font-size: 12px; color: var(--muted); }
+.build button { margin-top: 6px; background: none; border: 0; padding: 0; color: var(--epic); cursor: pointer; font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---------- changes ---------- */
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.chip { border: 1px solid var(--line); background: var(--panel); color: var(--muted); padding: 5px 11px; border-radius: 999px; cursor: pointer; font: 500 13px/1.3 var(--f-body); display: inline-flex; gap: 6px; align-items: center; }
+.chip[aria-pressed="true"] { color: var(--fg); border-color: var(--gold-dim); background: var(--panel-2); }
+.chip .c { font-family: var(--f-data); font-size: 11px; color: var(--muted); }
+select { background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font: 500 13px var(--f-body); }
+label.check { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); cursor: pointer; }
+.changes { display: grid; gap: 22px; }
+.cgroup h3 { font-size: 22px; display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.change { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; padding: 12px 14px; border-top: 1px solid var(--line); }
+.change:first-of-type { border-top: 0; }
+.change .head { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+.change .head b { font-weight: 600; }
+.tag { font: 600 10.5px/1.6 var(--f-body); letter-spacing: .08em; text-transform: uppercase; padding: 0 7px; border-radius: 4px; border: 1px solid currentColor; }
+.tag.added { color: var(--good); } .tag.removed { color: var(--bad); } .tag.text, .tag.ranks, .tag.meta, .tag.gate { color: var(--warn); }
+.tag.moved, .tag.requires, .tag.renamed, .tag.wording { color: var(--muted); }
+.ba { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 10px; margin-top: 6px; font-size: 13.5px; }
+.ba div { padding: 8px 10px; border-radius: 6px; background: var(--panel-2); white-space: pre-line; }
+.ba .b { box-shadow: inset 2px 0 0 var(--bad); color: #c9c3b7; }
+.ba .a { box-shadow: inset 2px 0 0 var(--good); }
+.ba .lbl { display: block; font: 600 10.5px/1.6 var(--f-body); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+.news .row { grid-template-columns: 130px minmax(0, 1fr); }
+.kind { font: 600 10.5px/1.6 var(--f-body); letter-spacing: .08em; text-transform: uppercase; margin-right: 6px; }
+.kind.maintenance { color: var(--warn); } .kind.hotfix, .kind.patch { color: var(--epic); } .kind.issues { color: var(--bad); } .kind.news { color: var(--muted); }
+.split { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+
+/* ---------- errors ---------- */
+.err-top { display: grid; gap: 14px; }
+.err-top h1 { font-size: clamp(30px, 5vw, 42px); }
+.search { display: flex; gap: 8px; flex-wrap: wrap; }
+.search input { flex: 1 1 260px; min-width: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; color: var(--fg);
+  padding: 12px 14px; font: 600 20px/1.2 var(--f-data); letter-spacing: .04em; text-transform: uppercase; }
+.search input::placeholder { color: #4b5466; }
+.search input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px color-mix(in oklab, var(--gold) 20%, transparent); }
+.codes { display: flex; flex-wrap: wrap; gap: 6px; }
+.codes .chip { font-family: var(--f-data); }
+.verdict { padding: 16px 18px; border-radius: 10px; border: 1px solid; display: grid; gap: 4px; }
+.verdict.warn { border-color: color-mix(in oklab, var(--warn) 60%, transparent); background: color-mix(in oklab, var(--warn) 10%, var(--panel)); }
+.verdict.ok { border-color: var(--line); background: var(--panel); }
+.verdict b { font-size: 17px; }
+.verdict.warn b { color: var(--warn); }
+.err-card { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 0; }
+.err-card > div { padding: 20px 22px; min-width: 0; }
+.err-card > div + div { border-left: 1px solid var(--line); }
+.err-code { font: 600 28px/1.1 var(--f-data); letter-spacing: .03em; }
+.err-title { font-size: 17px; color: var(--muted); margin-top: 4px; }
+.cat { display: inline-block; margin-top: 10px; font: 600 10.5px/1.6 var(--f-body); letter-spacing: .1em; text-transform: uppercase; padding: 1px 8px; border-radius: 4px; border: 1px solid currentColor; }
+.cat.server { color: var(--warn); } .cat.network { color: #6fb4e8; } .cat.account { color: var(--epic); } .cat.client, .cat.unknown { color: var(--muted); }
+.err-card p { margin: 12px 0 0; max-width: 62ch; }
+.steps { margin: 10px 0 0; padding-left: 22px; display: grid; gap: 7px; }
+.steps li::marker { font-family: var(--f-data); color: var(--gold); }
+.err-card h4 { margin: 18px 0 0; font: 600 11px/1 var(--f-body); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.threads { display: grid; gap: 8px; margin-top: 10px; font-size: 13.5px; }
+.threads a { display: block; text-decoration: none; }
+.threads a b { font-weight: 500; color: var(--fg); }
+.threads a:hover b { color: var(--gold); }
+.threads span { font: 500 12px var(--f-data); color: var(--muted); }
+.chart { width: 100%; height: auto; display: block; margin-top: 10px; overflow: visible; }
+.chart text { font: 500 10px var(--f-data); fill: var(--muted); }
+.chart .bar { fill: color-mix(in oklab, var(--fg) 55%, var(--panel)); }
+.chart .bar.m { fill: var(--warn); }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); margin-top: 6px; flex-wrap: wrap; }
+.legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; vertical-align: 0; }
+
+/* ---------- icons ---------- */
+.ico { width: var(--s, 40px); height: var(--s, 40px); border-radius: 6px; background-repeat: no-repeat; flex: none; display: inline-block; }
+
+/* ---------- talents ---------- */
+.classes { display: flex; gap: 6px; flex-wrap: wrap; }
+.cls { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px 5px 5px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; font-weight: 500; }
+.cls .ico { --s: 28px; border-radius: 5px; }
+.cls[aria-pressed="true"] { border-color: var(--cc); box-shadow: inset 0 0 0 1px var(--cc); color: var(--cc); }
+.cls:not([aria-pressed="true"]) .ico { filter: saturate(.5) brightness(.85); }
+.calc-head { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: space-between; }
+.pts { display: flex; gap: 18px; align-items: baseline; flex-wrap: wrap; }
+.pts .big { font: 600 34px/1 var(--f-data); color: var(--class); }
+.pts .of { color: var(--muted); font-family: var(--f-data); }
+.lvl { display: flex; gap: 8px; align-items: center; }
+.lvl input[type=range] { width: 150px; accent-color: var(--gold); }
+.btn { border: 1px solid var(--line); background: var(--panel); padding: 7px 13px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 13px; }
+.btn:hover { background: var(--panel-2); }
+.btn.primary { border-color: var(--gold-dim); color: var(--gold); }
+.trees { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+/* One talent tree = the in-game panel: the tab's own artwork, a bronze frame, square icon slots and arrows. */
+.tree { position: relative; overflow: hidden; border-radius: 6px; border: 1px solid #6b5631; background: #07090c;
+  box-shadow: inset 0 0 0 1px #000, inset 0 0 0 3px #2a2216, 0 10px 30px -18px #000; isolation: isolate; }
+.tree .art { position: absolute; inset: 0; z-index: -1; background: #10131a center / cover no-repeat; }
+.tree .art::after { content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, #07090ccc 0, #07090c66 60px, #07090c59 55%, #07090ce6 100%), radial-gradient(120% 90% at 50% 40%, transparent 40%, #000a 100%); }
+.tree header { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid #6b563166;
+  background: linear-gradient(180deg, #0a0c10f0, #0a0c10a0); }
+.tree header .ico { --s: 30px; border-radius: 4px; box-shadow: 0 0 0 1px #000, 0 0 0 2px #6b5631; }
+.tree header h3 { font-size: 20px; color: #f4e3b5; text-shadow: 0 1px 2px #000; }
+.tree header .sp { margin-left: auto; font: 600 18px/1 var(--f-data); color: #ffd100; text-shadow: 0 1px 2px #000; min-width: 2ch; text-align: right; }
+.tree header .reset { background: none; border: 0; color: #a99c82; cursor: pointer; font-size: 12px; padding: 4px; }
+.tree header .reset:hover { color: #fff; }
+.tree .body { padding: 18px 10px 20px; }
+.tgrid { --cg: calc(var(--cell) * .62); --rg: calc(var(--cell) * .42); position: relative; display: grid; grid-template-columns: repeat(4, var(--cell)); grid-template-rows: repeat(7, var(--cell));
+  column-gap: var(--cg); row-gap: var(--rg); width: max-content; margin-inline: auto; }
+.tgrid svg.arrows { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 0; }
+.arrows path { fill: none; stroke: #4f5563; stroke-width: .1; stroke-linejoin: round; }
+.arrows path.on { stroke: #f0c541; filter: drop-shadow(0 0 .06px #ffd100); }
+.arrows marker path { stroke: none; fill: #4f5563; }
+.arrows marker.on path { fill: #f0c541; }
+.tal { position: relative; width: var(--cell); height: var(--cell); padding: 0; border: 2px solid #4b4f57; border-radius: 4px; background: #000; cursor: pointer; z-index: 1;
+  box-shadow: 0 0 0 1px #000, 0 2px 6px #000c; transition: border-color .12s, transform .08s, box-shadow .12s; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.tal .ico { --s: 100%; width: 100%; height: 100%; border-radius: 2px; filter: grayscale(1) brightness(.5) contrast(.95); transition: filter .12s; }
+.tal.avail, .tal.some { border-color: #1eff00; box-shadow: 0 0 0 1px #000, 0 0 10px -3px #1eff00; }
+.tal.avail .ico, .tal.some .ico, .tal.max .ico { filter: none; }
+.tal.max { border-color: #ffd100; box-shadow: 0 0 0 1px #000, 0 0 12px -3px #ffd100; }
+.tal:hover { transform: translateY(-1px); }
+.tal:active { transform: scale(.94); }
+.tal.ms::after { content: ""; position: absolute; inset: -6px; border-radius: 7px; border: 1px dashed #ffd10066; pointer-events: none; }
+.tal .rk { position: absolute; right: -8px; bottom: -8px; min-width: 24px; padding: 0 4px; border-radius: 3px; background: #000; border: 1px solid #4b4f57;
+  font: 600 10.5px/15px var(--f-data); color: #9aa0aa; text-align: center; }
+.tal.avail .rk, .tal.some .rk { color: #1eff00; border-color: #1eff0088; }
+.tal.max .rk { color: #ffd100; border-color: #ffd10088; }
+.tal .chg { position: absolute; top: -4px; left: -4px; width: 9px; height: 9px; border-radius: 50%; background: var(--epic); border: 2px solid #000; }
+.tal .lvb { position: absolute; left: -8px; top: -9px; padding: 0 3px; border-radius: 3px; background: #000d; border: 1px solid #ffd10070;
+  font: 600 9.5px/13px var(--f-data); color: #ffd100; pointer-events: none; }
+.tal.plan { border-style: dashed; border-color: #ffd100aa; box-shadow: 0 0 0 1px #000; }
+.tal.plan .ico { filter: grayscale(.2) brightness(.55); }
+.tal.plan .rk { color: #ffd100aa; border-color: #ffd10055; }
+.tal.hl { outline: 2px solid #fff; outline-offset: 3px; }
+/* talents that modify the hovered spell */
+#trees.affing .tal:not(.aff):not(:hover):not(:focus) { opacity: .45; }
+.tal.aff { outline: 2px solid #5fd4ff; outline-offset: 3px; box-shadow: 0 0 0 1px #000, 0 0 18px -2px #5fd4ff; z-index: 3; }
+.tip .aff-l { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--muted); }
+.tip .aff-l span { color: #5fd4ff; font-weight: 600; }
+.tip .aff-l b { font-weight: 500; color: #cfc8ba; }
+.tip .aff-l b.on { color: #ffd100; }
+.tabs-m { display: none; }
+/* leveling planner */
+.planbar { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; padding: 9px 14px; border-radius: 8px; border: 1px solid #ffd10055;
+  background: linear-gradient(90deg, #ffd10014, var(--panel)); font-size: 13.5px; }
+.planbar b { color: #ffd100; font-weight: 600; }
+.np-btn[aria-pressed="true"] { border-color: color-mix(in oklab, var(--epic) 70%, transparent); color: #d9b8ff; background: color-mix(in oklab, var(--epic) 14%, var(--panel)); }
+.npbar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 10px 14px; border-radius: 8px; border: 1px solid color-mix(in oklab, var(--epic) 70%, transparent);
+  background: linear-gradient(90deg, color-mix(in oklab, var(--epic) 20%, var(--panel)), var(--panel)); font-size: 13.5px; }
+.npbar b { color: #e3ccff; }
+.npbar .lg { display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: 12.5px; }
+.npbar .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 2px dashed; margin-left: 6px; }
+.npbar .sw.add { border-color: #c79bff; } .npbar .sw.chg { border-color: #c79bff; border-style: solid; }
+.npbar .btn { margin-left: auto; }
+.tal.np-add { border-style: dashed; border-color: #c79bff; box-shadow: 0 0 0 1px #000, 0 0 12px -3px #c79bff; }
+.tal.np-add .ico { filter: none; opacity: .85; }
+.tal.np-chg::before { content: ""; position: absolute; inset: -4px; border-radius: 6px; border: 1px solid #c79bffaa; pointer-events: none; }
+.tal .npnew { position: absolute; left: 50%; top: -9px; transform: translateX(-50%); padding: 0 3px; border-radius: 3px; background: #2b1745; border: 1px solid #c79bff;
+  font: 700 8.5px/12px var(--f-body); letter-spacing: .05em; color: #e3ccff; pointer-events: none; }
+.notesbar { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; padding: 9px 14px; border-radius: 8px; border: 1px solid color-mix(in oklab, var(--epic) 55%, transparent);
+  background: color-mix(in oklab, var(--epic) 9%, var(--panel)); font-size: 13.5px; }
+.notesbar b { color: var(--fg); font-weight: 600; }
+.notesbar a { white-space: nowrap; }
+.notesbar .btn { margin-left: 0; }
+/* Blizzard's class notes under the trees */
+.cnotes { margin-top: 18px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+.cnotes > header { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 12px 16px; cursor: pointer; }
+.cnotes > header h2 { font-size: 21px; }
+.cnotes > header .cnt { display: flex; gap: 8px; flex-wrap: wrap; font: 600 12px var(--f-data); }
+.cnotes > header .tw { margin-left: auto; color: var(--muted); font-size: 18px; transition: transform .15s; }
+.cnotes.open > header .tw { transform: rotate(180deg); }
+.cnotes .body { display: none; padding: 0 16px 16px; }
+.cnotes.open .body { display: block; }
+.cnotes .src { font-size: 12.5px; color: var(--muted); margin: 0 0 10px; }
+.cnotes .tools { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; font-size: 13px; }
+.cn-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.cn-col h3 { font-size: 17px; margin: 0 0 8px; display: flex; gap: 8px; align-items: center; }
+.cn-col h3 .ico { --s: 22px; border-radius: 3px; }
+.cn-gen { margin-bottom: 14px; }
+.cn-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.cn-item { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; align-items: start; padding: 7px 9px; border-radius: 7px; background: var(--ink); border: 1px solid var(--line); font-size: 13px; line-height: 1.45; }
+.cn-item.tal-link { cursor: pointer; }
+.cn-item.tal-link:hover { border-color: var(--gold-dim); }
+.cn-item .tn { display: block; font-weight: 600; color: #ffd100; font-size: 12.5px; }
+.st { display: inline-block; white-space: nowrap; font: 600 10.5px/18px var(--f-body); letter-spacing: .04em; text-transform: uppercase; padding: 0 6px; border-radius: 4px; border: 1px solid; }
+.st.done { color: var(--good); border-color: color-mix(in oklab, var(--good) 60%, transparent); }
+.st.pending { color: var(--warn); border-color: color-mix(in oklab, var(--warn) 60%, transparent); }
+.st.unknown { color: var(--muted); border-color: var(--line); }
+.tal .nb { position: absolute; left: -4px; bottom: -4px; width: 9px; height: 9px; border-radius: 50%; background: var(--warn); border: 2px solid #000; pointer-events: none; }
+.tip .note-x { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 12.5px; color: #e6c78a; }
+.tip .note-x b { color: var(--warn); font-weight: 600; }
+@media (max-width: 920px) { .cn-cols { grid-template-columns: minmax(0, 1fr); } }
+.planbar { scroll-margin-top: 120px; box-shadow: 0 8px 24px -12px #000; background: linear-gradient(90deg, #2a2412, var(--panel) 60%); }
+.planbar .step { display: flex; gap: 6px; align-items: center; }
+.planbar .step .btn { margin: 0; padding: 5px 9px; }
+.planbar .step input { width: 140px; accent-color: #ffd100; }
+.planbar .btn { margin-left: auto; }
+.planner { padding: 14px 16px 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); }
+.planner > header { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin-bottom: 4px; }
+.planner > header h2 { font-size: 22px; }
+.planner > header .acts { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+.planner .hint { font-size: 12.5px; color: var(--muted); margin: 0 0 12px; max-width: 90ch; }
+.plist { columns: 3 300px; column-gap: 18px; margin: 0; padding: 0; list-style: none; }
+.prow { break-inside: avoid; display: grid; grid-template-columns: 52px 26px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 5px 6px; border-radius: 6px;
+  border: 1px solid transparent; cursor: pointer; }
+.prow:hover { background: var(--panel-2); }
+.prow[aria-current="true"] { background: color-mix(in oklab, #ffd100 12%, var(--panel-2)); border-color: #ffd10066; }
+.prow.drop { box-shadow: inset 0 2px 0 #ffd100; }
+.prow.dragging { opacity: .4; }
+.prow .lv { font: 600 12.5px/1.2 var(--f-data); color: #ffd100; }
+.prow .ico { --s: 26px; border-radius: 3px; box-shadow: 0 0 0 1px #000; }
+.prow .nm { min-width: 0; display: grid; line-height: 1.25; }
+.prow .nm b { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prow .nm span { font: 500 11.5px var(--f-data); color: var(--muted); }
+.prow .mv { display: flex; gap: 2px; }
+.prow .mv button { width: 26px; height: 26px; border-radius: 5px; border: 1px solid var(--line); background: var(--ink); color: var(--muted); cursor: pointer; font-size: 12px; line-height: 1; }
+.prow .mv button:hover:not(:disabled) { color: var(--fg); border-color: var(--gold-dim); }
+.prow .mv button:disabled { opacity: .3; cursor: default; }
+.prow.ms .nm b { color: #ffd100; }
+.pl-ab { display: flex; gap: 6px; align-items: center; font-size: 12.5px; color: var(--muted); margin: 2px 0 8px; }
+.parow { break-inside: avoid; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 7px; align-items: start; padding: 3px 6px; }
+.parow .lv { font: 500 11.5px/22px var(--f-data); color: var(--muted); }
+.parow .abs { display: flex; flex-wrap: wrap; gap: 4px; }
+.parow .ab { display: inline-flex; align-items: center; gap: 5px; padding: 1px 7px 1px 1px; border-radius: 5px; border: 1px solid var(--line); background: var(--ink); font-size: 12px; color: #cfc8ba; cursor: default; max-width: 100%; }
+.parow .ab .ico { --s: 18px; border-radius: 3px; }
+.parow .ab i { font: 600 10.5px var(--f-data); font-style: normal; color: var(--muted); }
+.parow .ab:hover, .parow .ab:focus-visible { border-color: var(--gold-dim); color: var(--fg); outline: none; }
+.pfree { break-inside: avoid; padding: 8px 6px; color: var(--muted); font-size: 12.5px; }
+.btn[aria-pressed="true"] { border-color: #ffd10088; color: #ffd100; background: color-mix(in oklab, #ffd100 10%, var(--panel)); }
+.legacy { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--line);
+  background: linear-gradient(90deg, color-mix(in oklab, var(--gold) 9%, var(--panel)), var(--panel)); }
+.legacy .ico { --s: 34px; border: 1px solid var(--gold-dim); }
+.legacy .hd { display: flex; gap: 10px; align-items: center; min-width: 0; flex: 0 1 auto; }
+.legacy .nm { display: grid; gap: 1px; min-width: 0; }
+.legacy .nm b { font-weight: 600; }
+.legacy .nm span { font-size: 12px; color: var(--muted); }
+.legacy .seg button { font-family: var(--f-data); min-width: 38px; padding: 6px 8px; }
+.legacy .seg button[aria-pressed="true"] { background: color-mix(in oklab, var(--gold) 22%, var(--panel-2)); color: var(--fg); }
+.legacy .eff { font-size: 13px; color: var(--muted); flex: 1 1 260px; min-width: 0; }
+.legacy .eff b { color: var(--gold); font-family: var(--f-data); font-weight: 600; }
+.tal.flag-changed { border-color: var(--bad); box-shadow: 0 0 0 2px color-mix(in oklab, var(--bad) 40%, transparent), 0 0 16px -3px var(--bad); }
+.tal.flag-chain { border-color: var(--warn); border-style: dashed; }
+.tal.flag-changed .ico, .tal.flag-chain .ico { filter: grayscale(.5) brightness(.65); }
+.tal .flagx { position: absolute; top: -7px; right: -7px; width: 16px; height: 16px; border-radius: 50%; background: var(--bad); color: #fff;
+  font: 700 11px/16px var(--f-body); text-align: center; border: 2px solid var(--ink); }
+.tal.flag-chain .flagx { background: var(--warn); color: var(--ink); }
+.banner { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 10px 14px; border-radius: 8px; border: 1px solid color-mix(in oklab, var(--bad) 55%, transparent);
+  background: color-mix(in oklab, var(--bad) 9%, var(--panel)); font-size: 13.5px; }
+.banner b { color: #f3a39e; font-weight: 600; }
+.banner .sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin: 0 4px 0 10px; vertical-align: -1px; }
+.banner button { margin-left: auto; }
+.savebar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.savebar input { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; color: var(--fg); padding: 7px 10px; font: 500 13px var(--f-body); width: 210px; max-width: 100%; }
+.savebar input:focus { outline: none; border-color: var(--gold-dim); }
+.saves { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.save { display: grid; gap: 10px; align-content: start; padding: 14px 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); min-width: 0; }
+.save.cur { border-color: var(--gold-dim); }
+.save.broken { border-color: var(--bad); background: linear-gradient(180deg, color-mix(in oklab, var(--bad) 13%, var(--panel)), var(--panel) 70%); }
+.save header { display: flex; gap: 10px; align-items: center; min-width: 0; }
+.save header .ico { --s: 32px; }
+.save header div { min-width: 0; }
+.save h3 { font: 600 16px/1.25 var(--f-body); letter-spacing: 0; overflow-wrap: anywhere; }
+.save .sub { font: 500 12px/1.4 var(--f-data); color: var(--muted); }
+.save .ex { font: 600 10px/1.6 var(--f-body); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 6px; margin-left: 6px; }
+.save .alert { display: grid; gap: 8px; font-size: 13px; }
+.save .alert > b { color: #f3a39e; font-weight: 600; font-size: 13.5px; }
+.clist { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.clist li { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 8px; align-items: start; }
+.clist .ico { --s: 24px; border-radius: 4px; }
+.clist .nm { font-weight: 500; }
+.clist .why { font-size: 12px; color: var(--muted); }
+.clist details { font-size: 12.5px; margin-top: 2px; }
+.clist summary { cursor: pointer; color: var(--muted); }
+.clist .ba { margin-top: 4px; font-size: 12.5px; grid-template-columns: minmax(0,1fr); gap: 4px; }
+.chainline { color: var(--muted); }
+.chainline b { color: var(--warn); font-weight: 600; }
+.pts-delta { font: 600 13px var(--f-data); }
+.pts-delta s { color: var(--muted); }
+.cmp { margin: 0 0 14px; padding: 14px 16px 16px; border-radius: 10px; border: 1px solid var(--gold-dim); background: var(--panel); }
+.cmp > header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.cmp > header h2 { font-size: 21px; }
+.cmp > header .btn { margin-left: auto; }
+.cmp-heads { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; align-items: center; margin-bottom: 14px; }
+.cmp-heads .vs { font: 600 12px var(--f-data); color: var(--muted); }
+.cmp-h { display: flex; gap: 10px; align-items: center; min-width: 0; padding: 8px 10px; border-radius: 8px; background: var(--ink); border-left: 3px solid; }
+.cmp-h.a { border-color: #6fb4e8; } .cmp-h.b { border-color: #e8a86f; }
+.cmp-h .ico { --s: 30px; }
+.cmp-h div { display: grid; min-width: 0; }
+.cmp-h .sub { font: 500 12px var(--f-data); color: var(--muted); }
+.cmp-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.cmp-col h4 { margin: 0 0 6px; display: flex; gap: 7px; align-items: center; font: 600 14px var(--f-body); }
+.cmp-col h4 .ico { --s: 20px; border-radius: 3px; }
+.cmp-col ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; }
+.cmp-col li { display: grid; grid-template-columns: 22px minmax(0, 1fr) 58px 58px; gap: 6px; align-items: center; font-size: 12.5px; padding: 3px 5px; border-radius: 5px; background: var(--ink); }
+.cmp-col li .ico { --s: 22px; border-radius: 3px; }
+.cmp-col li .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cmp-col li .v { font: 600 12px var(--f-data); text-align: right; color: var(--muted); }
+.cmp-col li .v i { font-style: normal; font-weight: 500; margin-left: 5px; color: #ffd100aa; font-size: 11px; }
+.cmp-col li.more-a .v.a { color: #6fb4e8; } .cmp-col li.more-b .v.b { color: #e8a86f; }
+.cmp-col li.lv .v i { color: #ffd100; }
+@media (max-width: 920px) { .cmp-cols { grid-template-columns: minmax(0, 1fr); } .cmp-heads { grid-template-columns: minmax(0, 1fr); } .cmp-heads .vs { display: none; } }
+.save .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+.save .acts .btn { padding: 6px 10px; font-size: 12.5px; }
+.btn.danger { color: var(--bad); }
+.btn.warnfix { border-color: var(--bad); color: #f3a39e; }
+
+/* talents layout: plan in a rail to the right of the trees, exactly as tall as they are */
+.tc-layout { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; }
+.tc-main { display: grid; gap: 14px; min-width: 0; }
+.rail { display: none; }
+.pl-collapse .ch, .l-short { display: none; }
+.planner > header h2 { flex: none; }
+.planner > header { position: relative; }
+.pl-i { width: 20px; height: 20px; flex: none; margin-right: auto; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: none; color: var(--muted); font: italic 600 12px/18px Georgia, serif; cursor: help; }
+.pl-i:hover, .pl-i.open { color: var(--gold); border-color: var(--gold-dim); }
+.pl-hint { display: none; position: absolute; z-index: 3; top: 100%; left: 0; right: 0; margin: 4px 0 0; padding: 10px 12px; border: 1px solid var(--gold-dim); border-radius: 8px; background: #0a0d12f2; box-shadow: 0 12px 40px #000a; font-size: 12.5px; line-height: 1.45; color: var(--fg); }
+.pl-i:hover ~ .pl-hint, .pl-i:focus-visible ~ .pl-hint, .pl-i.open ~ .pl-hint { display: block; }
+@media (min-width: 921px) {
+  body.wide .wrap { max-width: 1340px; }
+  #planToggle { display: none; }
+  /* trees shrink with the space the plan leaves: 5.86 = 4 cells + 3 column gaps, 30px = frame, padding, share of gaps */
+  .trees { container-type: inline-size; }
+  .tgrid { --cell: min(46px, calc((33.33cqw - 30px) / 5.86)); }
+  .tree header { gap: 6px; }
+  .tree header h3 { font-size: clamp(16px, 1.95cqw, 20px); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tree header .ico, .tree header .reset, .tree header .sp { flex: none; }
+  .tc-side { position: relative; width: 330px; display: flex; overflow: hidden; border-radius: 10px; transition: width .2s ease; }
+  .tc-side.closed { width: 44px; }
+  .rail { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 44px; padding: 12px 0; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--fg); cursor: pointer; }
+  .rail:hover { background: var(--panel-2); border-color: var(--gold-dim); }
+  .rail .ch { color: var(--gold); font-size: 18px; line-height: 1; }
+  .rail .lb { writing-mode: vertical-rl; font-weight: 500; font-size: 13.5px; white-space: nowrap; }
+  .rail .n { font: 600 12px/1 var(--f-data); color: #ffd100; }
+  .planner { position: absolute; top: 0; bottom: 0; left: 0; width: 330px; overflow-y: auto; overscroll-behavior: contain; padding: 0 12px 12px; }
+  .planner > header { position: sticky; top: 0; z-index: 2; flex-wrap: nowrap; gap: 6px; background: var(--panel); padding: 10px 0 8px; margin-bottom: 0; }
+  .planner > header h2 { font-size: 18px; white-space: nowrap; }
+  .planner > header .acts { flex-wrap: nowrap; gap: 4px; }
+  .planner > header .btn { padding: 4px 8px; font-size: 12px; white-space: nowrap; }
+  .l-full { display: none; }
+  .l-short, .pl-collapse .ch { display: inline; }
+  .pl-collapse .ch { font-size: 15px; line-height: 1; }
+  .plist { columns: auto; }
+  .prow { grid-template-columns: 44px 26px minmax(0, 1fr) 24px; gap: 7px; }
+  .prow .mv { flex-direction: column; }
+  .prow .mv button { width: 24px; height: 18px; font-size: 10px; }
+}
+/* no room to push the trees aside: the open plan slides over them */
+@media (min-width: 921px) and (max-width: 1099px) {
+  .tc-layout { grid-template-columns: minmax(0, 1fr) 44px; }
+  .tc-side:not(.closed) { position: absolute; top: 0; bottom: 0; right: 0; z-index: 30; box-shadow: -12px 12px 40px #000c; }
+}
+@media (max-width: 920px) {
+  .tc-layout { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+}
+@media (max-width: 1240px) { .brand span { display: none; } }
+
+/* tooltip */
+.tip { position: fixed; z-index: 50; width: min(340px, calc(100vw - 32px)); background: #0a0d12f2; border: 1px solid var(--gold-dim); border-radius: 8px; padding: 12px 14px;
+  box-shadow: 0 12px 40px #000a; pointer-events: none; font-size: 13.5px; line-height: 1.5; }
+.tip h4 { margin: 0; font: 600 16px/1.25 var(--f-body); }
+.tip .r { font: 500 12px var(--f-data); color: var(--muted); margin: 2px 0 6px; }
+.tip .meta { display: grid; grid-template-columns: 1fr auto; gap: 0 12px; font-size: 12.5px; color: #cfc8ba; margin-bottom: 6px; }
+.tip .meta span:nth-child(2n) { text-align: right; }
+.tip .req { color: var(--bad); font-size: 12.5px; margin-bottom: 4px; }
+.tip .d { color: #f1d488; white-space: pre-line; }
+.tip .cond { opacity: .55; }
+.tip .next { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+.tip .next .lbl { font-size: 12px; color: var(--muted); }
+.tip .next .d { color: #cdb978; }
+.tip .hint { margin-top: 8px; font-size: 11.5px; color: var(--muted); }
+.tip .chgnote { margin-top: 8px; font-size: 12px; color: var(--epic); }
+
+/* bottom sheet (touch) */
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; background: #0b0e14; border-top: 1px solid var(--gold-dim); padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -12px 40px #000c; max-height: 70vh; overflow: auto; }
+.sheet .ctl { display: flex; gap: 10px; margin-top: 12px; }
+.sheet .ctl .btn { flex: 1; padding: 11px; font-size: 15px; }
+
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--panel-2); border: 1px solid var(--gold-dim); padding: 9px 16px; border-radius: 8px; z-index: 70; font-size: 13.5px; }
+footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--muted); display: grid; gap: 6px; }
+
+@media (max-width: 920px) {
+  .status-hero, .split { grid-template-columns: minmax(0, 1fr); }
+  .trees { grid-template-columns: minmax(0, 1fr); }
+  .prow { grid-template-columns: 48px 26px minmax(0, 1fr) auto; }
+  .tree:not(.cur) { display: none; }
+  .tabs-m { display: flex; }
+  .tabs-m .chip { flex: 1; justify-content: center; }
+  .ba { grid-template-columns: minmax(0, 1fr); }
+  .err-card { grid-template-columns: minmax(0, 1fr); }
+  .err-card > div + div { border-left: 0; border-top: 1px solid var(--line); }
+}
+@media (max-width: 560px) {
+  .row { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .news .row { grid-template-columns: minmax(0, 1fr); }
+  .bar .right { margin-left: 0; }
+  .brand span { display: none; }
+  :root { --cell: 48px; }
+  .prow .mv button { width: 32px; height: 32px; }
+  nav { order: 3; flex: 1 1 100%; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+  nav a { padding: 7px 9px; white-space: nowrap; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="bar"><div class="wrap">
+  <a class="brand" href="#status"><b>Forever Hub</b><span data-i18n="tagline"></span></a>
+  <nav>
+    <a href="#status" data-route="status" data-i18n="nav_status"></a>
+    <a href="#changes" data-route="changes" data-i18n="nav_changes"></a>
+    <a href="#talents" data-route="talents" data-i18n="nav_talents"></a>
+    <a href="#errors" data-route="errors" data-i18n="nav_errors"></a>
+    <a href="#archive" data-route="archive" data-i18n="nav_archive"></a>
+  </nav>
+  <div class="right">
+    <span class="pill" id="buildPill"><span class="dot" id="pillDot"></span><span id="pillText">…</span></span>
+    <div class="seg" role="group" aria-label="Language">
+      <button id="lang-ru" data-lang="ru">RU</button><button id="lang-en" data-lang="en">EN</button>
+    </div>
+  </div>
+</div></div>
+
+<main class="wrap">
+  <!-- ================= STATUS ================= -->
+  <section class="view" id="view-status">
+    <div class="status-hero">
+      <div class="panel state">
+        <span class="eyebrow" data-i18n="st_eyebrow"></span>
+        <div class="big"><span class="dot" id="stDot"></span><h1 id="stTitle">…</h1></div>
+        <p id="stText" class="muted"></p>
+        <div id="stCrowd" class="crowd" hidden></div>
+        <p style="margin:0"><a href="#errors" data-i18n="st_err_link"></a></p>
+        <div class="facts" id="facts"></div>
+      </div>
+      <div class="panel countdowns" id="countdowns"></div>
+    </div>
+
+    <div class="section">
+      <header><h2 data-i18n="st_builds"></h2><span class="note" data-i18n="st_builds_note"></span></header>
+      <div class="panel builds" id="builds"></div>
+    </div>
+
+    <div class="section">
+      <header><h2 data-i18n="st_maint"></h2><span class="note" data-i18n="st_maint_note"></span></header>
+      <div class="panel list" id="maint"></div>
+    </div>
+    <p class="note" id="stSource" style="margin-top:14px"></p>
+  </section>
+
+  <!-- ================= CHANGES ================= -->
+  <section class="view" id="view-changes" hidden>
+    <div class="split">
+      <div class="section" style="margin-top:0">
+        <header><h2 data-i18n="ch_title"></h2></header>
+        <p class="note" data-i18n="ch_note" style="margin:0"></p>
+        <div class="toolbar">
+          <label class="muted" for="diffBuild" data-i18n="ch_build"></label>
+          <select id="diffBuild"></select>
+          <select id="diffClass"></select>
+          <label class="check"><input type="checkbox" id="diffNumbers"> <span data-i18n="ch_numbers"></span></label>
+        </div>
+        <div class="changes" id="changes"></div>
+      </div>
+      <div class="section" style="margin-top:0">
+        <header><h2 data-i18n="news_title"></h2></header>
+        <div class="toolbar" id="newsKinds"></div>
+        <div class="panel list news" id="news"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= BETA ARCHIVE ================= -->
+  <section class="view" id="view-archive" hidden>
+    <div class="err-top">
+      <span class="eyebrow" data-i18n="ar_eyebrow"></span>
+      <h1 data-i18n="ar_title"></h1>
+      <p class="muted" id="arLead" style="max-width:68ch;margin:0"></p>
+    </div>
+    <div class="facts" id="arFacts" style="margin-top:18px"></div>
+    <div class="section">
+      <header><h2 data-i18n="ar_timeline"></h2><span class="note" data-i18n="ar_timeline_note"></span></header>
+      <div class="panel builds" id="arBuilds"></div>
+    </div>
+    <div class="split" style="margin-top:28px">
+      <div class="section" style="margin-top:0">
+        <header><h2 data-i18n="ar_diff"></h2></header>
+        <div class="toolbar">
+          <label class="muted" for="arDiffBuild" data-i18n="ch_build"></label>
+          <select id="arDiffBuild"></select>
+          <select id="arDiffClass"></select>
+          <label class="check"><input type="checkbox" id="arDiffNumbers"> <span data-i18n="ch_numbers"></span></label>
+        </div>
+        <div class="changes" id="arChanges"></div>
+      </div>
+      <div>
+        <div class="section" style="margin-top:0">
+          <header><h2 data-i18n="ar_maint_t"></h2></header>
+          <div class="panel list" id="arMaint"></div>
+        </div>
+        <div class="section">
+          <header><h2 data-i18n="ar_topics_t"></h2></header>
+          <div class="panel list news" id="arTopics"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ERRORS ================= -->
+  <section class="view" id="view-errors" hidden>
+    <div class="err-top">
+      <span class="eyebrow" data-i18n="er_eyebrow"></span>
+      <h1 data-i18n="er_title"></h1>
+      <form class="search" id="errForm" autocomplete="off">
+        <label for="errInput" class="eyebrow" style="position:absolute;left:-9999px" data-i18n="er_label"></label>
+        <input id="errInput" inputmode="text" spellcheck="false" placeholder="BLZ51901016">
+        <button class="btn primary" type="submit" data-i18n="er_find"></button>
+      </form>
+      <div class="codes" id="errCodes"></div>
+    </div>
+    <div class="section" id="errResult" style="margin-top:22px"></div>
+    <p class="note" id="errSource" style="margin-top:14px"></p>
+  </section>
+
+  <!-- ================= TALENTS ================= -->
+  <section class="view" id="view-talents" hidden>
+    <div class="classes" id="classes" role="group" aria-label="Class"></div>
+    <div class="section" style="margin-top:22px">
+      <div class="calc-head">
+        <div class="pts">
+          <div><span class="big mono" id="ptsLeft">0</span> <span class="of" data-i18n="tc_left"></span></div>
+          <div class="muted mono" id="ptsSplit"></div>
+        </div>
+        <div class="lvl">
+          <label for="level" class="muted" data-i18n="tc_level"></label>
+          <input type="range" id="level" min="5" max="60" value="60">
+          <span class="mono" id="levelOut" style="min-width:2ch">60</span>
+          <button class="btn" id="capBtn"></button>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" id="planToggle" aria-pressed="false" data-i18n="pl_toggle"></button>
+          <button class="btn np-btn" id="npToggle" aria-pressed="false" hidden></button>
+          <button class="btn" id="resetAll" data-i18n="tc_reset"></button>
+          <button class="btn primary" id="share" data-i18n="tc_share"></button>
+        </div>
+      </div>
+      <div class="legacy" id="legacy" hidden></div>
+      <div class="banner" id="flagBanner" hidden></div>
+      <div class="npbar" id="npBar" hidden></div>
+      <div class="notesbar" id="notesBar" hidden></div>
+      <div class="planbar" id="planBar" hidden></div>
+      <div class="tc-layout">
+      <div class="tc-main">
+      <div class="tabs-m" id="tabsM"></div>
+      <div class="trees" id="trees"></div>
+      </div>
+      <aside class="tc-side closed" id="planSide">
+        <button class="rail" id="planRail" type="button"><span class="ch" aria-hidden="true">«</span><span class="lb" data-i18n="pl_toggle"></span><span class="n" id="planRailN"></span></button>
+        <section class="planner" id="planner" hidden></section>
+      </aside>
+      </div>
+      <p class="note" id="tcNote"></p>
+      <section class="cnotes" id="classNotes" hidden></section>
+    <div class="section" id="svSec">
+      <header><h2 data-i18n="sv_title"></h2><span class="pill" id="svAttention" hidden></span></header>
+      <form class="savebar" id="saveForm" autocomplete="off">
+        <label for="saveName" class="muted" data-i18n="sv_name"></label>
+        <input id="saveName" maxlength="40">
+        <button class="btn primary" type="submit" id="saveBtn" data-i18n="sv_save"></button>
+        <span class="note" data-i18n="sv_local"></span>
+      </form>
+      <section class="cmp" id="cmp" hidden></section>
+      <div class="saves" id="saves"></div>
+    </div>
+    </div>
+  </section>
+
+  <footer>
+    <div id="footData"></div>
+    <div data-i18n="foot_legal"></div>
+  </footer>
+</main>
+
+<div class="tip" id="tip" hidden></div>
+<div class="sheet" id="sheet" hidden></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+"use strict";
+const DATA = "data/";
+const I18N = {
+  ru: {
+    tagline: "статус серверов, изменения и таланты WoW: Forever",
+    aff_title: "Усиливают таланты:",
+    np_on: "Предпросмотр по заметкам",
+    np_off: "Вернуться к игре",
+    np_title: "Дерево по заметкам Blizzard от {d}.",
+    np_text: "Так таланты выглядят по объявлению, пока изменений нет в файлах клиента. Колонка и иконка новых талантов примерные, связи между ними неизвестны, описания — текст Blizzard. Билд здесь не сохраняется.",
+    np_new: "новый",
+    np_chg: "изменён по заметкам",
+    np_badge: "NEW",
+    np_tip: "По заметкам:",
+    np_tip_add: "Новый талант по заметкам:",
+    np_nosave: "В предпросмотре билды не сохраняются: вернитесь к игре, чтобы сохранить",
+    np_saves: "В предпросмотре по заметкам сохранённые билды скрыты: они сделаны на настоящих деревьях. Нажмите «Вернуться к игре».",
+    cmp_btn: "Сравнить",
+    cmp_title: "Сравнение билдов",
+    cmp_close: "Закрыть",
+    cmp_current: "Текущий билд в калькуляторе",
+    cmp_lvl: "ур. {l}",
+    cmp_other_class: "Билды разных классов: сравнить можно только распределение очков по веткам.",
+    cmp_no_diff: "Без различий.",
+    cmp_pick: "Выберите второй билд кнопкой «Сравнить» или сравнивайте с тем, что сейчас открыто в калькуляторе.",
+    cmp_legend: "Показаны только различия: ранги (синим больше у первого, оранжевым у второго) и уровень, на котором талант берётся по плану. Одинаковых талантов: {n}.",
+    ab_toggle: "Способности тренера по уровням",
+    ab_toggle_s: "Спос.",
+    ab_toggle_t: "Показывать, какие заклинания учить у тренера на каждом уровне",
+    ab_rank: "Ранг {r} · с {l} уровня",
+    ab_talent: "нужен талант",
+    nb_pending: "Для класса «{c}» объявлено изменений, которых ещё нет в файлах клиента: {n}.",
+    nb_go: "Показать заметки",
+    cn_title: "Заметки Blizzard: {c}",
+    cn_pending: "только в заметках",
+    cn_done: "уже в игре",
+    cn_unknown: "без проверки",
+    cn_src: "Официальные заметки от {d}, сверены с файлами клиента {b}.",
+    cn_stale: "Калькулятор уже на сборке {b}: статусы обновятся при следующей проверке.",
+    cn_only: "Только то, чего ещё нет в игре",
+    cn_hint: "Текст Blizzard на английском. Статус ставится автоматически: новые и удалённые таланты, ряд, число рангов и цифры. Клик по пункту показывает талант в дереве.",
+    cn_general: "Общее для класса",
+    cn_none: "Нет пунктов.",
+    cn_tip: "Объявлено Blizzard, ещё не в игре:",
+    nb_title: "Официальные заметки Blizzard от {d}.",
+    nb_text: "Часть объявленных изменений талантов может ещё не быть в файлах клиента: калькулятор показывает сборку {b} и обновится сам, когда они появятся.",
+    nb_hide: "Понятно",
+    pl_toggle: "План прокачки",
+    pl_title: "План прокачки",
+    pl_hint: "Очки записываются в том порядке, в котором вы вкачиваете таланты в деревьях. Перетащите строку или нажмите ↑ ↓, чтобы поменять порядок. Клик по строке показывает дерево на этом уровне.",
+    pl_hint_touch: "Очки записываются в том порядке, в котором вы вкачиваете таланты. Кнопки ↑ ↓ меняют порядок, касание строки показывает дерево на этом уровне.",
+    pl_auto: "Упорядочить по рядам",
+    pl_auto_s: "По рядам",
+    pl_about: "Как это работает",
+    pl_hide: "Свернуть",
+    pl_empty: "Вкачайте таланты в деревьях: здесь появится, что брать на каждом уровне.",
+    pl_free: "Свободные очки: {n} (ур. {a}–{b})",
+    pl_up: "Раньше",
+    pl_down: "Позже",
+    pl_preview: "Дерево на <b>{l}</b> уровне: вкачано {n} из {m} очков. Пунктиром отмечены таланты, которые вы возьмёте позже.",
+    pl_preview_exit: "Показать весь билд",
+    pl_bad: "Так нельзя: на {l} уровне «{n}» ещё не взять — {why}.",
+    pl_why_gate: "нужно {p} очков в ветке «{t}»",
+    pl_why_req: "сначала «{n}» {m}/{m}",
+    pl_tip: "Уровни: {list}",
+    pl_auto_done: "Порядок пересобран по рядам",
+    sv_plan: "план прокачки",
+    ar_regions: "US + EU",
+    ar_more: "Показать все ({n})",
+    ar_topics_t: "Синие посты беты",
+    ar_maint_t: "Работы на бете",
+    ar_diff: "Изменения талантов на бете",
+    ar_after: "после закрытия",
+    ar_timeline_note: "Сборки до 70170 вышли до того, как сайт начал разбирать таланты.",
+    ar_timeline: "Сборки беты",
+    ar_topics: "Синие темы",
+    ar_maint: "Работы",
+    ar_final: "Финальная сборка",
+    ar_changes_s: "в {n} сборках",
+    ar_changes: "Изменений талантов",
+    ar_builds_s: "{n} с данными талантов",
+    ar_builds: "Сборок",
+    ar_days: "{n} дн",
+    ar_dates: "Длилась",
+    ar_lead: "Закрытая бета шла с {a} по {b}. Здесь всё, что сайт собрал за это время: сборки, изменения талантов по датамайну, работы и синие посты. Архив больше не обновляется, кроме записи новых бета-сборок, если Blizzard их выпустит.",
+    ar_title: "Бета WoW: Forever",
+    ar_eyebrow: "Архив",
+    tc_note_launch: "Это клиент запуска {b}: таланты совпадают с финальной сборкой беты {f}. После запуска данные обновятся сами с новой сборкой.",
+    news_empty: "Синих постов пока нет.",
+    ch_archive_link: "Открыть изменения беты →",
+    ch_empty_launch: "Клиент запуска {b} не отличается по талантам от финальной сборки беты {f}. Изменения появятся здесь с первой сборкой после запуска.",
+    st_maint_empty: "После беты объявлений о работах пока не было.",
+    from_beta: "как в финале беты",
+    cd_archive_s: "{a} → {b} · {n} сборок · в архиве →",
+    cd_archive: "Бета",
+    cd_since: "С запуска",
+    f_launch_s: "в вашем часовом поясе",
+    f_launch: "Запуск",
+    st_prelaunch_t: "Бета закончилась {d} и перенесена в архив. Серверы откроются {l}. Клиент запуска уже раздаётся в Battle.net: его можно скачать заранее.",
+    st_prelaunch: "Ждём запуска",
+    er_now_closed: "Серверы WoW: Forever ещё не открыты: бета закончилась, запуск {l}. До запуска войти не получится, ошибки при входе сейчас ожидаемы.",
+    nav_archive: "Архив беты",
+    nav_status: "Статус", nav_changes: "Изменения", nav_talents: "Таланты", nav_errors: "Ошибки",
+    st_err_link: "Ошибка при входе? Найдите её по коду →",
+    er_eyebrow: "Ошибки входа и отключения", er_title: "Что значит код ошибки", er_label: "Код ошибки", er_find: "Найти",
+    er_now_maint: "Сейчас на серверах идут работы{u}. Эта ошибка вызвана ими: чинить ничего не нужно, дождитесь открытия.",
+    er_until: " до {t}", er_reopen_unknown: "Время окончания Blizzard не назвали.",
+    er_now_ok: "Работ сейчас не объявлено, значит причина скорее на вашей стороне. Пройдите шаги по порядку.",
+    er_now_acc: "Ошибка связана с учётной записью или лицензией, работы на сервере на неё не влияют.",
+    er_spike: "За последние сутки на форумах {n} новых сообщений с этим кодом: проблема массовая.",
+    er_meaning: "Что это значит", er_steps: "Что делать", er_players: "Что пишут игроки", er_official: "Статья поддержки Blizzard ↗",
+    er_activity: "Жалобы на форумах по дням", er_maint_days: "дни работ", er_reports: "сообщений",
+    er_threads: "Свежие темы", er_total: "{n} сообщений за всё время наблюдений",
+    er_unknown: "Этого кода нет в нашей базе", er_unknown_t: "Начните с общих шагов ниже и поищите код на форумах Blizzard.",
+    er_forum_search: "Искать на форуме", er_cat_server: "сервер", er_cat_network: "сеть", er_cat_account: "учётная запись", er_cat_client: "клиент", er_cat_unknown: "неизвестно",
+    er_source: "Объяснения сверены со статьями поддержки Blizzard и форумами 8 октября 2026. Счётчики сообщений обновлены {g}.",
+    er_bad: "Код выглядит как BLZ51901016 или WOW51900319: три буквы и восемь цифр.",
+    st_eyebrow: "Серверы WoW: Forever",
+    st_online: "Работает", st_online_t: "Объявленных работ нет, игроки массово не жалуются. Прямой опрос реалмов появится, когда Blizzard откроет API для Forever.",
+    st_maint_now: "Обслуживание", st_maint_now_t: "Blizzard объявили работы на серверах. Обычно они идут 1–3 часа, иногда с новой сборкой.",
+    st_maint_eta: "Blizzard закрыли серверы на работы и ожидают открыть их к {t}.", st_maint_eta_more: "После таких работ часто выходит новая сборка.",
+    st_new_build: "Новая сборка {b} уже раздаётся: клиент можно обновить заранее, но войти получится только после открытия.",
+    st_reopening: "Blizzard написали в {t}, что серверы вот-вот откроются, но подтверждения пока нет, а игроки всё ещё пишут, что вход недоступен.",
+    st_stale: "Нет свежих данных", st_stale_t: "Статус последний раз проверялся {a}. Без свежей проверки сайт не показывает «работает».",
+    st_reports: "Похоже, не работает", st_reports_t: "Blizzard работы не объявляли, но игроки за последний час массово пишут, что не могут зайти.",
+    st_crowd: "Игроки пишут ({n})",
+    st_maint_soon: "Скоро обслуживание", st_maint_soon_t: "Объявлены работы на серверах, начало {t}.",
+    st_ended: "Бета завершена", st_ended_t: "Бета-тест закончился {d}. Запуск игры: {l}.",
+    st_live: "Игра запущена", st_live_t: "WoW: Forever вышел. Данные беты остаются для сравнения.",
+    f_build: "Сборка клиента", f_build_s: "WoW: Forever в Battle.net",
+    f_updated: "Сборка обновлена", f_cap: "Кап уровня", f_cap_s: "на запуске",
+    f_news: "Синие посты за 7 дней",
+    cd_beta: "До конца беты", cd_launch: "До запуска", cd_days: "д", cd_h: "ч", cd_m: "мин",
+    st_builds: "Сборки клиента", st_builds_note: "Только клиент WoW: Forever. Каждая сборка разбирается автоматически; фиолетовая точка означает изменения талантов. Сборки беты — в архиве.",
+    st_maint: "Работы на сервере", st_maint_note: "Из официальных постов Blizzard, время показано в вашем часовом поясе.",
+    show_changes: "изменений: {n}", no_changes: "таланты без изменений", first_build: "первая сборка",
+    st_source: "Данные собраны {g}. Источники: сервер версий Battle.net, архив сборок wago.tools, форум Blizzard.",
+    ch_title: "Изменения талантов", ch_note: "Сравнение файлов клиента между сборками. Это датамайн: изменения видны раньше официальных патч-ноутов. Изменения времён беты — в архиве.",
+    ch_build: "Сборка", ch_all: "Все классы", ch_numbers: "Только изменения цифр",
+    ch_empty: "В этой сборке таланты не менялись.", ch_before: "Было", ch_after: "Стало",
+    k_added: "новый", k_removed: "удалён", k_ranks: "ранги", k_text: "описание", k_meta: "параметры", k_gate: "требование", k_requires: "связь", k_moved: "перемещён", k_renamed: "переименован", k_wording: "формулировка",
+    ranks_v: "рангов: {a} → {b}", gate_v: "очков в ветке: {a} → {b}",
+    news_title: "Синие посты", nk_all: "Все", nk_maintenance: "Работы", nk_patch: "Патчи", nk_hotfix: "Хотфиксы", nk_issues: "Проблемы", nk_news: "Новости",
+    tc_left: "очков осталось", tc_level: "Уровень", tc_cap: "Кап беты: {n}", tc_reset: "Сбросить всё", tc_share: "Ссылка на билд",
+    tc_copied: "Ссылка скопирована", tc_copy_fail: "Скопируйте ссылку из адресной строки",
+    tc_rank: "Ранг {a}/{b}", tc_next: "Следующий ранг:", tc_req_pts: "Нужно {n} очков в ветке «{t}»", tc_req_tal: "Нужно: {n} ({m}/{m})",
+    tc_hint_desktop: "ЛКМ — добавить, ПКМ — убрать", tc_add: "Добавить", tc_remove: "Убрать",
+    tc_changed: "Изменён в сборке {b}", tc_over: "Потрачено больше очков, чем доступно на {l} уровне",
+    tc_note: "Данные сборки {b}. Значения рангов взяты из файлов клиента; эффекты, зависящие от силы атаки и заклинаний, показаны без экипировки. Пунктирная рамка обозначает ключевой талант ряда.",
+    tc_reset_tab: "сброс",
+    lg_label: "Legacy", lg_none: "нет", lg_tier: "ступень {k}: очки с {l} уровня",
+    lg_req: "Открывается за {g} очков Legacy во втором дереве и «{r}» {m}/{m}.",
+    lg_eff: "Первое очко талантов на {s} уровне вместо 10. На {l} уровне: <b>{p}</b> {w} вместо {b}.", w_points: "очко|очка|очков",
+    lg_eff_none: "Выберите ступень, если она открыта у вас в Legacy: очки талантов начнут приходить раньше 10 уровня.",
+    lg_eff_max: "Первое очко на {s} уровне. На {l} уровне прибавки нет: потолок 51 очко.",
+    sv_legacy: "Legacy {k}",
+    sv_title: "Мои билды", sv_name: "Название", sv_save: "Сохранить билд", sv_local: "Билды хранятся в этом браузере.", sv_cloud: "Билды хранятся в вашем аккаунте Claude и доступны на всех устройствах.",
+    sv_cloud_err: "Не удалось сохранить в аккаунт, попробуйте ещё раз", sv_migrated: "Билды из этого браузера перенесены в аккаунт: {n}",
+    sv_saved: "Билд «{n}» сохранён", sv_updated: "Билд «{n}» обновлён", sv_empty: "Сохранённых билдов пока нет. Соберите билд и нажмите «Сохранить билд».",
+    sv_example: "пример", sv_open: "Открыть", sv_fix: "Сохранить исправленный", sv_link: "Ссылка", sv_del: "Удалить", sv_del_sure: "Точно удалить?",
+    sv_meta: "ур. {l} · сборка {b} · {d}", sv_attention: "требуют внимания: {n}",
+    sv_broken: "В новой сборке изменились таланты этого билда: {n}",
+    sv_gone: "удалён из игры", sv_changed_in: "изменён в сборке {b}", sv_changed: "изменён",
+    sv_before_after: "было / стало", sv_was: "В билде (ранг {r})", sv_now: "Сейчас",
+    sv_chain: "Убраны по цепочке: {list}. Им не хватает очков в ряду или вкачанного предыдущего таланта.",
+    sv_points: "Очков в билде",
+    sv_ok_same: "Актуален для текущей сборки",
+    sv_ok_older: "Сохранён на сборке {b}, его таланты с тех пор не менялись",
+    fl_banner: "Билд «{n}» открыт без изменённых талантов.", fl_changed: "изменён", fl_chain: "убран по цепочке", fl_hide: "Скрыть отметки",
+    fl_tip_changed: "Был в билде «{n}» (ранг {r}). Убран: талант изменён в новой сборке.",
+    fl_tip_gone: "Был в билде «{n}» (ранг {r}). Убран: талант удалён из игры.",
+    fl_tip_chain: "Был в билде «{n}» (ранг {r}). Убран по цепочке: после изменений не хватает очков или предыдущего таланта.",
+    passive: "Пассивный",
+    foot_legal: "Фанатский сайт, не связан с Blizzard Entertainment. World of Warcraft и WoW: Forever являются товарными знаками Blizzard.",
+    foot_data: "Сборка {b} · данные обновлены {g}",
+    ago_m: "{n} мин назад", ago_h: "{n} ч назад", ago_d: "{n} дн назад", soon: "скоро",
+  },
+  en: {
+    tagline: "WoW: Forever server status, changes and talents",
+    aff_title: "Modified by talents:",
+    np_on: "Preview by the notes",
+    np_off: "Back to the game",
+    np_title: "Trees by Blizzard's notes from {d}.",
+    np_text: "This is how the talents look as announced, while the client files do not have the changes yet. Column and icon of new talents are guesses, their links are unknown, descriptions are Blizzard's text. Builds are not saved here.",
+    np_new: "new",
+    np_chg: "changed by the notes",
+    np_badge: "NEW",
+    np_tip: "Per the notes:",
+    np_tip_add: "New talent per the notes:",
+    np_nosave: "Builds are not saved in the preview: go back to the game to save",
+    np_saves: "Saved builds are hidden in the preview: they are built on the real trees. Press “Back to the game”.",
+    cmp_btn: "Compare",
+    cmp_title: "Build comparison",
+    cmp_close: "Close",
+    cmp_current: "Build open in the calculator",
+    cmp_lvl: "lvl {l}",
+    cmp_other_class: "Builds of different classes: only the point split per tree can be compared.",
+    cmp_no_diff: "No differences.",
+    cmp_pick: "Pick a second build with “Compare”, or compare with the build open in the calculator.",
+    cmp_legend: "Only differences are shown: ranks (blue = more in the first, orange = more in the second) and the level the plan takes the talent at. Identical talents: {n}.",
+    ab_toggle: "Trainer abilities by level",
+    ab_toggle_s: "Abil.",
+    ab_toggle_t: "Show which spells to learn from the trainer at every level",
+    ab_rank: "Rank {r} · from level {l}",
+    ab_talent: "needs the talent",
+    nb_pending: "{n} announced changes for {c} are not in the client files yet.",
+    nb_go: "Show notes",
+    cn_title: "Blizzard notes: {c}",
+    cn_pending: "notes only",
+    cn_done: "in the game",
+    cn_unknown: "not checked",
+    cn_src: "Official notes from {d}, checked against client build {b}.",
+    cn_stale: "The calculator is already on build {b}: statuses refresh on the next check.",
+    cn_only: "Only what is not in the game yet",
+    cn_hint: "Status is set automatically: new and removed talents, row, rank count and numbers. Click an item to see the talent in the tree.",
+    cn_general: "Class-wide",
+    cn_none: "No items.",
+    cn_tip: "Announced by Blizzard, not in the game yet:",
+    nb_title: "Official Blizzard notes from {d}.",
+    nb_text: "Some announced talent changes may not be in the client files yet: the calculator shows build {b} and updates on its own when they arrive.",
+    nb_hide: "Got it",
+    pl_toggle: "Leveling plan",
+    pl_title: "Leveling plan",
+    pl_hint: "Points are recorded in the order you spend them in the trees. Drag a row or press ↑ ↓ to change the order. Click a row to see the trees at that level.",
+    pl_hint_touch: "Points are recorded in the order you spend them. ↑ ↓ change the order; tap a row to see the trees at that level.",
+    pl_auto: "Order by rows",
+    pl_auto_s: "By rows",
+    pl_about: "How this works",
+    pl_hide: "Collapse",
+    pl_empty: "Spend points in the trees and this shows what to take at every level.",
+    pl_free: "Unspent points: {n} (levels {a}–{b})",
+    pl_up: "Earlier",
+    pl_down: "Later",
+    pl_preview: "Trees at level <b>{l}</b>: {n} of {m} points spent. Dashed slots are talents you take later.",
+    pl_preview_exit: "Show the full build",
+    pl_bad: "Not possible: “{n}” would not be available yet at level {l} ({why}).",
+    pl_why_gate: "needs {p} points in {t}",
+    pl_why_req: "needs {n} {m}/{m} first",
+    pl_tip: "Levels: {list}",
+    pl_auto_done: "Order rebuilt by rows",
+    sv_plan: "leveling plan",
+    ar_regions: "US + EU",
+    ar_more: "Show all ({n})",
+    ar_topics_t: "Beta blue posts",
+    ar_maint_t: "Beta maintenance",
+    ar_diff: "Beta talent changes",
+    ar_after: "after close",
+    ar_timeline_note: "Builds before 70170 shipped before the site started parsing talents.",
+    ar_timeline: "Beta builds",
+    ar_topics: "Blue topics",
+    ar_maint: "Maintenance",
+    ar_final: "Final build",
+    ar_changes_s: "in {n} builds",
+    ar_changes: "Talent changes",
+    ar_builds_s: "{n} with talent data",
+    ar_builds: "Builds",
+    ar_days: "{n} days",
+    ar_dates: "Lasted",
+    ar_lead: "The closed beta ran from {a} to {b}. Here is everything the site collected: builds, datamined talent changes, maintenance and blue posts. The archive is frozen, except that new beta builds get recorded if Blizzard ships any.",
+    ar_title: "WoW: Forever beta",
+    ar_eyebrow: "Archive",
+    tc_note_launch: "This is launch client {b}: talents match the final beta build {f}. After launch the data updates on its own with each new build.",
+    news_empty: "No blue posts yet.",
+    ch_archive_link: "Open beta changes →",
+    ch_empty_launch: "Launch client {b} has the same talents as the final beta build {f}. Changes will show here from the first post-launch build.",
+    st_maint_empty: "No maintenance announced since the beta.",
+    from_beta: "same as final beta",
+    cd_archive_s: "{a} → {b} · {n} builds · archived →",
+    cd_archive: "Beta",
+    cd_since: "Since launch",
+    f_launch_s: "in your time zone",
+    f_launch: "Launch",
+    st_prelaunch_t: "The beta ended {d} and is now archived. Servers open {l}. The launch client is already on Battle.net, so you can download it early.",
+    st_prelaunch: "Awaiting launch",
+    er_now_closed: "WoW: Forever servers are not open yet: the beta is over and launch is {l}. Login errors are expected until then.",
+    nav_archive: "Beta archive",
+    nav_status: "Status", nav_changes: "Changes", nav_talents: "Talents", nav_errors: "Errors",
+    st_err_link: "Login error? Look it up by code →",
+    er_eyebrow: "Login and disconnect errors", er_title: "What does this error code mean", er_label: "Error code", er_find: "Look up",
+    er_now_maint: "The servers are down for maintenance right now{u}. That is what causes this error: nothing to fix, wait until they reopen.",
+    er_until: " until {t}", er_reopen_unknown: "Blizzard did not give an end time.",
+    er_now_ok: "No maintenance is announced, so the cause is more likely on your side. Work through the steps in order.",
+    er_now_acc: "This error is about your account or license; server maintenance does not affect it.",
+    er_spike: "{n} new forum posts with this code in the last day: it is widespread.",
+    er_meaning: "What it means", er_steps: "What to do", er_players: "What players report", er_official: "Blizzard support article ↗",
+    er_activity: "Forum reports per day", er_maint_days: "maintenance days", er_reports: "posts",
+    er_threads: "Recent threads", er_total: "{n} posts since tracking began",
+    er_unknown: "This code is not in our database", er_unknown_t: "Start with the general steps below and search the Blizzard forums for the code.",
+    er_forum_search: "Search the forum", er_cat_server: "server", er_cat_network: "network", er_cat_account: "account", er_cat_client: "client", er_cat_unknown: "unknown",
+    er_source: "Explanations checked against Blizzard support articles and forums on Oct 8, 2026. Post counts updated {g}.",
+    er_bad: "A code looks like BLZ51901016 or WOW51900319: three letters and eight digits.",
+    st_eyebrow: "WoW: Forever servers",
+    st_online: "Up", st_online_t: "No maintenance announced and no wave of player reports. Direct realm checks arrive once Blizzard opens an API for Forever.",
+    st_maint_now: "Maintenance", st_maint_now_t: "Blizzard announced server maintenance. It usually takes 1–3 hours, sometimes with a new build.",
+    st_maint_eta: "Blizzard took the servers down for maintenance and expect them back by {t}.", st_maint_eta_more: "A new build often follows.",
+    st_new_build: "New build {b} is already downloadable: update the client now, but you can log in only after realms reopen.",
+    st_reopening: "At {t} Blizzard said the servers are coming back imminently, but it is not confirmed and players still report they cannot log in.",
+    st_stale: "No fresh data", st_stale_t: "Status was last checked {a}. Without a fresh check the site will not show it as up.",
+    st_reports: "Looks down", st_reports_t: "Blizzard announced nothing, but in the last hour many players report they cannot log in.",
+    st_crowd: "Player reports ({n})",
+    st_maint_soon: "Maintenance soon", st_maint_soon_t: "Server maintenance is announced, starting {t}.",
+    st_ended: "Beta ended", st_ended_t: "The beta ended {d}. Launch: {l}.",
+    st_live: "Live", st_live_t: "WoW: Forever has launched. Beta data stays available for comparison.",
+    f_build: "Client build", f_build_s: "WoW: Forever on Battle.net",
+    f_updated: "Build updated", f_cap: "Level cap", f_cap_s: "at launch",
+    f_news: "Blue posts, last 7 days",
+    cd_beta: "Beta ends in", cd_launch: "Launch in", cd_days: "d", cd_h: "h", cd_m: "min",
+    st_builds: "Client builds", st_builds_note: "WoW: Forever client only. Every build is parsed automatically; a purple dot means talents changed. Beta builds are in the archive.",
+    st_maint: "Server maintenance", st_maint_note: "From Blizzard's official posts, times shown in your time zone.",
+    show_changes: "{n} changes", no_changes: "no talent changes", first_build: "first build",
+    st_source: "Data collected {g}. Sources: Battle.net version server, wago.tools build archive, Blizzard forums.",
+    ch_title: "Talent changes", ch_note: "Client files compared between builds. This is datamining: changes show up before official patch notes. Beta-era changes are in the archive.",
+    ch_build: "Build", ch_all: "All classes", ch_numbers: "Number changes only",
+    ch_empty: "No talent changes in this build.", ch_before: "Before", ch_after: "After",
+    k_added: "new", k_removed: "removed", k_ranks: "ranks", k_text: "tooltip", k_meta: "stats", k_gate: "requirement", k_requires: "link", k_moved: "moved", k_renamed: "renamed", k_wording: "wording",
+    ranks_v: "ranks: {a} → {b}", gate_v: "points in tree: {a} → {b}",
+    news_title: "Blue posts", nk_all: "All", nk_maintenance: "Maintenance", nk_patch: "Patches", nk_hotfix: "Hotfixes", nk_issues: "Issues", nk_news: "News",
+    tc_left: "points left", tc_level: "Level", tc_cap: "Beta cap: {n}", tc_reset: "Reset all", tc_share: "Copy build link",
+    tc_copied: "Link copied", tc_copy_fail: "Copy the link from the address bar",
+    tc_rank: "Rank {a}/{b}", tc_next: "Next rank:", tc_req_pts: "Requires {n} points in {t}", tc_req_tal: "Requires {m} points in {n}",
+    tc_hint_desktop: "Left-click to add, right-click to remove", tc_add: "Add point", tc_remove: "Remove point",
+    tc_changed: "Changed in build {b}", tc_over: "More points spent than a level {l} character has",
+    tc_note: "Data from build {b}. Rank values come from the game client; effects that scale with attack or spell power are shown without gear. A dashed frame marks a row's key talent.",
+    tc_reset_tab: "reset",
+    lg_label: "Legacy", lg_none: "off", lg_tier: "tier {k}: points from level {l}",
+    lg_req: "Unlocks with {g} Legacy points in the second tree and “{r}” {m}/{m}.",
+    lg_eff: "First talent point at level {s} instead of 10. At level {l}: <b>{p}</b> {w} instead of {b}.", w_points: "point|points|points",
+    lg_eff_none: "Pick the tier you have unlocked in Legacy: talent points start before level 10.",
+    lg_eff_max: "First point at level {s}. No bonus at level {l}: the cap is 51 points.",
+    sv_legacy: "Legacy {k}",
+    sv_title: "My builds", sv_name: "Name", sv_save: "Save build", sv_local: "Builds are stored in this browser.", sv_cloud: "Builds are stored in your Claude account and available on all your devices.",
+    sv_cloud_err: "Could not save to your account, try again", sv_migrated: "Builds from this browser moved to your account: {n}",
+    sv_saved: "Build “{n}” saved", sv_updated: "Build “{n}” updated", sv_empty: "No saved builds yet. Make a build and press Save build.",
+    sv_example: "example", sv_open: "Open", sv_fix: "Save fixed build", sv_link: "Link", sv_del: "Delete", sv_del_sure: "Delete for sure?",
+    sv_meta: "lvl {l} · build {b} · {d}", sv_attention: "{n} need attention",
+    sv_broken: "Talents in this build changed in the new game build: {n}",
+    sv_gone: "removed from the game", sv_changed_in: "changed in build {b}", sv_changed: "changed",
+    sv_before_after: "before / after", sv_was: "In your build (rank {r})", sv_now: "Now",
+    sv_chain: "Removed down the chain: {list}. They lack points in their row or a maxed prerequisite.",
+    sv_points: "Points in build",
+    sv_ok_same: "Up to date with the current build",
+    sv_ok_older: "Saved on build {b}; its talents have not changed since",
+    fl_banner: "Build “{n}” opened without its changed talents.", fl_changed: "changed", fl_chain: "removed down the chain", fl_hide: "Hide marks",
+    fl_tip_changed: "Was in “{n}” (rank {r}). Removed: the talent changed in the new build.",
+    fl_tip_gone: "Was in “{n}” (rank {r}). Removed: the talent no longer exists.",
+    fl_tip_chain: "Was in “{n}” (rank {r}). Removed down the chain: after the changes it lacks points or a prerequisite.",
+    passive: "Passive",
+    foot_legal: "Fan site, not affiliated with Blizzard Entertainment. World of Warcraft and WoW: Forever are trademarks of Blizzard.",
+    foot_data: "Build {b} · data updated {g}",
+    ago_m: "{n} min ago", ago_h: "{n} h ago", ago_d: "{n} d ago", soon: "soon",
+  },
+};
+
+const S = {
+  lang: "ru", route: "status", index: null, status: null, news: null, icons: null, errors: null, errCode: null,
+  example: null, flags: null, activeSave: null, delArm: null, legacy: 0,
+  talents: {}, diffs: {}, cls: "MAGE", level: 60, ranks: {}, mobileTab: 0, newsKind: "all",
+  diffBuild: null, diffClass: "", diffNumbers: false,
+  archive: null, arBuild: null, arTopicsAll: false,
+  abil: {}, cmp: [], np: false, npStash: null, npCache: null, order: [], preview: null, previewRanks: null, planner: false, pendingOrder: null, dragRun: null,
+};
+const ROUTES = ["status", "changes", "talents", "errors", "archive"];
+const phase = () => S.status?.phase || S.index?.phase || "beta";
+const launchMs = () => Date.parse(S.status?.dates?.launch || "2026-11-04T23:00:00Z");
+const betaClosedMs = () => Date.parse(S.status?.dates?.beta_closed || ((S.status?.dates?.beta_end || "2026-10-21") + "T21:00:00Z"));
+/* every build the site knows: archived beta builds + live builds (saved builds may date from the beta) */
+function allBuilds() {
+  const m = new Map();
+  for (const b of S.archive?.builds || []) if (b.talents) m.set(b.version, b);
+  for (const b of S.index?.builds || []) m.set(b.version, b);
+  return [...m.values()].sort((a, b) => a.build - b.build);
+}
+const nChanges = (b) => b?.changesByLang?.[S.lang] ?? b?.changes ?? 0;
+const day = (iso) => fmtDate(iso.length === 10 ? iso + "T12:00:00Z" : iso, { day: "numeric", month: "long" });
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const t = (k, v = {}) => (I18N[S.lang][k] ?? k).replace(/\{(\w+)\}/g, (_, x) => v[x] ?? "");
+const store = { get(k, d) { try { const v = localStorage.getItem("fh." + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+                set(k, v) { try { localStorage.setItem("fh." + k, JSON.stringify(v)); } catch {} } };
+const isTouch = matchMedia("(hover: none)").matches;
+
+async function getJSON(p) { const r = await fetch(DATA + p); if (!r.ok) throw new Error(p + " " + r.status); return r.json(); }
+
+function fmtDate(iso, opts = { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) {
+  if (!iso) return "—";
+  const d = new Date(iso.includes("T") ? iso : iso.replace(" ", "T") + "Z");
+  return d.toLocaleString(S.lang === "ru" ? "ru-RU" : "en-US", opts);
+}
+function ago(iso) {
+  const d = new Date(iso.includes("T") ? iso : iso.replace(" ", "T") + "Z");
+  const m = Math.round((Date.now() - d) / 60000);
+  if (m < 0) return t("soon");
+  if (m < 60) return t("ago_m", { n: m });
+  if (m < 60 * 36) return t("ago_h", { n: Math.round(m / 60) });
+  return t("ago_d", { n: Math.round(m / 1440) });
+}
+function iconStyle(name) {
+  const I = S.icons; if (!I) return "";
+  const p = I.icons[name] || I.icons["inv_misc_questionmark"] || [0, 0];
+  const sz = I.size;
+  return `background-image:url(${DATA}icons.jpg);background-size:${I.width / sz * 100}% ${I.height / sz * 100}%;` +
+         `background-position:${p[0] / (I.width - sz) * 100}% ${p[1] / (I.height - sz) * 100}%`;
+}
+
+/* ===================== i18n + routing ===================== */
+function applyI18n() {
+  document.documentElement.lang = S.lang;
+  document.querySelectorAll("[data-i18n]").forEach((el) => (el.textContent = t(el.dataset.i18n)));
+  document.querySelectorAll("[data-lang]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === S.lang)));
+  updateSaveNote();
+}
+function parseHash() {
+  const h = location.hash.slice(1);
+  if (/^e-[A-Za-z]{3}\d{8}$/.test(h)) { S.route = "errors"; S.errCode = h.slice(2).toUpperCase(); return; }
+  if (h.startsWith("t-")) {               // #t-mage-L60-<tab0>_<tab1>_<tab2>
+    const [, cls, ...rest] = h.split("-");   // #t-mage-L30[-T3]-<code>
+    S.route = "talents";
+    if (cls) S.cls = cls.toUpperCase();
+    let code = ""; S.pendingOrder = null;
+    for (const part of rest) {
+      if (/^L\d+$/.test(part)) S.level = Math.min(60, Math.max(5, +part.slice(1)));
+      else if (/^T\d$/.test(part)) S.legacy = +part.slice(1);
+      else if (/^O[0-9a-z]*$/.test(part)) S.pendingOrder = part.slice(1);
+      else code = part;
+    }
+    S.pendingCode = code;
+  } else if (ROUTES.includes(h)) S.route = h;
+}
+function setRoute(r) {
+  S.route = r;
+  document.body.classList.toggle("wide", r === "talents");
+  document.querySelectorAll("[data-route]").forEach((a) => a.dataset.route === r ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
+  for (const v of ROUTES) $("#view-" + v).hidden = v !== r;
+  scrollTo(0, 0);   // "#changes" is also an element id: don't let the browser jump into the list
+  hideTip();
+  render();
+}
+
+/* ===================== status ===================== */
+const STALE_MS = 2 * 3600e3;   // older status data is not trusted to say "up"
+function crowdRecent(st, sinceMs) {
+  const since = Math.max(sinceMs, Date.now() - 60 * 60e3);
+  return (st.crowd?.topics || []).filter((x) => Date.parse(x.created) >= since);
+}
+function computeState() {
+  const st = S.status; const now = Date.now();
+  // between the end of the beta and launch there is no server to be up
+  if (now > betaClosedMs() && now < launchMs()) return { k: "prelaunch", dot: "" };
+  const age = now - Date.parse(st.generated);
+  for (const m of st.maintenance || []) {
+    if (!m.start) continue;
+    const s = Date.parse(m.start);
+    // Over only when confirmed, or once the promised/announced time has passed AND players stopped reporting it down.
+    const e = m.reopened ? Date.parse(m.reopened)
+      : m.reopening ? Date.parse(m.reopening) + 30 * 60e3
+      : m.end ? Date.parse(m.end) + 30 * 60e3 : s + 3 * 3600e3;
+    const reports = crowdRecent(st, e - 30 * 60e3);
+    if (now >= s - 15 * 60e3 && (now <= e || (!m.reopened && reports.length >= 2 && now - e < 6 * 3600e3)))
+      return { k: "now", dot: "warn", m, reports: crowdRecent(st, s) };
+    if (s > now && s - now < 24 * 3600e3) return { k: "soon", dot: "warn", m };
+  }
+  if (age > STALE_MS) return { k: "stale", dot: "", age };
+  const reports = crowdRecent(st, 0);
+  if (reports.length >= 3) return { k: "reports", dot: "bad", reports };
+  return { k: "online", dot: "good" };
+}
+function renderStatus() {
+  const st = S.status, idx = S.index;
+  if (!st) return;
+  const s = computeState();
+  const latest = (idx?.builds || []).at(-1);
+  $("#stDot").className = "dot " + s.dot;
+  const map = { online: ["st_online", "st_online_t"], now: ["st_maint_now", "st_maint_now_t"], soon: ["st_maint_soon", "st_maint_soon_t"], prelaunch: ["st_prelaunch", "st_prelaunch_t"],
+    stale: ["st_stale", "st_stale_t"], reports: ["st_reports", "st_reports_t"] };
+  const [a, b] = map[s.k];
+  $("#stTitle").textContent = t(a);
+  const newBuild = s.k === "now" && latest && Date.parse(latest.seen.includes("T") ? latest.seen : latest.seen.replace(" ", "T") + "Z") > Date.parse(s.m.start);
+  if (s.k === "now" && s.m.reopening && !s.m.reopened) { $("#stText").textContent = t("st_reopening", { t: fmtDate(s.m.reopening) }); }
+  else if (s.k === "stale") { $("#stText").textContent = t("st_stale_t", { a: ago(st.generated) }); }
+  else if (s.k === "now" && s.m.end && !s.m.reopened) { $("#stText").textContent = t("st_maint_eta", { t: fmtDate(s.m.end) }) + " " + (newBuild ? t("st_new_build", { b: latest.version }) : t("st_maint_eta_more")); }
+  else $("#stText").textContent = t(b, { t: s.m ? fmtDate(s.m.start) : "", d: day(st.dates.beta_end), l: fmtDate(st.dates.launch, { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) });
+
+  const rep2 = s.reports || [];
+  $("#stCrowd").hidden = !rep2.length;
+  $("#stCrowd").innerHTML = rep2.length ? `<span class="eyebrow">${t("st_crowd", { n: rep2.length })}</span>` + rep2.slice(0, 4).map((x) =>
+    `<a href="${esc(x.url)}" target="_blank" rel="noopener"><b>${esc(x.title)}</b> <span>${x.region.toUpperCase()} · ${esc(fmtDate(x.created, { hour: "2-digit", minute: "2-digit" }))} · ${x.posts}</span></a>`).join("") : "";
+  const reg = st.regions || {}; const cur = Object.values(reg)[0] || st.latestBuild || {};
+  const week = (S.news?.topics || []).filter((x) => Date.now() - Date.parse(x.last) < 7 * 864e5).length;
+  $("#facts").innerHTML = [
+    [t("f_build"), cur.version || "—", t("f_build_s")],
+    [t("f_updated"), latest ? ago(latest.seen) : "—", latest ? fmtDate(latest.seen) : ""],
+    phase() === "beta" ? [t("f_cap"), st.levelCap, t("f_cap_s")]
+      : Date.now() < launchMs() ? [t("f_launch"), fmtDate(st.dates.launch, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }), t("f_launch_s")]
+      : [t("f_cap"), st.levelCap || 60, t("f_cap_s")],
+    [t("f_news"), week, "Kaivax, Aggrend, Nethaera…"],
+  ].map(([k, v, s2]) => `<div class="fact"><span class="eyebrow">${esc(k)}</span><span class="v">${esc(v)}</span><span class="s">${esc(s2)}</span></div>`).join("");
+
+  const cd = (ms) => { ms = Math.max(0, ms); const d = Math.floor(ms / 864e5), h = Math.floor(ms / 36e5) % 24, m = Math.floor(ms / 6e4) % 60;
+    return `${d}${t("cd_days")} ${String(h).padStart(2, "0")}${t("cd_h")} ${String(m).padStart(2, "0")}${t("cd_m")}`; };
+  const pct = (a1, b1) => Math.min(100, Math.max(0, (Date.now() - a1) / (b1 - a1) * 100));
+  const launch = launchMs(), closed = betaClosedMs(), A = S.archive;
+  const short = (iso) => fmtDate(iso + "T12:00:00Z", { day: "numeric", month: "short" });
+  $("#countdowns").innerHTML = (Date.now() < launch
+    ? `<div class="cd"><span class="eyebrow">${t("cd_launch")}</span><span class="t">${cd(launch - Date.now())}</span><div class="track"><i style="width:${pct(closed, launch)}%"></i></div>
+      <span class="s muted" style="font-size:12px">${fmtDate(st.dates.launch, { weekday: "short", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}</span></div>`
+    : `<div class="cd"><span class="eyebrow">${t("cd_since")}</span><span class="t">${cd(Date.now() - launch)}</span>
+      <span class="s muted" style="font-size:12px">${fmtDate(st.dates.launch, { day: "numeric", month: "long" })}</span></div>`)
+    + `<a class="cd arch" href="#archive"><span class="eyebrow">${t("cd_archive")}</span>
+      <span class="s">${t("cd_archive_s", { a: short(st.dates.beta_start), b: short(st.dates.beta_end), n: A?.stats?.builds ?? "…" })}</span></a>`;
+
+  $("#builds").innerHTML = buildsHTML(idx?.builds || [], true);
+  $("#builds").querySelectorAll("[data-diff]").forEach((el) => el.onclick = () => { S.diffBuild = el.dataset.diff; location.hash = "changes"; });
+
+  $("#maint").innerHTML = maintHTML(st.maintenance || []) || `<div class="row"><span class="muted" style="grid-column:1/-1">${t("st_maint_empty")}</span></div>`;
+  $("#stSource").textContent = t("st_source", { g: fmtDate(st.generated) });
+}
+function buildsHTML(list, markCur) {
+  const betaFinal = S.index?.betaFinal || S.archive?.final;
+  return list.map((b, i, arr) => {
+    const curB = markCur && i === arr.length - 1, n = nChanges(b);
+    const label = b.afterClose ? t("ar_after") : !b.talents ? "—" : b.from == null ? t("first_build") : n ? "" : b.from === betaFinal && b.product !== "wow_classic_beta" ? t("from_beta") : t("no_changes");
+    return `<div class="build ${n ? "has" : ""} ${curB ? "cur" : ""}">
+      <div class="n">${esc(b.version.split(".").slice(-1)[0])}</div><div class="d">${esc(fmtDate(b.seen, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }))}</div>
+      ${n ? `<button data-diff="${esc(b.version)}">${t("show_changes", { n })}</button>` : `<div class="d">${label}</div>`}</div>`;
+  }).join("");
+}
+function maintHTML(list) {
+  return list.map((m) => `<div class="row"><span class="when">${esc(fmtDate(m.start || m.announced))}</span>
+    <div class="what"><b>${esc(m.title)}</b><p>${esc(trim(m.excerpt, 170))}</p></div><a href="${esc(m.url)}" target="_blank" rel="noopener">forum ↗</a></div>`).join("");
+}
+const regionsOf = (x) => (x.regions || [x.region]).map((r) => r.toUpperCase()).join(" + ");
+const trim = (s, n) => (s && s.length > n ? s.slice(0, n - 1).replace(/\s+\S*$/, "") + "…" : s || "");
+
+/* ===================== changes ===================== */
+async function loadDiff(ver) {
+  const key = ver + "." + S.lang;
+  if (!(key in S.diffs)) { try { S.diffs[key] = await getJSON(`diffs/${key}.json`); } catch { S.diffs[key] = null; } }
+  return S.diffs[key];
+}
+async function renderChanges() {
+  const builds = (S.index?.builds || []).filter((b) => b.from != null);
+  if (!S.diffBuild) S.diffBuild = (builds.slice().reverse().find((b) => b.changes) || builds.at(-1) || {}).version;
+  const cur = builds.find((b) => b.version === S.diffBuild);
+  const empty = cur && !nChanges(cur) && cur.from === (S.index?.betaFinal || S.archive?.final)
+    ? `<p class="muted">${t("ch_empty_launch", { b: cur.version, f: cur.from })}</p><p><a href="#archive">${t("ch_archive_link")}</a></p>` : null;
+  await renderDiffPanel({ builds, key: "diffBuild", sel: "#diffBuild", cls: "#diffClass", num: "#diffNumbers", out: "#changes", empty });
+}
+async function renderDiffPanel({ builds, key, sel, cls: clsSel, num, out, empty }) {
+  $(sel).innerHTML = builds.slice().reverse().map((b) => `<option value="${esc(b.version)}" ${b.version === S[key] ? "selected" : ""}>${esc(b.version)} · ${nChanges(b)}</option>`).join("");
+  const d = S[key] ? await loadDiff(S[key]) : null;
+  const ch = (d?.changes || []);
+  const classes = [...new Map(ch.map((c) => [c.class, c.className])).entries()];
+  $(clsSel).innerHTML = `<option value="">${t("ch_all")}</option>` + classes.map(([k, n]) => `<option value="${k}" ${k === S.diffClass ? "selected" : ""}>${esc(n)}</option>`).join("");
+  $(num).checked = S.diffNumbers;
+  const cosmetic = (c) => (c.kind === "text" && !c.numbers) || c.kind === "moved" || c.kind === "renamed";
+  const list = ch.filter((c) => (!S.diffClass || c.class === S.diffClass) && !(S.diffNumbers && cosmetic(c)));
+  const groups = {};
+  for (const c of list) (groups[c.class] ??= { name: c.className, items: [] }).items.push(c);
+  const cls = S.talents[S.lang]?.classes || [];
+  const color = (k) => cls.find((c) => c.token === k)?.color || "var(--gold)";
+  $(out).innerHTML = Object.entries(groups).map(([k, g]) => `<div class="cgroup">
+      <h3 style="color:${color(k)}"><span class="ico" style="--s:26px;${iconStyle("classicon_" + k.toLowerCase())}"></span>${esc(g.name)} <span class="muted mono" style="font-size:13px">${g.items.length}</span></h3>
+      <div class="panel">${g.items.map(changeHTML).join("")}</div></div>`).join("") || (!ch.length && empty) || `<p class="muted">${t("ch_empty")}</p>`;
+}
+function changeHTML(c) {
+  const wording = c.kind === "text" && !c.numbers;
+  const tag = `<span class="tag ${wording ? "wording" : c.kind}">${t(wording ? "k_wording" : "k_" + c.kind)}</span>`;
+  let body = "";
+  if (c.kind === "ranks") body = `<div class="muted">${t("ranks_v", { a: c.before, b: c.after })}</div>`;
+  else if (c.kind === "gate") body = `<div class="muted">${t("gate_v", { a: c.before, b: c.after })}</div>`;
+  else if (c.kind === "added") body = `<div class="ba" style="grid-template-columns:minmax(0,1fr)"><div class="a">${fmtDesc(c.after)}</div></div>`;
+  else if (c.kind === "removed") body = `<div class="ba" style="grid-template-columns:minmax(0,1fr)"><div class="b">${fmtDesc(c.before)}</div></div>`;
+  else body = `<div class="ba"><div class="b"><span class="lbl">${t("ch_before")}</span>${fmtDesc(String(c.before))}</div><div class="a"><span class="lbl">${t("ch_after")}</span>${fmtDesc(String(c.after))}</div></div>`;
+  return `<div class="change"><span class="ico" style="--s:36px;${iconStyle(c.icon)}"></span><div style="min-width:0">
+    <div class="head"><b>${esc(c.talent)}</b>${tag}<span class="muted" style="font-size:12.5px">${esc(c.tab || "")}</span></div>${body}</div></div>`;
+}
+function fmtDesc(s) { return esc(String(s).replace(/\|c[0-9A-Fa-f]{8}|\|r/g, "")).replace(/\[\[([\s\S]*?)\]\]/g, '<span class="cond">$1</span>'); }
+
+function renderNews() {
+  const topics = S.news?.topics || [];
+  const kinds = ["all", "maintenance", "patch", "hotfix", "issues", "news"];
+  const counts = Object.fromEntries(kinds.map((k) => [k, k === "all" ? topics.length : topics.filter((x) => x.kind === k).length]));
+  $("#newsKinds").innerHTML = kinds.filter((k) => counts[k]).map((k) => `<button class="chip" data-k="${k}" aria-pressed="${S.newsKind === k}">${t("nk_" + k)} <span class="c">${counts[k]}</span></button>`).join("");
+  $("#newsKinds").querySelectorAll("button").forEach((b) => b.onclick = () => { S.newsKind = b.dataset.k; renderNews(); });
+  const list = topics.filter((x) => S.newsKind === "all" || x.kind === S.newsKind).slice(0, 40);
+  $("#news").innerHTML = list.map((x) => `<div class="row"><span class="when">${esc(fmtDate(x.last, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }))}</span>
+    <div class="what"><span class="kind ${x.kind}">${t("nk_" + x.kind)}</span><a href="${esc(x.url)}" target="_blank" rel="noopener"><b>${esc(x.title)}</b></a>
+    <p>${esc(x.authors.join(", "))} · ${esc(regionsOf(x))}${x.excerpt ? " — " + esc(trim(x.excerpt, 150)) : ""}</p></div></div>`).join("") || `<div class="row"><span class="muted" style="grid-column:1/-1">${t("news_empty")}</span></div>`;
+}
+
+/* ===================== beta archive ===================== */
+async function ensureArchive() {
+  if (S.archive === null && S.index?.archive) S.archive = await getJSON(S.index.archive).catch(() => false);
+  return S.archive || null;
+}
+async function renderArchive() {
+  const A = await ensureArchive();
+  if (!A) { $("#arLead").textContent = "—"; return; }
+  const a = day(A.start), b = day(A.end);
+  $("#arLead").textContent = t("ar_lead", { a, b });
+  const withCh = A.builds.filter((x) => nChanges(x));
+  const total = withCh.reduce((acc, x) => acc + nChanges(x), 0);
+  const days = Math.round((Date.parse(A.end) - Date.parse(A.start)) / 864e5) + 1;
+  $("#arFacts").innerHTML = [
+    [t("ar_dates"), t("ar_days", { n: days }), `${a} — ${b}`],
+    [t("ar_builds"), A.stats.builds, t("ar_builds_s", { n: A.stats.withTalents })],
+    [t("ar_changes"), total, t("ar_changes_s", { n: withCh.length })],
+    [t("ar_final"), (A.final || "").split(".").pop(), A.final || ""],
+    [t("ar_maint"), A.stats.maintenance, t("ar_regions")],
+    [t("ar_topics"), A.stats.topics, t("ar_regions")],
+  ].map(([k, v, s2]) => `<div class="fact"><span class="eyebrow">${esc(k)}</span><span class="v">${esc(v)}</span><span class="s">${esc(s2)}</span></div>`).join("");
+  $("#arBuilds").innerHTML = buildsHTML(A.builds, false);
+  $("#arBuilds").scrollLeft = $("#arBuilds").scrollWidth;   // newest (final) builds first in view
+  $("#arBuilds").querySelectorAll("[data-diff]").forEach((el) => el.onclick = () => { S.arBuild = el.dataset.diff; renderArchiveDiff(); $("#arDiffBuild").scrollIntoView({ behavior: "smooth", block: "center" }); });
+  $("#arMaint").innerHTML = maintHTML(A.maintenance || []) || `<div class="row"><span class="muted">—</span></div>`;
+  const topics = (A.topics || []).slice().sort((x, y) => (y.first || "").localeCompare(x.first || ""));
+  const shown = S.arTopicsAll ? topics : topics.slice(0, 12);
+  $("#arTopics").innerHTML = shown.map((x) => `<div class="row"><span class="when">${esc(fmtDate(x.first, { day: "numeric", month: "short" }))}</span>
+    <div class="what"><span class="kind ${x.kind}">${t("nk_" + x.kind)}</span><a href="${esc(x.url)}" target="_blank" rel="noopener"><b>${esc(x.title)}</b></a>
+    <p>${esc((x.authors || []).join(", "))} · ${esc(regionsOf(x))}${x.excerpt ? " — " + esc(trim(x.excerpt, 140)) : ""}</p></div></div>`).join("")
+    + (topics.length > shown.length ? `<div class="row"><button class="btn" id="arMore">${t("ar_more", { n: topics.length })}</button></div>` : "");
+  const more = $("#arMore"); if (more) more.onclick = () => { S.arTopicsAll = true; renderArchive(); };
+  await renderArchiveDiff();
+}
+async function renderArchiveDiff() {
+  const builds = (S.archive?.builds || []).filter((b) => b.from != null && b.talents);
+  if (!S.arBuild) S.arBuild = (builds.slice().reverse().find((b) => b.changes) || builds.at(-1) || {}).version;
+  await renderDiffPanel({ builds, key: "arBuild", sel: "#arDiffBuild", cls: "#arDiffClass", num: "#arDiffNumbers", out: "#arChanges" });
+}
+
+/* ===================== errors ===================== */
+const normCode = (v) => String(v || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+function findCode(q) {
+  const codes = S.errors?.codes || {};
+  if (codes[q]) return q;
+  const digits = q.replace(/^[A-Z]+/, "");
+  if (digits.length >= 5) return Object.keys(codes).find((c) => c.endsWith(digits)) || null;
+  return null;
+}
+function renderErrors() {
+  const E = S.errors; if (!E) { $("#errResult").innerHTML = ""; return; }
+  const list = Object.values(E.codes).sort((a, b) => b.reports - a.reports);
+  if (!S.errCode) S.errCode = list[0]?.code;
+  $("#errInput").value = S.errCode || "";
+  $("#errCodes").innerHTML = list.filter((e) => e.reports || e.meaning).map((e) =>
+    `<button class="chip" data-code="${e.code}" aria-pressed="${e.code === S.errCode}">${e.code} <span class="c">${e.reports}</span></button>`).join("");
+  $("#errCodes").querySelectorAll("[data-code]").forEach((b) => b.onclick = () => openCode(b.dataset.code));
+  $("#errSource").textContent = t("er_source", { g: fmtDate(E.generated) });
+  const q = normCode(S.errCode);
+  const code = findCode(q);
+  $("#errResult").innerHTML = code ? errorCard(E.codes[code]) : unknownCard(q);
+}
+function openCode(code) { S.errCode = code; history.replaceState(null, "", "#e-" + code); renderErrors(); }
+function verdict(e) {
+  const st = S.status ? computeState() : { k: "online" };
+  const cat = e?.category || "unknown";
+  const day = new Date().toISOString().slice(0, 10), yday = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+  const recent = e ? (e.perDay?.[day] || 0) + (e.perDay?.[yday] || 0) : 0;
+  const parts = [];
+  if (st.k === "prelaunch" && cat !== "account") {
+    parts.push(`<div class="verdict warn"><b>${esc(t("er_now_closed", { l: fmtDate(S.status.dates.launch, { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) }))}</b></div>`);
+  } else if (st.k === "now" && cat !== "account") {
+    const end = st.m?.end && !st.m.reopened ? t("er_until", { t: fmtDate(st.m.end) }) : "";
+    parts.push(`<div class="verdict warn"><b>${esc(t("er_now_maint", { u: end }))}</b>${end ? "" : `<span class="muted">${t("er_reopen_unknown")}</span>`}
+      <a href="${esc(st.m.url)}" target="_blank" rel="noopener">${esc(st.m.title)} ↗</a></div>`);
+  } else if (cat === "account") parts.push(`<div class="verdict ok"><b>${t("er_now_acc")}</b></div>`);
+  else parts.push(`<div class="verdict ok"><b>${t("er_now_ok")}</b>${recent >= 3 ? `<span class="muted">${t("er_spike", { n: recent })}</span>` : ""}</div>`);
+  return parts.join("");
+}
+function activityChart(e) {
+  const since = Date.parse((S.errors.since || "2026-09-17") + "T00:00:00Z");
+  const days = Math.max(1, Math.ceil((Date.now() - since) / 864e5));
+  const keys = Array.from({ length: days }, (_, i) => new Date(since + i * 864e5).toISOString().slice(0, 10));
+  const vals = keys.map((k) => e.perDay?.[k] || 0);
+  const maintDays = new Set([...(S.status?.maintenance || []), ...(S.archive?.maintenance || [])].map((m) => (m.start || m.announced || "").slice(0, 10)));
+  const max = Math.max(4, ...vals), W = 560, H = 120, padL = 26, padB = 18, bw = (W - padL) / days;
+  const nice = Math.ceil(max / 4) * 4;
+  const y = (v) => H - padB - (v / nice) * (H - padB - 8);
+  const ticks = [0, nice / 2, nice];
+  const bars = vals.map((v, i) => v ? `<rect class="bar ${maintDays.has(keys[i]) ? "m" : ""}" x="${padL + i * bw + 1}" y="${y(v)}" width="${Math.max(2, bw - 2)}" height="${H - padB - y(v)}" rx="1.5"><title>${keys[i]}: ${v}</title></rect>` : "").join("");
+  const grid = ticks.map((v) => `<line class="grid" x1="${padL}" x2="${W}" y1="${y(v)}" y2="${y(v)}"></line><text x="${padL - 6}" y="${y(v) + 3}" text-anchor="end">${v}</text>`).join("");
+  const step = Math.max(1, Math.round(days / 6));
+  const xl = keys.map((k, i) => i % step === 0 ? `<text x="${padL + i * bw + bw / 2}" y="${H - 4}" text-anchor="middle">${fmtDate(k + "T12:00:00Z", { day: "numeric", month: "short" })}</text>` : "").join("");
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t("er_activity"))}">${grid}${bars}${xl}</svg>
+    <div class="legend"><span><i style="background:var(--warn)"></i>${t("er_maint_days")}</span><span><i style="background:color-mix(in oklab, var(--fg) 55%, var(--panel))"></i>${t("er_reports")}</span></div>`;
+}
+function forumLinks(code) {
+  return ["us", "eu"].map((r) => `<a href="https://${r}.forums.blizzard.com/en/wow/search?q=${encodeURIComponent(code)}" target="_blank" rel="noopener">${t("er_forum_search")} ${r.toUpperCase()} ↗</a>`).join(" · ");
+}
+function errorCard(e) {
+  const L = S.lang, cat = e.category || "unknown";
+  const fixes = (e.fixes?.[L] || S.errors.generic.fixes[L]);
+  return verdict(e) + `<div class="panel err-card">
+    <div>
+      <div class="err-code">${e.code}</div>
+      ${e.title ? `<div class="err-title">${esc(e.title[L])}</div>` : ""}
+      <span class="cat ${cat}">${t("er_cat_" + cat)}</span>
+      ${e.meaning ? `<h4>${t("er_meaning")}</h4><p>${esc(e.meaning[L])}</p>` : `<p class="muted">${t("er_unknown_t")}</p>`}
+      <h4>${t("er_steps")}</h4><ol class="steps">${fixes.map((f) => `<li>${esc(f)}</li>`).join("")}</ol>
+      ${e.community ? `<h4>${t("er_players")}</h4><p class="muted">${esc(e.community[L])}</p>` : ""}
+      <p style="font-size:13.5px">${e.official ? `<a href="${esc(e.official)}" target="_blank" rel="noopener">${t("er_official")}</a> · ` : ""}${forumLinks(e.code)}</p>
+    </div>
+    <div>
+      <h4 style="margin-top:0">${t("er_activity")}</h4>
+      <div class="muted" style="font-size:13px;margin-top:6px">${t("er_total", { n: e.reports })}</div>
+      ${activityChart(e)}
+      ${e.threads?.length ? `<h4>${t("er_threads")}</h4><div class="threads">${e.threads.map((th) =>
+        `<a href="${esc(th.url)}" target="_blank" rel="noopener"><b>${esc(th.title)}</b><br><span>${th.region.toUpperCase()} · ${esc(fmtDate(th.last, { day: "numeric", month: "short" }))} · ${th.posts}</span></a>`).join("")}</div>` : ""}
+    </div></div>`;
+}
+function unknownCard(q) {
+  if (!/^[A-Z]{3}\d{8}$/.test(q)) return `<div class="verdict ok"><b>${t("er_bad")}</b></div>`;
+  const L = S.lang;
+  return verdict(null) + `<div class="panel err-card"><div>
+    <div class="err-code">${esc(q)}</div><div class="err-title">${t("er_unknown")}</div>
+    <p class="muted">${t("er_unknown_t")}</p>
+    <h4>${t("er_steps")}</h4><ol class="steps">${S.errors.generic.fixes[L].map((f) => `<li>${esc(f)}</li>`).join("")}</ol>
+    <p style="font-size:13.5px">${forumLinks(q)}</p></div></div>`;
+}
+
+/* ===================== talents ===================== */
+function ds() { return S.np ? npDataset() : S.talents[S.lang]; }
+
+/* ===================== preview by Blizzard's notes =====================
+   A copy of the client trees with the pending notes applied: new talents in the stated
+   row, removed ones gone, moves, rank counts and names. What the notes do not say
+   (column, icon, arrows of new talents) is guessed, so builds are not saved here. */
+function npAvailable(token) {
+  const cn = S.notes?.classes?.[token];
+  return !!cn && notesItems(cn).some((x) => x.ops?.length);
+}
+function npDataset() {
+  const base = S.talents[S.lang]; if (!base || !S.notes) return base;
+  const key = S.lang + base.build + S.notes.generated;
+  if (S.npCache?.key === key) return S.npCache.ds;
+  const D = JSON.parse(JSON.stringify(base));
+  let nid = -1;
+  for (const c of D.classes) {
+    const cn = S.notes.classes[c.token]; if (!cn) continue;
+    const items = [...cn.general.map((it) => ({ ...it, _tab: null })), ...cn.tabs.flatMap((tb, ti) => tb.map((it) => ({ ...it, _tab: ti }))),
+      ...cn.other.flatMap((o) => o.items.map((it) => ({ ...it, _tab: null })))];
+    const where = (id) => { for (const [ti, tb] of c.tabs.entries()) { const i = tb.talents.findIndex((x) => x.id === id); if (i >= 0) return { tb, ti, i, x: tb.talents[i] }; } return null; };
+    const rowPts = c.tabs.map((tb) => { const m = {}; for (const x of tb.talents) if (x.gate) m[x.row] = Math.max(m[x.row] || 0, x.gate.points); return m; });
+    const placed = new Set(), removed = new Set();
+    for (const it of items) for (const op of it.ops || []) {
+      if (op.k === "add") {
+        if (it._tab == null) continue;
+        const slot = op.slot && where(op.slot);
+        const x = { id: nid--, spell: 0, row: op.row - 1, col: slot ? slot.x.col : -1, name: op.name, icon: "inv_misc_questionmark", max: op.max,
+          ranks: Array(op.max).fill(op.desc), meta: { passive: op.passive }, gate: null, requires: [], np: "add", npNotes: [it.t] };
+        if (slot) { slot.tb.talents.splice(slot.i, 1); removed.add(slot.x.id); }
+        c.tabs[it._tab].talents.push(x); placed.add(x.id);
+        continue;
+      }
+      const f = where(op.id); if (!f) continue;
+      const x = f.x;
+      if (op.k === "remove") { f.tb.talents.splice(f.i, 1); removed.add(x.id); continue; }
+      x.np = x.np || "chg"; (x.npNotes ||= []).includes(it.t) || x.npNotes.push(it.t);
+      if (op.k === "move") { x.row = op.row - 1; x.npPref = x.col; x.col = -1; placed.add(x.id); }
+      else if (op.k === "ranks") { x.ranks = Array.from({ length: op.max }, (_, i) => x.ranks[i] || it.t); x.max = op.max; }
+      else if (op.k === "rename") x.name = op.name;
+    }
+    c.tabs.forEach((tb, ti) => {
+      // positions: untouched talents keep theirs; moved / new ones take their old column if free, else the nearest free one
+      const used = {};
+      const mark = (x) => ((used[x.row] ||= new Set()).add(x.col));
+      for (const x of tb.talents) if (!placed.has(x.id) && x.col >= 0) mark(x);
+      for (const x of tb.talents) if (placed.has(x.id) && x.col >= 0 && !used[x.row]?.has(x.col)) mark(x); else if (placed.has(x.id)) x.col = -1;
+      for (const x of tb.talents) if (x.col < 0) {
+        const pref = x.npPref ?? 1;
+        const cols = [0, 1, 2, 3].sort((a, b) => Math.abs(a - pref) - Math.abs(b - pref));
+        x.col = cols.find((k) => !used[x.row]?.has(k)) ?? pref; mark(x);
+      }
+      // arrows: only to parents that still exist above (or beside) the talent
+      const byI = Object.fromEntries(tb.talents.map((x) => [x.id, x]));
+      for (const x of tb.talents) x.requires = (x.requires || []).filter((id) => !removed.has(id) && byI[id] && byI[id].row <= x.row && id !== x.id);
+      // row gates: N points in the rows above, N as the tree already uses for that row (5 per row otherwise)
+      for (const x of tb.talents) {
+        if (x.row <= 0) { x.gate = null; continue; }
+        x.gate = { points: rowPts[ti][x.row] ?? x.row * 5, from: tb.talents.filter((y) => y.row < x.row).map((y) => y.id) };
+      }
+    });
+  }
+  S.npCache = { key, ds: D };
+  return D;
+}
+function setNp(on) {
+  if (on === S.np) return;
+  exitPreview();
+  if (on) { S.npStash = { ranks: S.ranks, order: S.order, flags: S.flags, active: S.activeSave }; S.ranks = {}; S.order = []; S.flags = null; S.activeSave = null; S.np = true; }
+  else { S.np = false; const st = S.npStash || {}; S.ranks = st.ranks || {}; S.order = st.order || []; S.flags = st.flags || null; S.activeSave = st.active || null; S.npStash = null; }
+  renderTalents();
+}
+function renderNpBar() {
+  const btn = $("#npToggle"), bar = $("#npBar");
+  const can = npAvailable(S.cls);
+  btn.hidden = !can && !S.np;
+  btn.setAttribute("aria-pressed", String(S.np));
+  btn.textContent = t(S.np ? "np_off" : "np_on");
+  bar.hidden = !S.np;
+  if (S.np) bar.innerHTML = `<span><b>${t("np_title", { d: fmtDate(S.notes.source.posted, { day: "numeric", month: "long" }) })}</b> ${t("np_text")}</span>
+    <span class="lg"><i class="sw add"></i>${t("np_new")}<i class="sw chg"></i>${t("np_chg")}</span>
+    <button class="btn" id="npExit">${t("np_off")}</button>`;
+  const ex = $("#npExit"); if (ex) ex.onclick = () => setNp(false);
+}
+function curClass() { return ds()?.classes.find((c) => c.token === S.cls) || ds()?.classes[0]; }
+function allTalents(c) { return c.tabs.flatMap((tb, ti) => tb.talents.map((x) => ({ ...x, tab: ti }))); }
+function rk(id) { return (S.preview != null ? S.previewRanks : S.ranks)[id] || 0; }
+function plural(n, f) {
+  if (S.lang !== "ru") return n === 1 ? f[0] : f[f.length - 1];
+  const a = n % 10, b = n % 100;
+  return a === 1 && b !== 11 ? f[0] : a >= 2 && a <= 4 && (b < 12 || b > 14) ? f[1] : f[2];
+}
+function talented() { return ds()?.legacy?.talented || null; }
+function startLevel(tier = S.legacy) {
+  const tl = talented(); const tr = tier && tl ? tl.tiers[tier - 1] : null;
+  return tr ? tr.start : 10;
+}
+function pointsAt(level, tier = S.legacy) { return Math.max(0, Math.min(51, level - startLevel(tier) + 1)); }
+function totalPoints() { return pointsAt(S.level); }
+function setLegacy(k) {
+  const max = talented()?.tiers.length || 0;
+  S.legacy = Math.max(0, Math.min(max, k | 0));
+  store.set("legacy", S.legacy);
+}
+function renderLegacy() {
+  const el = $("#legacy"), tl = talented();
+  el.hidden = !tl; if (!tl) return;
+  const k = S.legacy, st = startLevel(), p = totalPoints(), b = pointsAt(S.level, 0);
+  const eff = !k ? t("lg_eff_none") : p === b && b >= 51 ? t("lg_eff_max", { s: st, l: S.level })
+    : t("lg_eff", { s: st, l: S.level, p, b, w: plural(p, t("w_points").split("|")) });
+  el.innerHTML = `<div class="hd"><span class="ico" style="${iconStyle(tl.icon)}"></span>
+    <div class="nm"><b>${esc(tl.name)}</b><span>${t("lg_label")}${tl.requires ? " · " + esc(t("lg_req", { g: tl.gatePoints, r: tl.requires.name, m: tl.requires.max })) : ""}</span></div></div>
+    <div class="seg" role="group" aria-label="${esc(tl.name)}">
+      <button data-k="0" aria-pressed="${k === 0}" title="${esc(t("lg_none"))}">${t("lg_none")}</button>
+      ${tl.tiers.map((tr, i) => `<button data-k="${i + 1}" aria-pressed="${k === i + 1}" title="${esc(t("lg_tier", { k: i + 1, l: tr.start }) + ". " + tr.desc)}">${i + 1}</button>`).join("")}
+    </div>
+    <div class="eff">${eff}</div>`;
+  el.querySelectorAll("[data-k]").forEach((btn) => btn.onclick = () => {
+    setLegacy(+btn.dataset.k);
+    if (S.level < startLevel()) S.level = startLevel();
+    saveHash(); renderTalents();
+  });
+}
+function spent(c) { return allTalents(c).reduce((a, x) => a + rk(x.id), 0); }
+function tabSpent(tb) { return tb.talents.reduce((a, x) => a + rk(x.id), 0); }
+function byId(c) { const m = {}; for (const x of allTalents(c)) m[x.id] = x; return m; }
+
+function gateOk(x) { return !x.gate || x.gate.from.reduce((a, id) => a + rk(id), 0) >= x.gate.points; }
+function reqOk(x, M) { return !(x.requires || []).some((id) => M[id] && rk(id) < M[id].max); }
+function canAdd(x, c, M) { return rk(x.id) < x.max && spent(c) < totalPoints() && gateOk(x) && reqOk(x, M); }
+function validAll(c, M) { return allTalents(c).every((x) => !rk(x.id) || (gateOk(x) && reqOk(x, M))); }
+function canRemove(x, c, M) {
+  if (!rk(x.id)) return false;
+  S.ranks[x.id]--; const ok = validAll(c, M); S.ranks[x.id]++;
+  return ok;
+}
+function change(id, delta) {
+  exitPreview();
+  const c = curClass(), M = byId(c), x = M[id];
+  if (delta > 0 && canAdd(x, c, M)) { S.ranks[id] = rk(id) + 1; S.order.push(+id); }
+  else if (delta < 0 && canRemove(x, c, M)) {
+    S.ranks[id] = rk(id) - 1; if (!S.ranks[id]) delete S.ranks[id];
+    const i = S.order.lastIndexOf(+id); if (i >= 0) S.order.splice(i, 1);
+    S.order = normOrder(c, S.ranks, S.order);   // a removed point may have been needed earlier in the order
+  }
+  else return false;
+  saveHash(); renderTalents(); return true;
+}
+
+/* ===================== leveling order =====================
+   S.order lists node ids, one entry per spent point, in the order they are learned:
+   point i is learned at level startLevel() + i. It always matches S.ranks (same counts). */
+function pointOk(x, M, have) {
+  if (x.gate && x.gate.from.reduce((a, id) => a + (have[id] || 0), 0) < x.gate.points) return false;
+  return !(x.requires || []).some((id) => M[id] && (have[id] || 0) < M[id].max);
+}
+function rowOrder(c, ranks) {
+  // default: heaviest tree first, then row by row, every rank of a talent in a row
+  const per = c.tabs.map((tb) => tb.talents.reduce((a, x) => a + (ranks[x.id] || 0), 0));
+  const tabRank = per.map((v, i) => [v, i]).sort((a, b) => b[0] - a[0]).map((p) => p[1]);
+  const xs = allTalents(c).filter((x) => ranks[x.id]).sort((a, b) =>
+    tabRank.indexOf(a.tab) - tabRank.indexOf(b.tab) || a.row - b.row || a.col - b.col);
+  return xs.flatMap((x) => Array(ranks[x.id]).fill(x.id));
+}
+function normOrder(c, ranks, order) {
+  const M = byId(c), cnt = {}, keep = [];
+  for (const id of order || []) if (M[id] && (cnt[id] || 0) < (ranks[id] || 0)) { keep.push(+id); cnt[id] = (cnt[id] || 0) + 1; }
+  for (const id of rowOrder(c, ranks)) if ((cnt[id] || 0) < ranks[id]) { keep.push(+id); cnt[id] = (cnt[id] || 0) + 1; }
+  // Greedy repair: keep the user's sequence, but delay a point until the game would allow it.
+  const have = {}, out = [], rest = keep.slice();
+  while (rest.length) {
+    let i = rest.findIndex((id) => pointOk(M[id], M, have));
+    if (i < 0) i = 0;  // cannot happen for a valid build; never loop forever
+    const id = rest.splice(i, 1)[0]; out.push(id); have[id] = (have[id] || 0) + 1;
+  }
+  return out;
+}
+function orderProblem(c, order) {
+  const M = byId(c), have = {};
+  for (let i = 0; i < order.length; i++) {
+    const x = M[order[i]];
+    if (!pointOk(x, M, have)) {
+      const why = x.gate && x.gate.from.reduce((a, id) => a + (have[id] || 0), 0) < x.gate.points
+        ? t("pl_why_gate", { p: x.gate.points, t: c.tabs[x.tab].name })
+        : t("pl_why_req", { n: M[(x.requires || []).find((id) => M[id] && (have[id] || 0) < M[id].max)]?.name || "?", m: M[(x.requires || [])[0]]?.max || 1 });
+      return { i, x, why };
+    }
+    have[x.id] = (have[x.id] || 0) + 1;
+  }
+  return null;
+}
+function levelsOf(id) {
+  const out = []; S.order.forEach((v, i) => { if (v === +id) out.push(startLevel() + i); }); return out;
+}
+function runsOf(order) {
+  const runs = [];
+  order.forEach((id, i) => { const r = runs.at(-1); if (r && r.id === id) r.len++; else runs.push({ id, start: i, len: 1 }); });
+  return runs;
+}
+function moveRun(from, before) {
+  const c = curClass(), runs = runsOf(S.order);
+  if (before === from || before === from + 1 || before < 0 || before > runs.length) return;
+  const moved = runs[from], rest = runs.filter((_, k) => k !== from);
+  rest.splice(before > from ? before - 1 : before, 0, moved);
+  const next = rest.flatMap((r) => Array(r.len).fill(r.id));
+  const bad = orderProblem(c, next);
+  if (bad) { toast(t("pl_bad", { n: bad.x.name, l: startLevel() + bad.i, why: bad.why })); return; }
+  S.order = next; saveHash(); renderTalents();
+}
+function setPreview(n) {
+  if (n == null || n >= S.order.length) { exitPreview(); renderTalents(); return; }
+  S.preview = Math.max(0, n); n = S.preview; S.previewRanks = {};
+  const c = curClass(), x = c && byId(c)[S.order[n]];
+  if (x) S.mobileTab = x.tab;   // phones show one tree: the one this level's point goes into
+  for (const id of S.order.slice(0, n + 1)) S.previewRanks[id] = (S.previewRanks[id] || 0) + 1;
+  renderTalents();
+}
+function exitPreview() { S.preview = null; S.previewRanks = null; }
+function encodeOrder(c, order) {
+  const pos = {}; c.tabs.forEach((tb, ti) => tb.talents.forEach((x, i) => (pos[x.id] = ti + i.toString(36))));
+  return order.map((id) => pos[id] || "").join("");
+}
+function decodeOrder(c, code) {
+  const out = [];
+  for (let i = 0; i + 1 < (code || "").length; i += 2) { const x = c.tabs[+code[i]]?.talents[parseInt(code[i + 1], 36)]; if (x) out.push(x.id); }
+  return out;
+}
+/* Official notes newer than two weeks: Blizzard often announces talent changes before
+   they reach the client files the calculator is built from. */
+function renderNotesBar(D) {
+  const bar = $("#notesBar");
+  const n = (S.news?.topics || []).filter((x) => x.kind === "patch" && Date.now() - Date.parse(x.last) < 14 * 864e5)
+    .sort((a, b) => b.last.localeCompare(a.last))[0];
+  bar.hidden = S.np || !n || store.get("notesSeen", "") === n.url + n.last;
+  if (bar.hidden) return;
+  const cn = S.notes?.classes?.[S.cls], pend = cn ? notesItems(cn).filter((x) => x.s === "pending").length : 0;
+  bar.innerHTML = `<span><b>${esc(t("nb_title", { d: fmtDate(n.last, { day: "numeric", month: "long" }) }))}</b> ${esc(pend ? t("nb_pending", { n: pend, c: curClass().name }) : t("nb_text", { b: D.build }))}</span>
+    ${cn ? `<button class="btn" id="nbGo">${t("nb_go")}</button>` : `<a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(trim(n.title, 70))} ↗</a>`}
+    <button class="btn" id="nbHide" style="margin-left:auto">${t("nb_hide")}</button>`;
+  $("#nbHide").onclick = () => { store.set("notesSeen", n.url + n.last); bar.hidden = true; };
+  const go = $("#nbGo"); if (go) go.onclick = () => { store.set("cnOpen", true); renderClassNotes(curClass(), byId(curClass())); $("#classNotes").scrollIntoView({ behavior: "smooth", block: "start" }); };
+}
+/* ===================== Blizzard class notes ===================== */
+function notesItems(cn) { return [...cn.general, ...cn.tabs.flat(), ...cn.other.flatMap((o) => o.items)]; }
+function pendingNotes(id) {
+  const cn = S.notes?.classes?.[S.cls];
+  return cn ? notesItems(cn).filter((x) => x.id === +id && x.s === "pending") : [];
+}
+function renderClassNotes(c, M) {
+  const box = $("#classNotes"), N = S.notes, cn = N?.classes?.[c.token];
+  box.hidden = !cn; if (!cn) return;
+  const open = !!store.get("cnOpen", false), only = !!store.get("cnOnlyPending", false);
+  const all = notesItems(cn), cnt = (k) => all.filter((x) => x.s === k).length;
+  const stale = N.build !== ds().build;
+  const item = (x) => {
+    if (only && x.s !== "pending") return "";
+    const tl = x.id && M[x.id];
+    return `<li class="cn-item ${tl ? "tal-link" : ""}" ${tl ? `data-id="${x.id}"` : ""}><span class="st ${x.s}">${t("cn_" + x.s)}</span>
+      <span>${tl ? `<span class="tn">${esc(tl.name)}</span>` : ""}${esc(x.t)}</span></li>`;
+  };
+  const list = (arr) => { const h = arr.map(item).join(""); return h ? `<ul class="cn-list">${h}</ul>` : `<p class="muted" style="margin:0;font-size:13px">${t("cn_none")}</p>`; };
+  box.className = "cnotes" + (open ? " open" : "");
+  box.innerHTML = `<header id="cnHead" role="button" tabindex="0" aria-expanded="${open}"><h2>${esc(t("cn_title", { c: c.name }))}</h2>
+      <span class="cnt"><span class="st pending">${t("cn_pending")} ${cnt("pending")}</span><span class="st done">${t("cn_done")} ${cnt("done")}</span><span class="st unknown">${t("cn_unknown")} ${cnt("unknown")}</span></span>
+      <span class="tw" aria-hidden="true">⌄</span></header>
+    <div class="body">
+      <p class="src">${t("cn_src", { d: fmtDate(N.source.posted, { day: "numeric", month: "long" }), b: N.build })}${stale ? " " + esc(t("cn_stale", { b: ds().build })) : ""}
+        <a href="${esc(N.source.url)}" target="_blank" rel="noopener">${esc(N.source.title)} ↗</a></p>
+      <div class="tools"><label class="check"><input type="checkbox" id="cnOnly" ${only ? "checked" : ""}> <span>${t("cn_only")}</span></label>
+        <span class="muted">${t("cn_hint")}</span></div>
+      ${cn.general.length && (!only || cn.general.some((x) => x.s === "pending")) ? `<div class="cn-gen"><div class="cn-col"><h3><span class="ico" style="${iconStyle(c.icon)}"></span>${esc(t("cn_general"))}</h3>${list(cn.general)}</div></div>` : ""}
+      <div class="cn-cols">${c.tabs.map((tb, i) => `<div class="cn-col"><h3><span class="ico" style="${iconStyle(tb.icon)}"></span>${esc(tb.name)}</h3>${list(cn.tabs[i] || [])}</div>`).join("")}</div>
+      ${cn.other.map((o) => `<div class="cn-col" style="margin-top:14px"><h3>${esc(o.name)}</h3>${list(o.items)}</div>`).join("")}
+    </div>`;
+  const toggle = () => { store.set("cnOpen", !open); renderClassNotes(c, M); };
+  $("#cnHead").onclick = toggle;
+  $("#cnHead").onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } };
+  const cb = $("#cnOnly"); if (cb) cb.onchange = (e) => { store.set("cnOnlyPending", e.target.checked); renderClassNotes(c, M); };
+  box.querySelectorAll(".cn-item[data-id]").forEach((li) => {
+    li.onclick = () => {
+      const tl = M[li.dataset.id]; if (!tl) return;
+      S.mobileTab = tl.tab; renderTalents();
+      const el = $(`.tal[data-id="${tl.id}"]`); if (!el) return;
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.add("hl"); setTimeout(() => el.classList.remove("hl"), 1800);
+    };
+  });
+}
+/* ===================== trainer abilities in the plan ===================== */
+function abilitiesFor(c) {
+  const rows = S.abil[S.lang]?.classes?.[c.token] || [];
+  // ranks that only exist for a talent (Mutilate, Hemorrhage...) show up only if the build has it
+  return rows.filter((x) => !x.t || (S.ranks[x.t] || 0) > 0);
+}
+function abRowsHTML(rows, from, to) {
+  const by = new Map();
+  for (const x of rows) if (x.l >= from && x.l <= to) (by.get(x.l) || by.set(x.l, []).get(x.l)).push(x);
+  return [...by.entries()].map(([lv, xs]) => `<li class="parow"><span class="lv">${lv}</span>
+    <span class="abs">${xs.map((x) => `<span class="ab" data-s="${x.s}" tabindex="0"><span class="ico" style="${iconStyle(x.i)}"></span>${esc(x.n)}${x.r > 1 ? ` <i>${x.r}</i>` : ""}</span>`).join("")}</span></li>`).join("");
+}
+function showAbTip(x, el, sheet) {
+  const M = byId(curClass()), aff = (x.a || []).map((id) => M[id]).filter(Boolean);
+  const html = `<h4>${esc(x.n)}</h4><div class="r">${t("ab_rank", { r: x.r, l: x.l })}${x.t ? " · " + esc(t("ab_talent")) : ""}</div><div class="d">${fmtDesc(x.d || "")}</div>
+    ${aff.length ? `<div class="aff-l"><span>${t("aff_title")}</span> ${aff.map((y) => `<b class="${rk(y.id) ? "on" : ""}">${esc(y.name)}${rk(y.id) ? ` ${rk(y.id)}/${y.max}` : ""}</b>`).join(", ")}</div>` : ""}`;
+  affOn(x.a || []);
+  if (sheet) { const sh = $("#sheet"); sh.innerHTML = html; sh.hidden = false; return; }
+  const tip = $("#tip"); tip.innerHTML = html; tip.hidden = false;
+  placeTip(tip, el, null);
+}
+function setPlanner(on) {
+  S.planner = !!on; store.set("planner", S.planner);
+  if (!S.planner) exitPreview();
+  renderTalents();
+}
+function renderPlanner(c, M) {
+  const box = $("#planner"), bar = $("#planBar");
+  $("#planToggle").setAttribute("aria-pressed", String(S.planner));
+  box.hidden = !S.planner;
+  $("#planSide").classList.toggle("closed", !S.planner);
+  $("#planRail").hidden = S.planner;
+  $("#planRailN").textContent = S.order.length || "";
+  const grew = S.order.length === renderPlanner.n + 1;   // one point just added: follow it down the list
+  renderPlanner.n = S.order.length;
+  bar.hidden = S.preview == null;
+  if (S.preview != null) {
+    const st0 = startLevel(), last = S.order.length - 1;
+    bar.innerHTML = `<span class="step"><button class="btn" id="plPrev" ${S.preview ? "" : "disabled"} aria-label="−1">◀</button>
+        <input type="range" id="plRange" min="${st0}" max="${st0 + last}" value="${st0 + S.preview}" aria-label="${esc(t("tc_level"))}">
+        <button class="btn" id="plNext" aria-label="+1">▶</button></span>
+      <span>${t("pl_preview", { l: st0 + S.preview, n: S.preview + 1, m: S.order.length })}</span><button class="btn" id="plExit">${t("pl_preview_exit")}</button>`;
+    $("#plExit").onclick = () => { exitPreview(); renderTalents(); };
+    $("#plPrev").onclick = () => setPreview(S.preview - 1);
+    $("#plNext").onclick = () => setPreview(S.preview + 1);
+    $("#plRange").oninput = (e) => setPreview(+e.target.value - st0);
+  }
+  if (!S.planner) return;
+  const runs = runsOf(S.order), st = startLevel();
+  const tabIdx = {}; c.tabs.forEach((tb, ti) => tb.talents.forEach((x) => (tabIdx[x.id] = ti)));
+  const split = [0, 0, 0];
+  const showAb = store.get("plAbil", true) !== false;
+  const abRows = showAb ? abilitiesFor(c) : [];
+  let abFrom = 2;   // abilities up to this level are already listed
+  const abUpTo = (lv) => { const h = abRowsHTML(abRows, abFrom, lv); abFrom = Math.max(abFrom, lv + 1); return h; };
+  const rows = abUpTo(st - 1) + runs.map((r, k) => {
+    const x = M[r.id];
+    const before = S.order.slice(0, r.start).filter((v) => v === r.id).length;
+    for (let j = 0; j < r.len; j++) split[tabIdx[r.id]]++;
+    const a = st + r.start, b = st + r.start + r.len - 1;
+    const cur = S.preview != null && S.preview >= r.start && S.preview < r.start + r.len;
+    const rkTxt = r.len > 1 ? `${before + 1}–${before + r.len}/${x.max}` : `${before + 1}/${x.max}`;
+    return `<li class="prow ${isMilestone(x) ? "ms" : ""}" data-run="${k}" data-id="${x.id}" ${isTouch ? "" : 'draggable="true"'} aria-current="${cur}">
+      <span class="lv">${a === b ? a : a + "–" + b}</span><span class="ico" style="${iconStyle(x.icon)}"></span>
+      <span class="nm"><b>${esc(x.name)}</b><span>${rkTxt} · ${esc(c.tabs[x.tab].name)} ${split.join("/")}</span></span>
+      <span class="mv"><button data-mv="up" ${k === 0 ? "disabled" : ""} title="${esc(t("pl_up"))}" aria-label="${esc(t("pl_up"))}">↑</button><button data-mv="down" ${k === runs.length - 1 ? "disabled" : ""} title="${esc(t("pl_down"))}" aria-label="${esc(t("pl_down"))}">↓</button></span></li>` + abUpTo(b);
+  }).join("") + (S.order.length ? abUpTo(60) : "");
+  const free = totalPoints() - S.order.length;
+  const lastLv = Math.min(60, st + 50);
+  const keepTop = box.scrollTop;
+  box.innerHTML = `<header><h2>${t("pl_title")}</h2>
+      <button class="pl-i" id="plInfo" type="button" aria-label="${esc(t("pl_about"))}" aria-describedby="plHint">i</button>
+      <div class="pl-hint" id="plHint" role="tooltip">${t(isTouch ? "pl_hint_touch" : "pl_hint")}</div>
+      <div class="acts"><button class="btn" id="plAuto" title="${esc(t("pl_auto"))}" ${S.order.length ? "" : "disabled"}><span class="l-full">${t("pl_auto")}</span><span class="l-short">${t("pl_auto_s")}</span></button><button class="btn pl-collapse" id="plHide" title="${esc(t("pl_hide"))}" aria-label="${esc(t("pl_hide"))}" aria-expanded="true"><span class="l-full">${t("pl_hide")}</span><span class="ch" aria-hidden="true">»</span></button></div></header>
+    ${S.order.length ? `<label class="check pl-ab" title="${esc(t("ab_toggle_t"))}"><input type="checkbox" id="plAb" ${showAb ? "checked" : ""}> <span>${t("ab_toggle")}</span></label>` : ""}
+    ${S.order.length ? `<ol class="plist">${rows}${free > 0 ? `<li class="pfree">${t("pl_free", { n: free, a: st + S.order.length, b: lastLv })}</li>` : ""}</ol>` : `<p class="muted" style="margin:0">${t("pl_empty")}</p>`}`;
+  $("#plHide").onclick = () => setPlanner(false);
+  const abCb = $("#plAb"); if (abCb) abCb.onchange = () => { store.set("plAbil", abCb.checked); renderTalents(); };
+  box.querySelectorAll(".ab[data-s]").forEach((el) => {
+    const row = abRows.find((x) => x.s === +el.dataset.s);
+    if (!row) return;
+    if (isTouch) { el.onclick = (e) => { e.stopPropagation(); showAbTip(row, el, true); }; return; }
+    el.onmouseenter = () => showAbTip(row, el); el.onmouseleave = hideTip;
+  });
+  $("#plInfo").onclick = (e) => { e.stopPropagation(); e.currentTarget.classList.toggle("open"); };
+  $("#plAuto").onclick = () => { S.order = normOrder(c, S.ranks, rowOrder(c, S.ranks)); exitPreview(); saveHash(); renderTalents(); toast(t("pl_auto_done")); };
+  box.querySelectorAll(".prow").forEach((li) => {
+    const k = +li.dataset.run, r = runs[k];
+    li.onclick = (e) => {
+      const mv = e.target.closest("[data-mv]");
+      if (mv) { e.stopPropagation(); moveRun(k, mv.dataset.mv === "up" ? k - 1 : k + 2); return; }
+      const end = r.start + r.len - 1;
+      setPreview(S.preview === end ? null : end);
+      const pb = S.preview != null && $("#planBar").getBoundingClientRect();
+      if (pb && (pb.top < 70 || $("#trees").getBoundingClientRect().bottom > innerHeight + 200)) $("#planBar").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    };
+    if (!isTouch) {
+      li.onmouseenter = () => $(`.tal[data-id="${li.dataset.id}"]`)?.classList.add("hl");
+      li.onmouseleave = () => $(`.tal[data-id="${li.dataset.id}"]`)?.classList.remove("hl");
+      li.ondragstart = (e) => { S.dragRun = k; li.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", String(k)); } catch {} };
+      li.ondragend = () => { S.dragRun = null; li.classList.remove("dragging"); box.querySelectorAll(".drop").forEach((n) => n.classList.remove("drop")); };
+      li.ondragover = (e) => { if (S.dragRun == null) return; e.preventDefault(); box.querySelectorAll(".drop").forEach((n) => n !== li && n.classList.remove("drop")); li.classList.add("drop"); };
+      li.ondragleave = () => li.classList.remove("drop");
+      li.ondrop = (e) => {
+        e.preventDefault(); const from = S.dragRun; S.dragRun = null;
+        const rect = li.getBoundingClientRect(), after = e.clientY > rect.top + rect.height / 2;
+        if (from != null) moveRun(from, after ? k + 1 : k);
+      };
+    }
+  });
+  // the list scrolls inside its panel: keep the place, follow new points and the previewed level
+  box.scrollTop = grew && S.preview == null ? box.scrollHeight : keepTop;
+  const curRow = box.querySelector('.prow[aria-current="true"]');
+  if (curRow) {
+    const a = box.getBoundingClientRect(), r = curRow.getBoundingClientRect(), h = box.querySelector("header").offsetHeight;
+    if (r.top < a.top + h) box.scrollTop -= a.top + h - r.top;
+    else if (r.bottom > a.bottom) box.scrollTop += r.bottom - a.bottom;
+  }
+}
+function encode(c) {
+  return c.tabs.map((tb) => tb.talents.map((x) => rk(x.id).toString(36)).join("").replace(/0+$/, "")).join("_");
+}
+function decode(c, code) {
+  S.ranks = {};
+  (code || "").split("_").forEach((s, ti) => {
+    const tb = c.tabs[ti]; if (!tb) return;
+    [...s].forEach((ch, i) => { const x = tb.talents[i]; const v = parseInt(ch, 36) || 0; if (x && v) S.ranks[x.id] = Math.min(v, x.max); });
+  });
+}
+function hashFor(c) {
+  const o = S.order.length && encodeOrder(c, S.order) !== encodeOrder(c, normOrder(c, S.ranks, rowOrder(c, S.ranks))) ? "-O" + encodeOrder(c, S.order) : "";
+  return `t-${c.token.toLowerCase()}-L${S.level}${S.legacy ? "-T" + S.legacy : ""}${o}-${encode(c)}`;
+}
+function saveHash() {
+  const c = curClass(); if (!c || S.np) return;
+  const h = "#" + hashFor(c);
+  if (location.hash !== h) history.replaceState(null, "", h);
+  store.set("build." + c.token, { level: S.level, v: ds().build, ranks: { ...S.ranks }, order: S.order.slice() });
+}
+function restoreAuto(c) {
+  if (S.np) { S.ranks = {}; S.order = []; return; }
+  const saved = store.get("build." + c.token, null);
+  exitPreview();
+  if (!saved) { S.ranks = {}; S.order = []; return; }
+  S.level = saved.level || S.level;
+  if (saved.ranks) {           // by node id: survives layout changes between game builds
+    const M = byId(c), r = {};
+    for (const [id, v] of Object.entries(saved.ranks)) if (M[id] && v > 0) r[id] = Math.min(v, M[id].max);
+    pruneRanks(c, r); S.ranks = r;
+  } else decode(c, saved.code); // old positional format
+  S.order = normOrder(c, S.ranks, saved.order || []);
+}
+function changedIds() {
+  const out = new Map();
+  const builds = (S.index?.builds || []).filter((b) => b.changes);
+  const last = builds.at(-1); if (!last) return out;
+  const d = S.diffs[last.version + "." + S.lang];
+  for (const ch of d?.changes || []) if (ch.class === S.cls && !(ch.kind === "text" && !ch.numbers)) out.set(ch.node, last.version);
+  return out;
+}
+
+function selectClass(token, fromHash = false) {
+  if (S.np && !npAvailable(token)) setNp(false);
+  const c = ds().classes.find((x) => x.token === token) || ds().classes[0];
+  S.cls = c.token;
+  if (!fromHash) restoreAuto(c);
+  S.flags = null; exitPreview();
+  saveHash(); renderTalents();
+}
+
+function renderTalents() {
+  const D = ds(); if (!D) return;
+  const c = curClass(); const M = byId(c);
+  document.documentElement.style.setProperty("--class", c.color);
+  $("#classes").innerHTML = D.classes.map((k) => `<button class="cls" style="--cc:${k.color}" data-c="${k.token}" aria-pressed="${k.token === c.token}">
+     <span class="ico" style="${iconStyle(k.icon)}"></span>${esc(k.name)}</button>`).join("");
+  $("#classes").querySelectorAll(".cls").forEach((b) => b.onclick = () => selectClass(b.dataset.c));
+
+  const tot = totalPoints(), sp = spent(c);
+  $("#ptsLeft").textContent = tot - sp;
+  $("#ptsLeft").style.color = sp > tot ? "var(--bad)" : "";
+  $("#ptsSplit").textContent = c.tabs.map(tabSpent).join(" / ");
+  $("#level").min = startLevel(); if (S.level < startLevel()) S.level = startLevel();
+  $("#level").value = S.level; $("#levelOut").textContent = S.level;
+  renderLegacy();
+  $("#capBtn").hidden = phase() === "beta" ? false : true;
+  $("#capBtn").textContent = t("tc_cap", { n: S.status?.levelCap ?? 30 });
+  const changed = changedIds();
+  const lb = (S.index?.builds || []).find((b) => b.version === D.build);
+  const fromBeta = lb && lb.from && lb.from === (S.index?.betaFinal || S.archive?.final) && !nChanges(lb);
+  $("#tcNote").textContent = (sp > tot ? t("tc_over", { l: S.level }) + ". " : "") + (fromBeta ? t("tc_note_launch", { b: D.build, f: lb.from }) + " " : "") + t("tc_note", { b: D.build });
+
+  $("#tabsM").innerHTML = c.tabs.map((tb, i) => `<button class="chip" data-i="${i}" aria-pressed="${i === S.mobileTab}">${esc(tb.name)} <span class="c">${tabSpent(tb)}</span></button>`).join("");
+  $("#tabsM").querySelectorAll("button").forEach((b) => b.onclick = () => { S.mobileTab = +b.dataset.i; renderTalents(); });
+
+  const cellPos = (x) => `grid-row:${x.row + 1};grid-column:${x.col + 1}`;
+  const CG = .62, RG = .42, W = 4 + 3 * CG, H = 7 + 6 * RG;      // must match .tgrid gaps (in cell units)
+  const cx = (col) => col * (1 + CG) + .5, top = (row) => row * (1 + RG);
+  const plan = S.planner && S.preview == null;
+  $("#trees").innerHTML = c.tabs.map((tb, ti) => {
+    const paths = [];
+    for (const x of tb.talents) for (const rid of x.requires || []) {
+      const p = M[rid]; if (!p || p.tab !== ti) continue;
+      const on = rk(rid) >= p.max; let d;
+      if (p.col === x.col) d = `M${cx(p.col)} ${top(p.row) + 1.04}V${top(x.row) - .1}`;
+      else if (p.row === x.row) { const dir = x.col > p.col ? 1 : -1; d = `M${cx(p.col) + dir * .54} ${top(p.row) + .5}H${cx(x.col) - dir * .62}`; }
+      else { const dir = x.col > p.col ? 1 : -1; d = `M${cx(p.col) + dir * .54} ${top(p.row) + .5}H${cx(x.col)}V${top(x.row) - .1}`; }
+      paths.push(`<path class="${on ? "on" : ""}" d="${d}" marker-end="url(#ah${on ? 1 : 0})"/>`);
+    }
+    const bg = tb.id ? `background-image:url(${DATA}trees/${tb.id}.jpg)` : "";
+    return `<div class="tree ${ti === S.mobileTab ? "cur" : ""}" data-tab="${ti}"><div class="art" style="${bg}"></div>
+      <header><span class="ico" style="${iconStyle(tb.icon)}"></span><h3>${esc(tb.name)}</h3>
+        <button class="reset" data-reset="${ti}">${t("tc_reset_tab")}</button><span class="sp">${tabSpent(tb)}</span></header>
+      <div class="body"><div class="tgrid">
+        <svg class="arrows" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+          <defs>${[0, 1].map((o) => `<marker id="ah${o}" class="${o ? "on" : ""}" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="2.6" markerHeight="2.6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z"/></marker>`).join("")}</defs>
+          ${paths.join("")}</svg>
+        ${tb.talents.map((x) => {
+          const r = rk(x.id); const tx = { ...x, tab: ti };
+          const full = S.ranks[x.id] || 0;
+          const ghost = S.preview != null && full > r;
+          const st = r >= x.max ? "max" : r > 0 ? "some" : ghost ? "" : canAdd(tx, c, M) ? "avail" : "";
+          const fl = !r && S.flags?.items.get(x.id);
+          const lv = plan && full ? levelsOf(x.id)[0] : null;
+          return `<button class="tal ${st} ${ghost ? "plan" : ""} ${x.np ? "np-" + x.np : ""} ${isMilestone(x) ? "ms" : ""} ${fl ? "flag-" + (fl.kind === "chain" ? "chain" : "changed") : ""}" style="${cellPos(x)}" data-id="${x.id}" aria-label="${esc(x.name)} ${r}/${x.max}">
+            <span class="ico" style="${iconStyle(x.icon)}"></span><span class="rk">${ghost ? full : r}/${x.max}</span>${lv ? `<span class="lvb">${lv}</span>` : ""}${fl ? `<span class="flagx">${fl.kind === "chain" ? "!" : "×"}</span>` : changed.has(x.id) && !lv ? '<span class="chg"></span>' : ""}${!S.np && pendingNotes(x.id).length ? '<span class="nb"></span>' : ""}${x.np === "add" ? `<span class="npnew">${t("np_badge")}</span>` : ""}</button>`;
+        }).join("")}
+      </div></div></div>`;
+  }).join("");
+  renderPlanner(c, M);
+  renderNotesBar(D);
+  renderClassNotes(c, M);
+  renderNpBar();
+  bindTalentEvents();
+  renderFlagBanner();
+  renderSaves();
+}
+function isMilestone(x) { return x.max === 1 && !x.meta.passive && (x.row === 2 || x.row === 4 || x.row === 6); }
+
+function bindTalentEvents() {
+  $("#trees").querySelectorAll("[data-reset]").forEach((b) => b.onclick = () => {
+    const c = curClass(); const tb = c.tabs[+b.dataset.reset];
+    exitPreview();
+    for (const x of tb.talents) delete S.ranks[x.id];
+    if (!validAll(c, byId(c))) S.ranks = {};
+    S.order = normOrder(c, S.ranks, S.order);
+    saveHash(); renderTalents();
+  });
+  $("#trees").querySelectorAll(".tal").forEach((el) => {
+    const id = +el.dataset.id;
+    if (isTouch) { el.onclick = () => openSheet(id); return; }
+    el.onclick = (e) => { change(id, e.shiftKey ? -1 : 1); showTip(id, el); };
+    el.oncontextmenu = (e) => { e.preventDefault(); change(id, -1); showTip(id, el); };
+    el.onmouseenter = () => showTip(id, el);
+    el.onfocus = () => showTip(id, el);
+    el.onmouseleave = hideTip; el.onblur = hideTip;
+    el.onkeydown = (e) => { if (e.key === "-" || e.key === "Backspace") { e.preventDefault(); change(id, -1); showTip(id, $(`.tal[data-id="${id}"]`)); } };
+  });
+}
+function tipHTML(id, withHint) {
+  const c = curClass(), M = byId(c), x = M[id], r = rk(id);
+  const meta = x.meta || {};
+  const metaRows = [[meta.cost, meta.range], [meta.cast, meta.cd]].filter((p) => p[0] || p[1]);
+  const reqs = [];
+  if (x.gate && !gateOk(x)) reqs.push(t("tc_req_pts", { n: x.gate.points, t: c.tabs[x.tab].name }));
+  for (const rid of x.requires || []) if (M[rid] && rk(rid) < M[rid].max) reqs.push(t("tc_req_tal", { n: M[rid].name, m: M[rid].max }));
+  const cur = r ? x.ranks[r - 1] : x.ranks[0];
+  const next = r && r < x.max ? x.ranks[r] : null;
+  const ch = changedIds().get(id);
+  return `<h4>${esc(x.name)}</h4><div class="r">${t("tc_rank", { a: r, b: x.max })}${meta.passive ? " · " + t("passive") : ""}</div>
+    ${metaRows.length ? `<div class="meta">${metaRows.map((p) => `<span>${esc(p[0] || "")}</span><span>${esc(p[1] || "")}</span>`).join("")}</div>` : ""}
+    ${reqs.map((q) => `<div class="req">${esc(q)}</div>`).join("")}
+    <div class="d">${fmtDesc(cur)}</div>
+    ${next ? `<div class="next"><div class="lbl">${t("tc_next")}</div><div class="d">${fmtDesc(next)}</div></div>` : ""}
+    ${ch ? `<div class="chgnote">● ${t("tc_changed", { b: ch })}</div>` : ""}
+    ${S.np ? (x.npNotes || []).slice(0, 3).map((n) => `<div class="note-x"><b>${t(x.np === "add" ? "np_tip_add" : "np_tip")}</b> ${esc(trim(n, 240))}</div>`).join("")
+      : pendingNotes(id).slice(0, 2).map((n) => `<div class="note-x"><b>${t("cn_tip")}</b> ${esc(trim(n.t, 220))}</div>`).join("")}
+    ${(talentLinks()[id] || []).length ? `<div class="aff-l"><span>${t("aff_title")}</span> ${(talentLinks()[id] || []).map((k) => M[k]).filter(Boolean).map((y) => `<b class="${rk(y.id) ? "on" : ""}">${esc(y.name)}${rk(y.id) ? ` ${rk(y.id)}/${y.max}` : ""}</b>`).join(", ")}</div>` : ""}
+    ${S.planner && (S.ranks[id] || 0) ? `<div class="r" style="margin-top:8px;color:#ffd100">${esc(t("pl_tip", { list: levelsOf(id).map((l, i) => `${i + 1} — ${l}`).join(", ") }))}</div>` : ""}
+    ${!r && S.flags?.items.get(id) ? `<div class="req" style="margin-top:8px">${esc(flagTip(S.flags.items.get(id)))}</div>` : ""}
+    ${withHint ? `<div class="hint">${t("tc_hint_desktop")}</div>` : ""}`;
+}
+function showTip(id, el) {
+  const tip = $("#tip"); tip.innerHTML = tipHTML(id, true); tip.hidden = false;
+  placeTip(tip, el, $("#trees"));
+  affOn(talentLinks()[id] || []);
+}
+/* Tooltip above or below: first outside the trees (so no talent is covered), then next to
+   the hovered element, on the side with more room. Centered on the element horizontally. */
+function placeTip(tip, el, zone) {
+  const topLim = (document.querySelector(".bar")?.getBoundingClientRect().bottom || 0) + 8, botLim = innerHeight - 8;
+  const z = zone ? zone.getBoundingClientRect() : null;
+  tip.style.width = "";
+  if (z) {
+    // a wider (so shorter) tooltip often fits in the free space above or below the trees
+    for (const wd of [340, 460, 580]) {
+      if (wd > innerWidth - 16) break;
+      tip.style.width = wd + "px";
+      const hh = tip.offsetHeight;
+      if (z.top - hh - 10 >= topLim || z.bottom + 10 + hh <= botLim) break;
+      tip.style.width = "";
+    }
+  }
+  const r = el.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+  const left = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), innerWidth - w - 8);
+  let top;
+  if (z && z.top - h - 10 >= topLim) top = z.top - h - 10;
+  else if (z && z.bottom + 10 + h <= botLim) top = z.bottom + 10;
+  else {
+    const up = r.top - topLim, down = botLim - r.bottom;
+    if (up >= h + 12 && (up >= down || down < h + 12)) top = r.top - h - 12;
+    else if (down >= h + 12) top = r.bottom + 12;
+    else top = up > down ? Math.max(topLim, r.top - h - 12) : Math.min(botLim - h, r.bottom + 12);
+  }
+  tip.style.left = left + "px"; tip.style.top = Math.max(8, top) + "px";
+}
+function hideTip() { $("#tip").hidden = true; affOff(); }
+/* talents that modify a spell: lit up while the spell (ability or active talent) is hovered */
+function talentLinks() { return S.abil[S.lang]?.talentLinks?.[S.cls] || {}; }
+function affOn(ids) {
+  affOff();
+  for (const id of ids) $(`.tal[data-id="${id}"]`)?.classList.add("aff");
+  if (ids.length) $("#trees").classList.add("affing");
+}
+function affOff() {
+  document.querySelectorAll(".tal.aff").forEach((n) => n.classList.remove("aff"));
+  $("#trees")?.classList.remove("affing");
+}
+function openSheet(id) {
+  const sh = $("#sheet"); const c = curClass(), M = byId(c), x = M[id];
+  sh.innerHTML = tipHTML(id, false).replace(/class="d"/g, 'class="d" style="color:#f1d488"') +
+    `<div class="ctl"><button class="btn" id="shMinus" ${canRemove(x, c, M) ? "" : "disabled"}>− ${t("tc_remove")}</button>
+     <button class="btn primary" id="shPlus" ${canAdd(x, c, M) ? "" : "disabled"}>+ ${t("tc_add")}</button></div>`;
+  sh.hidden = false;
+  $("#shPlus").onclick = () => { change(id, 1); openSheet(id); };
+  $("#shMinus").onclick = () => { change(id, -1); openSheet(id); };
+}
+document.addEventListener("click", (e) => {
+  const sh = $("#sheet");
+  if (!sh.hidden && !sh.contains(e.target) && !e.target.closest(".tal") && !e.target.closest(".ab")) { sh.hidden = true; affOff(); }
+  document.querySelector("#plInfo.open")?.classList.remove("open");
+});
+
+/* ===================== saved builds ===================== */
+function pruneRanks(c, ranks) {
+  // Remove every talent that breaks the tree rules (row gate or prerequisite arrow),
+  // repeating until stable. Validity only gets worse as points are removed, so
+  // removing all currently-invalid talents per pass is safe and order-independent.
+  const M = byId(c), get = (id) => ranks[id] || 0, removed = [];
+  for (;;) {
+    const bad = allTalents(c).filter((x) => get(x.id) && (
+      (x.gate && x.gate.from.reduce((a, id) => a + get(id), 0) < x.gate.points) ||
+      (x.requires || []).some((id) => M[id] && get(id) < M[id].max)));
+    if (!bad.length) return removed;
+    for (const x of bad) { removed.push({ x, r: ranks[x.id] }); delete ranks[x.id]; }
+  }
+}
+/* Saved builds live in the viewer's private area of the artifact database
+   (data/users/<id>/…), so they follow the Claude account across devices.
+   Without it (signed out, self-hosted) they fall back to this browser. */
+const SAVES = { col: null, list: [], ready: false };
+const localSaves = () => { const v = store.get("saves", []); return Array.isArray(v) ? v : []; };
+const getSaves = () => (SAVES.col ? SAVES.list : localSaves());
+function commitSaves(list, changed, removedId) {
+  if (!SAVES.col) { store.set("saves", list); return; }
+  const prev = SAVES.list;
+  SAVES.list = list;  // optimistic; the snapshot confirms
+  const op = removedId ? SAVES.col.doc(removedId).delete() : SAVES.col.doc(changed.id).set(JSON.parse(JSON.stringify(changed)));
+  op.catch(() => { SAVES.list = prev; toast(t("sv_cloud_err")); if (S.route === "talents") renderSaves(); });
+}
+async function connectSaves() {
+  let db = null, user = null, uid = null;
+  try {
+    if (window.claude?.use) [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+    uid = user ? await user.id() : null;
+  } catch { db = null; }
+  if (!db || !uid) { updateSaveNote(); return; }
+  let col;
+  try { col = db.collection("data/users/" + uid); } catch { updateSaveNote(); return; }
+  col.onSnapshot((snap) => {
+    const first = !SAVES.col;
+    SAVES.col = col;
+    SAVES.list = snap.docs.map((d) => d.data()).filter((v) => v && v.id && v.talents)
+      .sort((a, b) => String(b.updated).localeCompare(String(a.updated)));
+    updateSaveNote();
+    if (first) migrateLocal();
+    if (S.route === "talents" && ds()) renderSaves();
+  }, () => { SAVES.col = null; updateSaveNote(); if (S.route === "talents" && ds()) renderSaves(); });
+}
+function migrateLocal() {
+  // One-time move of builds saved in this browser before cloud storage existed.
+  if (store.get("savesMigrated", false)) return;
+  const local = localSaves(), have = new Set(SAVES.list.map((s) => s.id));
+  const todo = local.filter((s) => s && s.id && !have.has(s.id));
+  if (!todo.length) { store.set("savesMigrated", true); return; }
+  Promise.all(todo.map((sv) => SAVES.col.doc(sv.id).set(JSON.parse(JSON.stringify(sv)))))
+    .then(() => { store.set("savesMigrated", true); toast(t("sv_migrated", { n: todo.length })); })
+    .catch(() => toast(t("sv_cloud_err")));
+}
+function updateSaveNote() {
+  const el = document.querySelector('[data-i18n="sv_local"]');
+  if (el) el.textContent = t(SAVES.col ? "sv_cloud" : "sv_local");
+}
+function listSaves() {
+  const own = getSaves();
+  // the example is shown only until the viewer has builds of their own
+  const ex = S.example && !own.length && !store.get("exampleHidden", false) ? [S.example] : [];
+  return [...own, ...ex];
+}
+function snapshot(c, ranks) {
+  const M = byId(c), out = {};
+  for (const [id, r] of Object.entries(ranks)) { const x = M[id]; if (x && r) out[id] = { r, fp: x.fp, n: x.name, d: x.ranks[r - 1] }; }
+  return out;
+}
+function laterChanges(sv, cls, id) {
+  // Diff entries for this talent in every game build after the one the save was made on.
+  const out = [];
+  for (const b of allBuilds()) {
+    if (!b.changes || b.build <= +sv.version.split(".").pop()) continue;
+    const d = S.diffs[b.version + "." + S.lang];
+    for (const ch of d?.changes || []) if (ch.class === cls && ch.node === id) out.push({ ...ch, build: b.version });
+  }
+  return out;
+}
+async function loadSaveDiffs() {
+  const olds = Math.min(...listSaves().map((sv) => +String(sv.version).split(".").pop()));
+  if (listSaves().length) await ensureArchive();
+  await Promise.all(allBuilds().filter((b) => b.changes && b.build > olds).map((b) => loadDiff(b.version)));
+}
+function analyzeSave(sv) {
+  const c = ds()?.classes.find((k) => k.token === sv.cls); if (!c) return null;
+  const M = byId(c), ranks = {}, changed = [];
+  for (const [sid, s] of Object.entries(sv.talents || {})) {
+    const id = +sid, x = M[id];
+    if (!x) { changed.push({ id, kind: "gone", name: s.n, icon: null, r: s.r, s }); continue; }
+    if (s.fp && x.fp && s.fp !== x.fp) { changed.push({ id, kind: "changed", name: x.name, icon: x.icon, r: s.r, s, x }); continue; }
+    ranks[id] = Math.min(s.r, x.max);
+  }
+  const chain = pruneRanks(c, ranks).map(({ x, r }) => ({ id: x.id, kind: "chain", name: x.name, icon: x.icon, r }));
+  const before = Object.values(sv.talents || {}).reduce((a, s) => a + s.r, 0);
+  const after = Object.values(ranks).reduce((a, v) => a + v, 0);
+  const split = c.tabs.map((tb) => tb.talents.reduce((a, x) => a + (ranks[x.id] || 0), 0));
+  return { c, ranks, changed, chain, before, after, split, broken: changed.length > 0 };
+}
+function flagTip(f) {
+  const key = f.kind === "chain" ? "fl_tip_chain" : f.kind === "gone" ? "fl_tip_gone" : "fl_tip_changed";
+  return t(key, { n: S.flags.name, r: f.r });
+}
+function openSave(sv) {
+  const a = analyzeSave(sv); if (!a) return;
+  S.cls = sv.cls; S.ranks = { ...a.ranks }; exitPreview();
+  S.order = normOrder(a.c, S.ranks, sv.order || []);
+  setLegacy(sv.legacy || 0); S.level = Math.max(startLevel(), sv.level || 60);
+  // On phones show the tree the saved build invested in most.
+  const tabOf = {}; a.c.tabs.forEach((tb, i) => tb.talents.forEach((x) => (tabOf[x.id] = i)));
+  const per = [0, 0, 0]; for (const [id, s2] of Object.entries(sv.talents || {})) if (id in tabOf) per[tabOf[id]] += s2.r;
+  S.mobileTab = per.indexOf(Math.max(...per));
+  S.activeSave = sv.example ? null : sv.id;
+  S.flags = a.broken ? { name: sv.name, items: new Map([...a.changed, ...a.chain].map((f) => [f.id, f])) } : null;
+  $("#saveName").value = sv.name;
+  saveHash(); renderTalents();
+  $("#view-talents").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+}
+function storeSave(name, cls, level, ranks, keepId, legacy = S.legacy, order = S.order) {
+  const c = ds().classes.find((k) => k.token === cls);
+  const list = getSaves().slice(); const now = new Date().toISOString();
+  const i = list.findIndex((s) => (keepId && s.id === keepId) || (s.cls === cls && s.name.toLowerCase() === name.toLowerCase()));
+  const existed = i >= 0;
+  // copy: documents delivered by the database are frozen
+  const sv = existed ? { ...list[i] } : { id: "b" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), created: now };
+  Object.assign(sv, { name, cls, level, legacy, version: ds().build, updated: now, talents: snapshot(c, ranks), order: normOrder(c, ranks, order) });
+  if (existed) list.splice(i, 1);
+  list.unshift(sv);
+  commitSaves(list, sv);
+  return { sv, existed };
+}
+function saveCurrent() {
+  if (S.np) { toast(t("np_nosave")); return; }
+  const c = curClass();
+  const name = $("#saveName").value.trim() || `${c.name} ${c.tabs.map(tabSpent).join("/")}`;
+  const { sv, existed } = storeSave(name, c.token, S.level, S.ranks);
+  S.activeSave = sv.id; S.flags = null;
+  $("#saveName").value = name;
+  toast(t(existed ? "sv_updated" : "sv_saved", { n: name }));
+  renderTalents();
+}
+function fixSave(sv) {
+  const a = analyzeSave(sv); if (!a) return;
+  if (sv.example) store.set("exampleHidden", true);
+  const { sv: nsv } = storeSave(sv.name, sv.cls, sv.level, a.ranks, sv.example ? null : sv.id, sv.legacy || 0, sv.order || []);
+  if (S.activeSave === sv.id || (sv.example && S.flags?.name === sv.name)) { S.activeSave = nsv.id; S.flags = null; }
+  toast(t("sv_updated", { n: sv.name }));
+  renderTalents();
+}
+function deleteSave(sv) {
+  if (S.delArm !== sv.id) { S.delArm = sv.id; renderSaves(); clearTimeout(deleteSave.t); deleteSave.t = setTimeout(() => { S.delArm = null; renderSaves(); }, 3500); return; }
+  S.delArm = null;
+  if (sv.example) store.set("exampleHidden", true);
+  else commitSaves(getSaves().filter((s) => s.id !== sv.id), null, sv.id);
+  if (S.activeSave === sv.id) S.activeSave = null;
+  renderSaves();
+}
+function encodeRanks(c, ranks) {
+  return c.tabs.map((tb) => tb.talents.map((x) => (ranks[x.id] || 0).toString(36)).join("").replace(/0+$/, "")).join("_");
+}
+function changeDetail(f, sv) {
+  if (f.kind === "gone") return `<span class="why">${t("sv_gone")}</span>`;
+  const chs = laterChanges(sv, sv.cls, f.id);
+  const builds = [...new Set(chs.map((c) => c.build.split(".").pop()))];
+  const tags = [...new Set(chs.map((c) => (c.kind === "text" && !c.numbers ? "wording" : c.kind)))]
+    .filter((k) => k !== "wording" && k !== "renamed").map((k) => `<span class="tag ${k}">${t("k_" + k)}</span>`).join(" ");
+  const why = builds.length ? t("sv_changed_in", { b: builds.join(", ") }) : t("sv_changed");
+  const lines = chs.filter((c) => c.kind === "ranks" || c.kind === "gate").map((c) =>
+    c.kind === "ranks" ? t("ranks_v", { a: c.before, b: c.after }) : t("gate_v", { a: c.before, b: c.after }));
+  const nowDesc = f.x ? f.x.ranks[Math.min(f.r, f.x.max) - 1] : "";
+  return `<span class="why">${esc(why)}</span> ${tags}
+    ${lines.length ? `<div class="why">${lines.map(esc).join(" · ")}</div>` : ""}
+    <details><summary>${t("sv_before_after")}</summary><div class="ba">
+      <div class="b"><span class="lbl">${t("sv_was", { r: f.r })}</span>${fmtDesc(f.s.d || "")}</div>
+      <div class="a"><span class="lbl">${t("sv_now")}</span>${fmtDesc(nowDesc)}</div></div></details>`;
+}
+function saveCard(sv) {
+  const a = analyzeSave(sv); if (!a) return "";
+  const c = a.c, del = S.delArm === sv.id;
+  const cur = S.activeSave === sv.id;
+  const ver = String(sv.version).split(".").pop();
+  const status = a.broken ? `<div class="alert">
+      <b>${t("sv_broken", { n: a.changed.length })}</b>
+      <ul class="clist">${a.changed.map((f) => `<li>${f.icon ? `<span class="ico" style="${iconStyle(f.icon)}"></span>` : `<span class="ico" style="${iconStyle("inv_misc_questionmark")}"></span>`}
+        <div style="min-width:0"><span class="nm">${esc(f.name)}</span> <span class="mono muted" style="font-size:12px">${f.r}</span><br>${changeDetail(f, sv)}</div></li>`).join("")}</ul>
+      ${a.chain.length ? `<div class="chainline">${t("sv_chain", { list: a.chain.map((f) => `<b>${esc(f.name)}</b>`).join(", ") })}</div>` : ""}
+      <div class="pts-delta">${t("sv_points")}: <s>${a.before}</s> → ${a.after} <span class="muted">(${a.split.join(" / ")})</span></div>
+    </div>`
+    : `<div class="sub">${sv.version === ds().build ? t("sv_ok_same") : t("sv_ok_older", { b: ver })}</div>`;
+  return `<article class="save ${a.broken ? "broken" : ""} ${cur ? "cur" : ""}" data-sid="${esc(sv.id)}">
+    <header><span class="ico" style="${iconStyle(c.icon)}"></span><div>
+      <h3 style="color:${a.broken ? "#f3a39e" : c.color}">${esc(sv.name)}${sv.example ? `<span class="ex">${t("sv_example")}</span>` : ""}</h3>
+      <div class="sub">${esc(c.name)} · ${a.broken ? "" : a.split.join(" / ") + " · "}${esc(t("sv_meta", { l: sv.level, b: ver, d: fmtDate(sv.updated, { day: "numeric", month: "short" }) }))}${sv.legacy ? " · " + esc(t("sv_legacy", { k: sv.legacy })) : ""}${sv.order?.length ? " · " + esc(t("sv_plan")) : ""}</div>
+    </div></header>
+    ${status}
+    <div class="acts">
+      <button class="btn primary" data-act="open">${t("sv_open")}</button>
+      ${a.broken ? `<button class="btn warnfix" data-act="fix">${t("sv_fix")}</button>` : ""}
+      <button class="btn" data-act="link">${t("sv_link")}</button>
+      <button class="btn" data-act="cmp" aria-pressed="${S.cmp.includes(sv.id)}">${t("cmp_btn")}</button>
+      <button class="btn danger" data-act="del">${del ? t("sv_del_sure") : t("sv_del")}</button>
+    </div></article>`;
+}
+function renderSaves() {
+  const box = $("#saves"); if (!box || !ds()) return;
+  if (S.np) { box.innerHTML = `<p class="muted" style="margin:0">${t("np_saves")}</p>`; $("#cmp").hidden = true; $("#svAttention").hidden = true; return; }
+  const list = listSaves();
+  const analyzed = list.map((sv) => ({ sv, broken: analyzeSave(sv)?.broken }));
+  analyzed.sort((p, q) => (q.broken - p.broken) || ((q.sv.cls === S.cls) - (p.sv.cls === S.cls)) || String(q.sv.updated).localeCompare(String(p.sv.updated)));
+  S.cmp = S.cmp.filter((id) => list.some((x) => x.id === id));
+  box.innerHTML = analyzed.map(({ sv }) => saveCard(sv)).join("") || `<p class="muted" style="margin:0">${t("sv_empty")}</p>`;
+  renderCompare(list);
+  const nBroken = analyzed.filter((x) => x.broken).length;
+  const pill = $("#svAttention"); pill.hidden = !nBroken;
+  pill.innerHTML = `<span class="dot bad"></span>${t("sv_attention", { n: nBroken })}`;
+  box.querySelectorAll(".save").forEach((card) => {
+    const sv = list.find((s) => s.id === card.dataset.sid);
+    card.querySelectorAll("[data-act]").forEach((b) => b.onclick = () => {
+      const act = b.dataset.act;
+      if (act === "open") openSave(sv);
+      else if (act === "fix") fixSave(sv);
+      else if (act === "del") deleteSave(sv);
+      else if (act === "cmp") {
+        S.cmp = S.cmp.includes(sv.id) ? S.cmp.filter((x) => x !== sv.id) : [...S.cmp, sv.id].slice(-2);
+        renderSaves();
+        if (S.cmp.length) $("#cmp").scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+      else if (act === "link") {
+        const a = analyzeSave(sv);
+        const o = sv.order?.length ? "-O" + encodeOrder(a.c, normOrder(a.c, a.ranks, sv.order)) : "";
+        const url = location.href.split("#")[0] + `#t-${sv.cls.toLowerCase()}-L${sv.level}${sv.legacy ? "-T" + sv.legacy : ""}${o}-${encodeRanks(a.c, a.ranks)}`;
+        navigator.clipboard?.writeText(url).then(() => toast(t("tc_copied")), () => toast(t("tc_copy_fail")));
+      }
+    });
+  });
+}
+/* ===================== compare two builds ===================== */
+function cmpSide(sv) {
+  if (!sv) {   // the build open in the calculator
+    const c = curClass();
+    return { name: t("cmp_current"), c, cls: c.token, level: S.level, legacy: S.legacy, ranks: { ...S.ranks }, order: S.order.slice() };
+  }
+  const a = analyzeSave(sv); if (!a) return null;
+  return { name: sv.name, c: a.c, cls: sv.cls, level: sv.level, legacy: sv.legacy || 0, ranks: a.ranks, order: normOrder(a.c, a.ranks, sv.order || []), sv };
+}
+function renderCompare(list) {
+  const box = $("#cmp");
+  box.hidden = !S.cmp.length; if (!S.cmp.length) { box.innerHTML = ""; return; }
+  const A = cmpSide(list.find((x) => x.id === S.cmp[0])), B = cmpSide(S.cmp[1] ? list.find((x) => x.id === S.cmp[1]) : null);
+  if (!A || !B) { box.hidden = true; return; }
+  const split = (X) => X.c.tabs.map((tb) => tb.talents.reduce((s2, x) => s2 + (X.ranks[x.id] || 0), 0));
+  const firstLv = (X, id) => { const i = X.order.indexOf(+id); return i < 0 ? null : startLevel(X.legacy) + i; };
+  const head = (X, k) => `<div class="cmp-h ${k}"><span class="ico" style="${iconStyle(X.c.icon)}"></span><div><b style="color:${X.c.color}">${esc(X.name)}</b>
+      <span class="sub">${esc(X.c.name)} · ${split(X).join(" / ")} · ${esc(t("cmp_lvl", { l: X.level }))}${X.legacy ? " · " + esc(t("sv_legacy", { k: X.legacy })) : ""}</span></div></div>`;
+  let body = "";
+  if (A.cls !== B.cls) body = `<p class="muted" style="margin:0">${t("cmp_other_class")}</p>`;
+  else {
+    const c = A.c, M = byId(c);
+    let same = 0;
+    body = `<div class="cmp-cols">${c.tabs.map((tb, ti) => {
+      const rows = tb.talents.filter((x) => (A.ranks[x.id] || 0) || (B.ranks[x.id] || 0)).map((x) => {
+        const a = A.ranks[x.id] || 0, b = B.ranks[x.id] || 0, la = firstLv(A, x.id), lb = firstLv(B, x.id);
+        if (a === b && la === lb) { same++; return ""; }
+        const cls2 = a === b ? "lv" : a > b ? "more-a" : "more-b";
+        return `<li class="${cls2}"><span class="ico" style="${iconStyle(x.icon)}"></span><span class="nm">${esc(x.name)}</span>
+          <span class="v a">${a}/${x.max}${la && a ? `<i>${la}</i>` : ""}</span><span class="v b">${b}/${x.max}${lb && b ? `<i>${lb}</i>` : ""}</span></li>`;
+      }).join("");
+      return `<div class="cmp-col"><h4><span class="ico" style="${iconStyle(tb.icon)}"></span>${esc(tb.name)} <span class="mono muted">${split(A)[ti]} · ${split(B)[ti]}</span></h4>
+        ${rows ? `<ul>${rows}</ul>` : `<p class="muted" style="margin:0;font-size:12.5px">${t("cmp_no_diff")}</p>`}</div>`;
+    }).join("")}</div>
+    <p class="muted" style="margin:10px 0 0;font-size:12.5px">${t("cmp_legend", { n: same })}</p>`;
+  }
+  box.innerHTML = `<header><h2>${t("cmp_title")}</h2><button class="btn" id="cmpClose">${t("cmp_close")}</button></header>
+    <div class="cmp-heads">${head(A, "a")}<span class="vs">vs</span>${head(B, "b")}</div>${body}
+    ${!S.cmp[1] ? `<p class="muted" style="margin:10px 0 0;font-size:12.5px">${t("cmp_pick")}</p>` : ""}`;
+  $("#cmpClose").onclick = () => { S.cmp = []; renderSaves(); };
+}
+function renderFlagBanner() {
+  const el = $("#flagBanner");
+  const live = S.flags && [...S.flags.items.values()].some((f) => !rk(f.id));
+  el.hidden = !live; if (!live) return;
+  el.innerHTML = `<b>${esc(t("fl_banner", { n: S.flags.name }))}</b>
+    <span><span class="sw" style="background:var(--bad)"></span>${t("fl_changed")}<span class="sw" style="background:var(--warn)"></span>${t("fl_chain")}</span>
+    <button class="btn" id="flHide">${t("fl_hide")}</button>`;
+  $("#flHide").onclick = () => { S.flags = null; renderTalents(); };
+}
+
+function toast(msg) { const el = $("#toast"); el.textContent = msg; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => (el.hidden = true), 2200); }
+
+/* ===================== render + boot ===================== */
+// The client's node groups for a row gate sometimes include the talent itself or its row-mates
+// (Shadowform, Mortal Strike…). Only points in rows above may open a row, as in the game.
+function fixGates(data) {
+  for (const c of data.classes) for (const tb of c.tabs) {
+    const row = Object.fromEntries(tb.talents.map((x) => [x.id, x.row]));
+    for (const x of tb.talents) if (x.gate) x.gate.from = x.gate.from.filter((id) => row[id] < x.row);
+  }
+  return data;
+}
+async function ensureLang() {
+  if (!S.talents[S.lang] && S.index) S.talents[S.lang] = fixGates(await getJSON(`talents/${S.index.latest}/${S.lang}.json`));
+  if (S.index && !(S.lang in S.abil)) S.abil[S.lang] = await getJSON(`abilities/${S.index.latest}/${S.lang}.json`).catch(() => null);
+  const lastChanged = (S.index?.builds || []).filter((b) => b.changes).at(-1);
+  if (lastChanged) await loadDiff(lastChanged.version);
+}
+async function render() {
+  applyI18n();
+  const latest = (S.index?.builds || []).at(-1);
+  const ph = phase(), pre = ph !== "beta" && Date.now() < launchMs();
+  $("#pillText").textContent = latest ? (ph === "beta" ? (S.lang === "ru" ? "Бета · " : "Beta · ") : pre ? (S.lang === "ru" ? "Предзапуск · " : "Pre-launch · ") : "Live · ") + latest.version : "…";
+  if (S.status) $("#pillDot").className = "dot " + computeState().dot;
+  if (S.route === "status") renderStatus();
+  if (S.route === "changes") { await ensureLang(); renderChanges(); renderNews(); }
+  if (S.route === "errors") { await ensureArchive(); renderErrors(); }
+  if (S.route === "archive") { await ensureLang(); await renderArchive(); }
+  if (S.route === "talents") {
+    await ensureLang();
+    await loadSaveDiffs();
+    if (S.pendingCode != null) {
+      const c = curClass(); S.cls = c.token; decode(c, S.pendingCode); pruneRanks(c, S.ranks); exitPreview();
+      S.order = normOrder(c, S.ranks, decodeOrder(c, S.pendingOrder || ""));
+      S.pendingCode = null; S.pendingOrder = null; saveHash();
+    }
+    renderTalents();
+  }
+  $("#footData").textContent = S.index ? t("foot_data", { b: S.index.latest, g: fmtDate(S.index.generated) }) : "";
+}
+
+async function boot() {
+  S.lang = store.get("lang", (navigator.language || "ru").startsWith("ru") ? "ru" : "en");
+  S.legacy = +store.get("legacy", 0) || 0;
+  S.planner = !!store.get("planner", false);
+  parseHash();
+  applyI18n();
+  try {
+    [S.index, S.status, S.news, S.icons] = await Promise.all([getJSON("index.json"), getJSON("status.json"), getJSON("news.json"), getJSON("icons.json")]);
+    S.errors = await getJSON("errors.json").catch(() => null);
+    S.example = await getJSON("example-save.json").catch(() => null);
+    S.notes = await getJSON("notes.json").catch(() => null);
+  } catch (e) {
+    $("#stTitle").textContent = "Data unavailable"; $("#stText").textContent = String(e); return;
+  }
+  if (S.route === "talents" && S.pendingCode == null) {
+    await ensureLang(); restoreAuto(curClass());
+  }
+  setRoute(S.route);
+  ensureArchive().then(() => { if (S.route === "status") renderStatus(); });
+  setInterval(() => { if (S.route === "status") renderStatus(); }, 60000);
+  connectLive();
+  connectSaves();
+}
+
+/* Live data: inside the Claude viewer the scheduled task writes fresh status,
+   news and error stats to the artifact database every hour; the page listens
+   and re-renders without a reload. Elsewhere (self-hosted) claude is absent and
+   the bundled JSON is used. */
+async function connectLive() {
+  let db = null;
+  try { db = window.claude?.use ? await window.claude.use("db") : null; } catch { db = null; }
+  if (!db) return;
+  for (const key of ["status", "news", "errors"]) {
+    db.doc("live/" + key).onSnapshot((snap) => {
+      if (!snap.exists) return;
+      try {
+        const v = JSON.parse(snap.data().json);
+        const cur = S[key];
+        if (cur?.generated && v.generated && Date.parse(v.generated) <= Date.parse(cur.generated)) return;
+        S[key] = v; S.live = true;
+        if (S.route === "status" || (key === "news" && S.route === "changes") || (key === "errors" && S.route === "errors")) render();
+        else if (key === "status") $("#pillDot").className = "dot " + computeState().dot;
+      } catch {}
+    }, () => {});
+  }
+}
+
+addEventListener("hashchange", () => {
+  const h = location.hash.slice(1);
+  if (h.startsWith("t-")) { parseHash(); render(); return; }
+  if (/^e-/.test(h) || h === "errors") { parseHash(); setRoute("errors"); return; }
+  if (["status", "changes", "talents", "archive"].includes(h)) {
+    if (h === "talents" && S.route !== "talents" && ds() && !Object.keys(S.ranks).length) restoreAuto(curClass());
+    setRoute(h);
+  }
+});
+document.querySelectorAll("[data-lang]").forEach((b) => b.onclick = async () => {
+  S.lang = b.dataset.lang; store.set("lang", S.lang);  // ranks are keyed by node id, same in every language
+  await ensureLang();
+  render();
+});
+$("#level").oninput = (e) => { S.level = +e.target.value; saveHash(); renderTalents(); };
+$("#capBtn").onclick = () => { S.level = S.status?.levelCap ?? 30; saveHash(); renderTalents(); };
+$("#resetAll").onclick = () => { S.ranks = {}; S.order = []; exitPreview(); S.flags = null; S.activeSave = null; saveHash(); renderTalents(); };
+$("#npToggle").onclick = () => setNp(!S.np);
+$("#planToggle").onclick = () => setPlanner(!S.planner);
+$("#planRail").onclick = () => setPlanner(true);
+$("#share").onclick = () => {
+  const url = location.href.split("#")[0] + "#" + hashFor(curClass());
+  navigator.clipboard?.writeText(url).then(() => toast(t("tc_copied")), () => toast(t("tc_copy_fail")));
+};
+$("#saveForm").onsubmit = (e) => { e.preventDefault(); saveCurrent(); };
+$("#errForm").onsubmit = (e) => { e.preventDefault(); const q = normCode($("#errInput").value); openCode(findCode(q) || q); };
+$("#diffBuild").onchange = (e) => { S.diffBuild = e.target.value; renderChanges(); };
+$("#diffClass").onchange = (e) => { S.diffClass = e.target.value; renderChanges(); };
+$("#diffNumbers").onchange = (e) => { S.diffNumbers = e.target.checked; renderChanges(); };
+$("#arDiffBuild").onchange = (e) => { S.arBuild = e.target.value; renderArchiveDiff(); };
+$("#arDiffClass").onchange = (e) => { S.diffClass = e.target.value; renderArchiveDiff(); };
+$("#arDiffNumbers").onchange = (e) => { S.diffNumbers = e.target.checked; renderArchiveDiff(); };
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { hideTip(); $("#sheet").hidden = true; if (S.preview != null) { exitPreview(); renderTalents(); } } });
+boot();
+</script>
