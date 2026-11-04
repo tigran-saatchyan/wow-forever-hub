@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { useEffect, useState, type CSSProperties } from "react";
-import { fixGates, type TalentDataset } from "../engine";
+import { fixGates, type NotesData, type TalentDataset } from "../engine";
 import { data } from "./api";
 import type { Lang } from "./i18n";
 import type { StatusData } from "./status";
@@ -9,7 +9,52 @@ export interface IndexData {
   generated: string;
   latest: string;
   phase: string;
-  builds: { version: string; build: number; seen: string; changes?: number; changesByLang?: Record<string, number> }[];
+  builds: BuildInfo[];
+  archive?: string;
+  betaFinal?: string;
+}
+
+export interface BuildInfo {
+  version: string;
+  build: number;
+  seen: string;
+  from?: string;
+  talents?: boolean;
+  changes?: number | null;
+  changesByLang?: Record<string, number>;
+}
+
+/** Trainer spells per class and level, and which talents modify each spell (data/abilities). */
+export interface AbilityRow {
+  l: number; // level
+  s: number; // spell id
+  n: string;
+  r: number; // rank
+  i: string; // icon
+  d?: string;
+  a?: number[]; // talents that modify it
+  t?: number; // exists only with this talent
+}
+export interface AbilitiesData {
+  build: string;
+  classes: Record<string, AbilityRow[]>;
+  talentLinks: Record<string, Record<string, number[]>>;
+}
+
+/** One entry of data/diffs/<build>.<lang>.json */
+export interface DiffChange {
+  kind: "added" | "removed" | "text" | "renamed" | "requires" | "meta" | "moved" | "ranks" | "gate";
+  class: string;
+  node: number;
+  talent?: string;
+  numbers?: boolean;
+  before?: unknown;
+  after?: unknown;
+}
+export interface DiffData {
+  from: string;
+  to: string;
+  changes: DiffChange[];
 }
 
 export interface NewsTopic {
@@ -36,6 +81,49 @@ const forever = { staleTime: Infinity } as const;
 
 export const useIndex = () => useQuery({ queryKey: ["index"], queryFn: () => data<IndexData>("index.json"), ...forever });
 export const useIcons = () => useQuery({ queryKey: ["icons"], queryFn: () => data<Icons>("icons.json"), ...forever });
+
+export const useNotes = () => useQuery({ queryKey: ["notes"], queryFn: () => data<NotesData>("notes.json"), ...forever });
+export const useNews = () => useQuery({ queryKey: ["news"], queryFn: () => data<{ topics: NewsTopic[] }>("news.json") });
+
+export function useAbilities(lang: Lang) {
+  const idx = useIndex();
+  return useQuery({
+    queryKey: ["abilities", idx.data?.latest, lang],
+    enabled: !!idx.data,
+    // older builds may not have abilities: the plan then simply shows no trainer rows
+    queryFn: () => data<AbilitiesData>(`abilities/${idx.data!.latest}/${lang}.json`).catch(() => null),
+    ...forever,
+  });
+}
+
+/** Every client build with talent data: the beta archive plus the live index, oldest first. */
+export function useAllBuilds(): BuildInfo[] {
+  const idx = useIndex().data;
+  const arch = useQuery({
+    queryKey: ["archive", idx?.archive],
+    enabled: !!idx?.archive,
+    queryFn: () => data<{ builds: BuildInfo[] }>(idx!.archive!).catch(() => ({ builds: [] })),
+    ...forever,
+  }).data;
+  const m = new Map<string, BuildInfo>();
+  for (const b of arch?.builds || []) if (b.talents) m.set(b.version, b);
+  for (const b of idx?.builds || []) m.set(b.version, b);
+  return [...m.values()].sort((a, b) => a.build - b.build);
+}
+
+/** Talent diffs of the given builds (missing files resolve to null). */
+export function useDiffs(versions: string[], lang: Lang): Record<string, DiffData | null> {
+  const qs = useQueries({
+    queries: versions.map((v) => ({
+      queryKey: ["diff", v, lang],
+      queryFn: () => data<DiffData>(`diffs/${v}.${lang}.json`).catch(() => null),
+      ...forever,
+    })),
+  });
+  const out: Record<string, DiffData | null> = {};
+  versions.forEach((v, i) => (out[v] = qs[i].data ?? null));
+  return out;
+}
 
 export function useTalents(lang: Lang) {
   const idx = useIndex();

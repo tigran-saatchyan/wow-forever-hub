@@ -26,7 +26,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     root.dataset.faction = theme.faction;
   }, [theme]);
 
-  const sfx = useCallback((cue: Cue) => play(theme.voice, cue, sound), [theme.voice, sound]);
+  const sfx = useCallback((cue: Cue) => play(theme.id, theme.voice, cue, sound), [theme.id, theme.voice, sound]);
   const value = useMemo<Ctx>(
     () => ({
       theme,

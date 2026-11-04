@@ -22,6 +22,10 @@ export interface Talent {
   requires?: number[]; // arrows: parent must be fully ranked
   fp?: string; // fingerprint of everything that matters for a build
   flag8?: boolean;
+  /** set only in the preview by Blizzard's notes: a new talent or one the notes change */
+  np?: "add" | "chg";
+  npNotes?: string[];
+  npPref?: number;
 }
 
 export interface Tab {

@@ -49,3 +49,11 @@ export function loadLegacy(dataset: TalentDataset) {
   const fns = factory(S, () => dataset, (k: string) => k);
   return { S, ...fns } as Record<string, any> & { S: Record<string, any> };
 }
+
+/** The prototype's npDataset() on the given trees and notes. */
+export function legacyNpDataset(base: TalentDataset, notes: unknown): TalentDataset {
+  const src = readFileSync(resolve(ROOT, "legacy/web/index.html"), "utf8");
+  const body = ["notesItems", "npDataset"].map((n) => extract(src, n)).join("\n");
+  const S = { lang: "en", talents: { en: base }, notes, npCache: null };
+  return new Function("S", `${body}\nreturn npDataset();`)(S);
+}

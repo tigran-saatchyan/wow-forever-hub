@@ -84,34 +84,420 @@ body {
       focus:border-gold/60 focus:outline-none;
   }
 
-  /* Talent slot frame states, as in the prototype: green can learn, gold has points, grey locked */
+  /* Talent slot, as in the prototype and the game: grey = closed, green = can learn or partly learned,
+     gold = maxed. Badges: level from the plan (top left), rank (bottom right). */
   .slot {
-    @apply relative h-11 w-11 rounded-md border-2 bg-black/60 bg-cover transition sm:h-12 sm:w-12;
+    @apply relative h-11 w-11 rounded-md border-2 bg-black sm:h-12 sm:w-12;
+    border-color: #4b4f57;
+    box-shadow: 0 0 0 1px #000, 0 2px 6px #000c;
+    transition: border-color 0.12s, box-shadow 0.12s, opacity 0.12s, outline-color 0.12s;
+    touch-action: manipulation;
+    user-select: none;
+    z-index: 1;
   }
-  .slot.can {
-    border-color: rgb(var(--good));
-    box-shadow: 0 0 10px -2px rgb(var(--good) / 0.8);
+  .slot .ico {
+    @apply absolute inset-0 rounded-[3px];
+    filter: grayscale(1) brightness(0.5) contrast(0.95);
+    transition: filter 0.12s;
   }
-  .slot.has {
-    border-color: rgb(var(--gold));
-    box-shadow: 0 0 12px -2px rgb(var(--gold) / 0.9);
+  .slot.avail,
+  .slot.some {
+    border-color: #1eff00;
+    box-shadow: 0 0 0 1px #000, 0 0 10px -3px #1eff00;
   }
-  .slot.locked {
-    @apply border-zinc-600;
-    filter: grayscale(1) brightness(0.55);
+  .slot.avail .ico,
+  .slot.some .ico,
+  .slot.max .ico {
+    filter: none;
   }
-  .slot.milestone::after {
+  .slot.max {
+    border-color: #ffd100;
+    box-shadow: 0 0 0 1px #000, 0 0 12px -3px #ffd100;
+  }
+  .slot.ms::after {
     content: "";
-    @apply pointer-events-none absolute -inset-[5px] rounded-lg border border-dashed border-gold/70;
+    @apply pointer-events-none absolute -inset-[6px] rounded-lg border border-dashed;
+    border-color: #ffd10066;
   }
   .slot .rk {
-    @apply absolute -bottom-2 -right-2 rounded border border-edge bg-bg px-1 font-mono text-[10px] leading-4 text-ink;
+    @apply pointer-events-none absolute -bottom-2 -right-2 min-w-[24px] rounded-[3px] border bg-black px-1 text-center font-mono text-[10.5px] font-semibold leading-[15px];
+    border-color: #4b4f57;
+    color: #9aa0aa;
   }
-  .slot.has .rk {
-    @apply border-gold/70 text-gold;
+  .slot.avail .rk,
+  .slot.some .rk {
+    color: #1eff00;
+    border-color: #1eff0088;
   }
-  .slot.can .rk {
-    @apply border-good/70 text-good;
+  .slot.max .rk {
+    color: #ffd100;
+    border-color: #ffd10088;
+  }
+  .slot .lvb {
+    @apply pointer-events-none absolute -left-2 -top-[9px] rounded-[3px] border px-[3px] font-mono text-[9.5px] font-semibold leading-[13px];
+    background: #000d;
+    border-color: #ffd10070;
+    color: #ffd100;
+  }
+  .slot .chg {
+    @apply pointer-events-none absolute -left-1 -top-1 h-[9px] w-[9px] rounded-full border-2 border-black;
+    background: #a335ee;
+  }
+  .slot .nb {
+    @apply pointer-events-none absolute -bottom-1 -left-1 h-[9px] w-[9px] rounded-full border-2 border-black;
+    background: #ff9a3c;
+  }
+  .slot .flagx {
+    @apply pointer-events-none absolute -right-2 -top-2 grid h-4 w-4 place-items-center rounded-full border border-black text-[10px] font-bold text-white;
+    background: rgb(var(--bad));
+  }
+  .slot.flag-chain .flagx {
+    background: #ff9a3c;
+  }
+  .slot.flag-changed {
+    border-color: rgb(var(--bad));
+    box-shadow: 0 0 0 2px rgb(var(--bad) / 0.4), 0 0 16px -3px rgb(var(--bad));
+  }
+  .slot.flag-chain {
+    border-color: #ff9a3c;
+    box-shadow: 0 0 0 2px #ff9a3c55, 0 0 16px -3px #ff9a3c;
+  }
+  /* "view at level": talents taken later in the plan */
+  .slot.plan {
+    border-style: dashed;
+    border-color: #ffd100aa;
+    box-shadow: 0 0 0 1px #000;
+  }
+  .slot.plan .ico {
+    filter: grayscale(0.2) brightness(0.55);
+  }
+  .slot.plan .rk {
+    color: #ffd100aa;
+    border-color: #ffd10055;
+  }
+  /* preview by Blizzard's notes */
+  .slot.np-add {
+    border-style: dashed;
+    border-color: #c79bff;
+    box-shadow: 0 0 0 1px #000, 0 0 12px -3px #c79bff;
+  }
+  .slot.np-add .ico {
+    filter: none;
+    opacity: 0.85;
+  }
+  .slot.np-chg::before {
+    content: "";
+    @apply pointer-events-none absolute -inset-1 rounded-md border;
+    border-color: #c79bffaa;
+  }
+  .slot .npnew {
+    @apply pointer-events-none absolute -top-[9px] left-1/2 -translate-x-1/2 rounded-[3px] border px-[3px] text-[8.5px] font-bold leading-3 tracking-wider;
+    background: #2b1745;
+    border-color: #c79bff;
+    color: #e3ccff;
+  }
+  /* hovered plan row / note, and talents that modify the hovered spell */
+  .slot.hl {
+    outline: 2px solid #fff;
+    outline-offset: 3px;
+    z-index: 3;
+  }
+  .slot.flash {
+    animation: flash 0.6s ease-in-out 3;
+  }
+  .slot.aff {
+    outline: 2px solid #5fd4ff;
+    outline-offset: 3px;
+    box-shadow: 0 0 0 1px #000, 0 0 18px -2px #5fd4ff;
+    z-index: 3;
+  }
+  .affing .slot:not(.aff):not(:hover):not(:focus) {
+    opacity: 0.45;
+  }
+
+
+  /* One talent tree = the in-game panel: the tab's own artwork, a bronze frame, square slots, arrows */
+  .trees {
+    container-type: inline-size;
+  }
+  .wow-tree {
+    @apply relative overflow-hidden rounded-md;
+    isolation: isolate;
+    border: 1px solid #6b5631;
+    background: #07090c;
+    box-shadow: inset 0 0 0 1px #000, inset 0 0 0 3px #2a2216, 0 10px 30px -18px #000;
+  }
+  .wow-tree .art {
+    @apply absolute inset-0 bg-cover bg-center bg-no-repeat;
+    z-index: -1;
+    background-color: #10131a;
+  }
+  .wow-tree .art::after {
+    content: "";
+    @apply absolute inset-0;
+    background:
+      linear-gradient(180deg, #07090ccc 0, #07090c66 60px, #07090c59 55%, #07090ce6 100%),
+      radial-gradient(120% 90% at 50% 40%, transparent 40%, #000a 100%);
+  }
+  .wow-tree header {
+    @apply flex items-center gap-2 px-3 py-2.5;
+    border-bottom: 1px solid #6b563166;
+    background: linear-gradient(180deg, #0a0c10f0, #0a0c10a0);
+  }
+  .wow-tree .tico {
+    @apply h-[30px] w-[30px] flex-none rounded;
+    box-shadow: 0 0 0 1px #000, 0 0 0 2px #6b5631;
+  }
+  .wow-tree h3 {
+    @apply min-w-0 truncate font-display font-semibold;
+    font-size: clamp(16px, 1.95cqw, 20px);
+    color: #f4e3b5;
+    text-shadow: 0 1px 2px #000;
+  }
+  .wow-tree .reset {
+    @apply flex-none p-1 text-xs hover:text-white;
+    color: #a99c82;
+  }
+  .wow-tree .sp {
+    @apply ml-auto flex-none text-right font-mono text-lg font-semibold;
+    color: #ffd100;
+    text-shadow: 0 1px 2px #000;
+  }
+  .wow-tree .body {
+    padding: 18px 10px 20px;
+  }
+  .tgrid {
+    --cell: min(52px, calc((100cqw - 30px) / 5.86));
+    @apply relative mx-auto grid w-max;
+    grid-template-columns: repeat(4, var(--cell));
+    grid-template-rows: repeat(7, var(--cell));
+    column-gap: calc(var(--cell) * 0.62);
+    row-gap: calc(var(--cell) * 0.42);
+  }
+  @media (min-width: 768px) {
+    .tgrid {
+      --cell: min(46px, calc((33.33cqw - 30px) / 5.86));
+    }
+  }
+  .tgrid .slot {
+    width: var(--cell);
+    height: var(--cell);
+  }
+  .tgrid .slot:hover {
+    transform: translateY(-1px);
+  }
+  .tgrid .slot:active {
+    transform: scale(0.94);
+  }
+  .arrows {
+    @apply pointer-events-none absolute inset-0 h-full w-full overflow-visible;
+    z-index: 0;
+  }
+  .arrows path {
+    fill: none;
+    stroke: #4f5563;
+    stroke-width: 0.1;
+    stroke-linejoin: round;
+  }
+  .arrows path.on {
+    stroke: #f0c541;
+    filter: drop-shadow(0 0 0.06px #ffd100);
+  }
+  .arrows marker path {
+    stroke: none;
+    fill: #4f5563;
+  }
+  .arrows marker.on path {
+    fill: #f0c541;
+  }
+
+
+  /* tooltips: dark glass with a gold edge, rank texts in the game's tooltip yellow */
+  .wow-tip {
+    width: min(340px, calc(100vw - 32px));
+    @apply rounded-lg border px-3.5 py-3 text-sm leading-snug;
+    background: #0a0d12f2;
+    border-color: rgb(var(--gold) / 0.45);
+    box-shadow: 0 12px 40px #000a;
+    color: rgb(var(--ink));
+  }
+  .wow-tip h4 {
+    @apply text-base font-semibold;
+  }
+  .wow-tip .r {
+    @apply mb-1.5 mt-0.5 font-mono text-xs text-muted;
+  }
+  .wow-tip .meta {
+    @apply mb-1.5 grid grid-cols-[1fr_auto] gap-x-3 text-[12.5px];
+    color: #cfc8ba;
+  }
+  .wow-tip .meta span:nth-child(2n) {
+    text-align: right;
+  }
+  .wow-tip .req {
+    @apply mb-1 text-[12.5px] text-bad;
+  }
+  .wow-tip .d {
+    white-space: pre-line;
+    color: #f1d488;
+  }
+  .wow-tip .next {
+    @apply mt-2 border-t border-edge pt-2;
+  }
+  .wow-tip .next .lbl {
+    @apply text-xs text-muted;
+  }
+  .wow-tip .next .d {
+    color: #cdb978;
+  }
+  .wow-tip .hint {
+    @apply mt-2 text-[11.5px] text-muted;
+  }
+  .wow-tip .chgnote {
+    @apply mt-2 text-xs;
+    color: #c78bff;
+  }
+  .wow-tip .lvls {
+    @apply mt-2 font-mono text-xs;
+    color: #ffd100;
+  }
+  .wow-tip .note-x {
+    @apply mt-2 border-t border-edge pt-2 text-[12.5px];
+    color: #e6c78a;
+  }
+  .wow-tip .note-x b {
+    @apply font-semibold;
+    color: #ff9a3c;
+  }
+  .wow-tip .aff-l {
+    @apply mt-2 border-t border-edge pt-2 text-[12.5px] text-muted;
+  }
+  .wow-tip .aff-l > span:first-child {
+    @apply font-semibold;
+    color: #5fd4ff;
+  }
+  .wow-tip .aff-l b {
+    @apply font-medium;
+    color: #cfc8ba;
+  }
+  .wow-tip .aff-l b.on {
+    color: #ffd100;
+  }
+  .sheet {
+    @apply fixed inset-x-0 bottom-0 z-[60] max-h-[70vh] w-full overflow-auto rounded-none rounded-t-xl;
+    padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* plan side panel: scrolls inside, header sticks */
+  .planner {
+    @apply absolute inset-0 overflow-y-auto px-3 pb-3;
+    overscroll-behavior: contain;
+  }
+  .planner > header {
+    @apply sticky top-0 z-[2] flex items-center gap-1.5 pb-2 pt-2.5;
+    background: rgb(var(--panel));
+  }
+  .pl-i {
+    @apply grid h-5 w-5 flex-none place-items-center rounded-full border border-edge text-xs font-semibold italic text-muted hover:border-gold/60 hover:text-gold;
+    font-family: Georgia, serif;
+  }
+  .pl-i.open {
+    @apply border-gold/60 text-gold;
+  }
+  .pl-hint {
+    @apply absolute inset-x-0 top-full z-[3] mt-1 hidden rounded-lg border px-3 py-2.5 text-[12.5px] leading-snug text-ink;
+    border-color: rgb(var(--gold) / 0.5);
+    background: #0a0d12f2;
+    box-shadow: 0 12px 40px #000a;
+  }
+  .pl-i:hover ~ .pl-hint,
+  .pl-i:focus-visible ~ .pl-hint,
+  .pl-i.open ~ .pl-hint {
+    display: block;
+  }
+  .rail {
+    @apply flex-col items-center gap-2.5 rounded-lg border border-edge/70 bg-panel/90 py-3 text-ink hover:border-gold/60;
+  }
+  .planbar {
+    @apply flex flex-wrap items-center gap-x-3.5 gap-y-2.5 rounded-lg border px-3.5 py-2;
+    border-color: #ffd10055;
+    background: linear-gradient(90deg, #2a2412, rgb(var(--panel)) 60%);
+    box-shadow: 0 8px 24px -12px #000;
+  }
+  .notesbar,
+  .npbar {
+    @apply flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border px-3.5 py-2.5 text-[13.5px];
+    border-color: #a335ee8c;
+    background: linear-gradient(90deg, #a335ee17, rgb(var(--panel) / 0.9));
+  }
+  .notesbar b,
+  .npbar b {
+    @apply font-semibold;
+  }
+  .cn-item {
+    @apply grid items-start gap-2 rounded-md border border-edge bg-bg/70 px-2.5 py-2 text-[13px] leading-snug;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .cn-item.tal-link {
+    @apply cursor-pointer hover:border-gold/60;
+  }
+
+  /* leveling plan rows */
+  .prow {
+    @apply grid cursor-pointer items-center gap-2 rounded-md border border-transparent px-1.5 py-1;
+    grid-template-columns: 44px 26px minmax(0, 1fr) auto;
+  }
+  .prow:hover {
+    @apply bg-bg/60;
+  }
+  .prow[aria-current="true"] {
+    background: rgb(255 209 0 / 0.1);
+    border-color: #ffd10066;
+  }
+  .prow.drop {
+    box-shadow: inset 0 2px 0 #ffd100;
+  }
+  .prow.dragging {
+    opacity: 0.4;
+  }
+  .mvb {
+    @apply grid h-[26px] w-[26px] place-items-center rounded border border-edge bg-bg text-xs text-muted hover:border-gold/60 hover:text-ink disabled:cursor-default disabled:opacity-30;
+  }
+  .ab {
+    @apply inline-flex max-w-full items-center gap-1.5 rounded border border-edge bg-bg py-px pl-px pr-2 text-xs;
+    color: #cfc8ba;
+  }
+  .ab:hover,
+  .ab:focus-visible {
+    @apply border-gold/60 text-ink outline-none;
+  }
+  .st {
+    @apply inline-block whitespace-nowrap rounded border px-1.5 text-[10.5px] font-semibold uppercase leading-[18px] tracking-wide;
+  }
+  .st.done {
+    @apply border-good/60 text-good;
+  }
+  .st.pending {
+    color: #ff9a3c;
+    border-color: #ff9a3c99;
+  }
+  .st.unknown {
+    @apply border-edge text-muted;
+  }
+  .tag {
+    @apply rounded-full border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
+  }
+  .btn[aria-pressed="true"] {
+    border-color: #ffd10088;
+    color: #ffd100;
+    background: rgb(255 209 0 / 0.1);
+  }
+}
+
+@keyframes flash {
+  50% {
+    outline-color: rgb(var(--gold));
+    box-shadow: 0 0 24px 2px rgb(var(--gold));
   }
 }
 
