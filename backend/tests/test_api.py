@@ -56,3 +56,34 @@ def test_builds_crud(client):
     assert len(client.get("/api/builds").json()) == 1
     assert client.delete(f"/api/builds/{a['id']}").status_code == 204
     assert client.get("/api/builds").json() == []
+
+
+def test_production_guard():
+    from app.config import Settings
+
+    with pytest.raises(RuntimeError, match="FH_JWT_SECRET"):
+        Settings(env="production").check_production()
+    ok = Settings(
+        env="production",
+        jwt_secret="x" * 40,
+        admin_email="me@example.com",
+        admin_password="long-enough-pass",
+        cookie_secure=True,
+        database_url="sqlite+aiosqlite:////var/lib/foreverhub/hub.db",
+    )
+    ok.check_production()
+
+
+def test_spa_fallback(tmp_path, monkeypatch):
+    (tmp_path / "assets").mkdir()
+    (tmp_path / "index.html").write_text("<div id=root></div>")
+    (tmp_path / "favicon.svg").write_text("<svg/>")
+    from app import main
+    from app.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "static_dir", tmp_path)
+    with TestClient(main.create_app()) as c:
+        assert "root" in c.get("/talents").text
+        assert c.get("/favicon.svg").text == "<svg/>"
+        assert c.get("/api/nope").status_code == 404
+        assert c.get("/api/health").json() == {"ok": True}

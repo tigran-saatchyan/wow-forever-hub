@@ -5,6 +5,7 @@
 
 - Что строим и зачем: [docs/SPEC.md](docs/SPEC.md)
 - План по этапам: [docs/ROADMAP.md](docs/ROADMAP.md)
+- Выкладка на Railway: [docs/DEPLOY.md](docs/DEPLOY.md)
 
 ## Структура
 

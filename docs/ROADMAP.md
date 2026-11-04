@@ -32,8 +32,9 @@
 
 ## Этап 3 — деплой
 
-- 🔜 Railway: два сервиса (API + статика фронта) или один (FastAPI раздаёт `dist/`), Postgres, том для `data/`
-- 🔜 Секреты `FH_*`, `FH_COOKIE_SECURE=true`
+- ✅ Один сервис Railway: Dockerfile в корне, FastAPI раздаёт API, `data/` и собранный фронт
+- ✅ SQLite на Railway Volume; защита от запуска в проде с секретами по умолчанию
+- 🔜 Выкатить по [DEPLOY.md](DEPLOY.md) и проверить на живом домене
 
 ## Этап 4 — библиотека и обмен
 

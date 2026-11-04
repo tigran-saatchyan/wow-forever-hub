@@ -27,3 +27,20 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npx vite build
+
+  image:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t forever-hub .
+      - name: Smoke test the production image
+        run: |
+          docker run -d --name hub -p 8000:8000 \
+            -e FH_JWT_SECRET=ci-secret-ci-secret-ci-secret-ci-secret \
+            -e FH_ADMIN_EMAIL=ci@example.com -e FH_ADMIN_PASSWORD=ci-password-123 \
+            -e FH_DATABASE_URL=sqlite+aiosqlite:////tmp/hub.db forever-hub
+          for i in $(seq 1 30); do curl -sf localhost:8000/api/health && break; sleep 1; done
+          curl -sf localhost:8000/ | grep -q 'id="root"'
+          curl -sf localhost:8000/data/index.json > /dev/null
+          docker logs hub
