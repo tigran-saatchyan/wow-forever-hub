@@ -89,14 +89,17 @@ def update_talents(builds: list[dict], keep: int = 10) -> dict:
     if processed:
         latest = processed[-1]["version"]
         from . import abilities
-        abil = []
+        built_ab: dict[str, dict] = {}
         for lang, loc in config.LOCALES.items():
             try:
-                ab = abilities.build_abilities(latest, lang, loc, prev_ds[lang], icon_map)
-                _write(data / "abilities" / latest / f"{lang}.json", ab)
-                abil.append(ab)
+                built_ab[lang] = abilities.build_abilities(latest, lang, loc, prev_ds[lang], icon_map)
             except Exception as e:  # noqa: BLE001
                 log.warning("abilities %s/%s: %s", latest, lang, e)
+        if "en" in prev_ds:
+            log.info("abilities: %d links dropped by the school check", abilities.prune_school_conflicts(built_ab, prev_ds["en"]))
+        for lang, ab in built_ab.items():
+            _write(data / "abilities" / latest / f"{lang}.json", ab)
+        abil = list(built_ab.values())
         names = sorted(set(icons.collect_names([prev_ds[l] for l in prev_ds])) | abilities.icon_names_of(abil))
         res = icons.build_sprite(names, data)
         if res["missing"]:

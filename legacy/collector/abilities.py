@@ -13,6 +13,7 @@ Output (per language): abilities/<build>/<lang>.json
 from __future__ import annotations
 
 import logging
+import re
 
 from . import db2
 from .tooltip import Renderer
@@ -155,3 +156,90 @@ def build_abilities(build: str, lang: str, locale: str, talent_ds: dict, icons: 
 
 def icon_names_of(datasets: list[dict]) -> set[str]:
     return {r["i"] for ds in datasets for rows in ds["classes"].values() for r in rows}
+
+
+# ---------------------------------------------------------------------------------------------
+# School check for the links above. Class masks alone over-match: Holy Precision ("chance to hit
+# with Holy spells") carries a mask that covers Shadow spells too, so Vampiric Embrace or
+# Shadowform showed it as a modifier. A link is dropped when the talent's English text limits
+# it to schools ("Fire, Frost, and Nature spells", "Holy damage") that the spell's own text
+# does not have, unless the talent names the spell outright.
+# ---------------------------------------------------------------------------------------------
+_SCHOOLS = "Holy|Shadow|Fire|Frost|Arcane|Nature|Physical"
+_SCHOOL_LIST = re.compile(
+    rf"\b((?:(?:{_SCHOOLS}),?\s+(?:and\s+|or\s+)?)*(?:{_SCHOOLS}))\s+(?:damage\s+)?(?:spells?|damage|magic|resistance)\b", re.I
+)
+
+
+def _strip_names(text: str, names: list[str]) -> str:
+    for n in names:  # longest first: "Holy Fire" before "Holy"
+        text = text.replace(n, " ")
+    return text
+
+
+def talent_schools(text: str, names: list[str]) -> set[str]:
+    out: set[str] = set()
+    for m in _SCHOOL_LIST.finditer(_strip_names(text, names)):
+        out |= {s.capitalize() for s in re.findall(_SCHOOLS, m.group(1), re.I)}
+    return out
+
+
+_SPELL_SCHOOL = re.compile(r"\b(Holy|Shadow|Fire|Frost|Arcane|Nature)\s+(?:damage|energy|magic|spells?|resistance)\b", re.I)
+
+
+def spell_schools(text: str, names: list[str]) -> set[str]:
+    return {s.capitalize() for s in _SPELL_SCHOOL.findall(_strip_names(text, names))}
+
+
+def school_conflicts(ab_en: dict, talents_en: dict) -> dict[str, set[tuple[str, int]]]:
+    """Per class: (spell key, talent node) pairs whose schools contradict. Spell key is the
+    spell id for trainer rows and "t<node>" for talents that are spells themselves."""
+    bad: dict[str, set[tuple[str, int]]] = {}
+    for c in talents_en["classes"]:
+        token = c["token"]
+        M = {x["id"]: x for tb in c["tabs"] for x in tb["talents"]}
+        rows = ab_en.get("classes", {}).get(token, [])
+        names = sorted({r["n"] for r in rows} | {x["name"] for x in M.values()}, key=len, reverse=True)
+        spells = [(str(r["s"]), r["n"], r.get("d", ""), r.get("a", [])) for r in rows]
+        spells += [("t" + k, M[int(k)]["name"], M[int(k)]["ranks"][0], v)
+                   for k, v in ab_en.get("talentLinks", {}).get(token, {}).items() if int(k) in M]
+        for key, name, desc, aff in spells:
+            for tid in aff:
+                x = M.get(tid)
+                if not x:
+                    continue
+                tt = " ".join(x["ranks"])
+                if name in tt:
+                    continue
+                ts, ss = talent_schools(tt, names), spell_schools(desc, names)
+                if ts and ss and not ts & ss:
+                    bad.setdefault(token, set()).add((key, tid))
+    return bad
+
+
+def prune_school_conflicts(abil_by_lang: dict[str, dict], talents_en: dict) -> int:
+    """Drop contradicting links from every language (node ids are the same in all). Returns the count."""
+    en = abil_by_lang.get("en")
+    if not en:
+        return 0
+    bad = school_conflicts(en, talents_en)
+    n = 0
+    for ab in abil_by_lang.values():
+        for token, pairs in bad.items():
+            for r in ab.get("classes", {}).get(token, []):
+                if r.get("a"):
+                    keep = [t for t in r["a"] if (str(r["s"]), t) not in pairs]
+                    n += len(r["a"]) - len(keep)
+                    if keep:
+                        r["a"] = keep
+                    else:
+                        del r["a"]
+            links = ab.get("talentLinks", {}).get(token, {})
+            for k in list(links):
+                keep = [t for t in links[k] if ("t" + k, t) not in pairs]
+                n += len(links[k]) - len(keep)
+                if keep:
+                    links[k] = keep
+                else:
+                    del links[k]
+    return n

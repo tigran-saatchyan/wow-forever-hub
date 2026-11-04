@@ -87,17 +87,21 @@ def run(state: Path) -> dict:
         if built:
             latest = built[-1]["version"]
             # trainer abilities by level for the leveling plan (optional: never block a talent update)
-            abil = []
+            built_ab: dict[str, dict] = {}
             for lang, loc in config.LOCALES.items():
                 try:
-                    ab = abilities.build_abilities(latest, lang, loc, prev[lang], icon_map)
-                    _write(data / "abilities" / latest / f"{lang}.json", ab)
-                    files[f"data/abilities/{latest}/{lang}.json"] = f"web/data/abilities/{latest}/{lang}.json"
-                    if prev_latest and prev_latest != latest:
-                        files[f"data/abilities/{prev_latest}/{lang}.json"] = None
-                    abil.append(ab)
+                    built_ab[lang] = abilities.build_abilities(latest, lang, loc, prev[lang], icon_map)
                 except Exception as e:  # noqa: BLE001
                     notes.append(f"abilities {latest}/{lang}: {e}")
+            # class masks over-match (Holy Precision on Shadow spells): drop links whose schools contradict
+            if "en" in prev:
+                abilities.prune_school_conflicts(built_ab, prev["en"])
+            for lang, ab in built_ab.items():
+                _write(data / "abilities" / latest / f"{lang}.json", ab)
+                files[f"data/abilities/{latest}/{lang}.json"] = f"web/data/abilities/{latest}/{lang}.json"
+                if prev_latest and prev_latest != latest:
+                    files[f"data/abilities/{prev_latest}/{lang}.json"] = None
+            abil = list(built_ab.values())
             names = sorted(set(icons.collect_names(list(prev.values()))) | abilities.icon_names_of(abil))
             icons.build_sprite(names, data)
             index["builds"] = (index.get("builds", []) + built)[-KEEP_BUILDS:]
