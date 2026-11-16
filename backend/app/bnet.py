@@ -121,10 +121,13 @@ class Bnet:
         locale = LOCALES.get(lang or "", None)
         ns = self.namespace(kind, region)
         r = await self._get(path, ns, region, locale, token)
-        if kind == "static" and r.status_code in (403, 404) and ns == f"static-forever-{region}":
+        if kind == "static" and r.status_code in (403, 404):
+            # Forever's static data answers under the plain or the versioned name, item by item:
+            # try the other one before giving up, and remember which one answered
             ver = current_version(self.s)
-            if ver:
-                alt = f"static-{ver}-forever-{region}"
+            plain = f"static-forever-{region}"
+            alt = plain if ns != plain else (f"static-{ver}-forever-{region}" if ver else None)
+            if alt:
                 r2 = await self._get(path, alt, region, locale, token)
                 if r2.status_code == 200:
                     self._static_ns[region] = alt

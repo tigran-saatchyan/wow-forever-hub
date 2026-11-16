@@ -11,7 +11,7 @@ from . import auth, bnet
 from .config import get_settings
 from .db import init_db
 from .routers import bnet as bnet_routes
-from .routers import builds, characters, items, live, market
+from .routers import builds, characters, items, live, market, media
 
 
 @asynccontextmanager
@@ -47,6 +47,7 @@ def create_app() -> FastAPI:
     app.include_router(characters.router)
     app.include_router(items.router)
     app.include_router(market.router)
+    app.include_router(media.router)
 
     @app.get("/api/health")
     async def health():

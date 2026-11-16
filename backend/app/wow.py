@@ -26,9 +26,11 @@ def character_summary(p: dict, lang: str | None = None) -> dict:
     return {
         "name": name_of(p.get("name"), lang) or "",
         "level": p.get("level"),
-        "classId": _get(p, "character_class", "id"),
-        "className": name_of(p.get("character_class"), lang),
-        "race": name_of(p.get("race"), lang),
+        # profile: character_class / race; Battle.net account list: playable_class / playable_race
+        "classId": _get(p, "character_class", "id") or _get(p, "playable_class", "id"),
+        "className": name_of(p.get("character_class") or p.get("playable_class"), lang),
+        "race": name_of(p.get("race") or p.get("playable_race"), lang),
+        "raceId": _get(p, "race", "id") or _get(p, "playable_race", "id"),
         "gender": _get(p, "gender", "type"),
         "faction": _get(p, "faction", "type"),
         "guild": {"name": name_of(guild, lang), "href": _get(guild, "key", "href")} if guild else None,
@@ -135,14 +137,17 @@ def talents(specs: dict) -> list[dict]:
     return out
 
 
-def media_url(m: dict, *keys: str) -> str | None:
-    """First asset URL from a media answer (keys tried in order, e.g. "avatar", "inset", "icon")."""
+def media_url(m: dict, *keys: str, strict: bool = False) -> str | None:
+    """First asset URL from a media answer (keys tried in order, e.g. "avatar", "inset", "icon").
+
+    Without `strict`, any asset will do when none of the keys is there.
+    """
     assets = m.get("assets") or []
     for k in keys:
         for a in assets:
             if a.get("key") == k and a.get("value"):
                 return a["value"]
-    return assets[0].get("value") if assets else None
+    return None if strict or not assets else assets[0].get("value")
 
 
 def item(it: dict, media: dict | None, lang: str | None = None) -> dict:
@@ -244,3 +249,46 @@ def roster(r: dict, lang: str | None = None) -> list[dict]:
             "rank": m.get("rank"),
         })
     return sorted(out, key=lambda x: (x["rank"] if x["rank"] is not None else 99, -(x["level"] or 0), x["name"]))
+
+
+# stat key -> how to read it; percentages are shown with "%"
+_STATS = [
+    ("health", "n"), ("power", "n"), ("strength", "e"), ("agility", "e"), ("stamina", "e"), ("intellect", "e"),
+    ("spirit", "e"), ("armor", "e"), ("attack_power", "n"), ("melee_crit", "p"), ("ranged_crit", "p"),
+    ("spell_crit", "p"), ("spell_power", "n"), ("mana_regen", "n"), ("dodge", "p"), ("parry", "p"), ("block", "p"),
+    ("defense", "e"), ("melee_haste", "p"), ("spell_haste", "p"), ("versatility", "n"), ("mastery", "p"),
+]
+
+
+def statistics(st: dict, lang: str | None = None) -> dict:
+    """Character sheet numbers: {key: value}, plus the power type's name (Mana, Rage, Energy)."""
+    out: dict = {}
+    for key, how in _STATS:
+        v = st.get(key)
+        if isinstance(v, dict):
+            v = v.get("effective", v.get("value", v.get("base")))
+        if isinstance(v, int | float) and not isinstance(v, bool):
+            out[key] = round(v, 2) if how == "p" else int(v) if float(v).is_integer() else round(v, 1)
+    power = name_of(st.get("power_type"), lang)
+    if power:
+        out["powerName"] = power
+    return out
+
+
+def professions(p: dict, lang: str | None = None) -> list[dict]:
+    """Primary and secondary professions with skill: classic gives skill_points directly, retail per tier."""
+    out = []
+    for kind in ("primaries", "secondaries"):
+        for x in p.get(kind) or []:
+            name = name_of(x.get("profession"), lang)
+            skill, mx = x.get("skill_points"), x.get("max_skill_points")
+            tiers = x.get("tiers") or []
+            if skill is None and tiers:
+                t = tiers[-1]
+                skill, mx = t.get("skill_points"), t.get("max_skill_points")
+            if name:
+                out.append({
+                    "name": name, "id": _get(x, "profession", "id"),
+                    "kind": "primary" if kind == "primaries" else "secondary", "skill": _num(skill), "max": _num(mx),
+                })
+    return out

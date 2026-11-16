@@ -1,20 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ItemHover, ItemIcon } from "../components/Wow";
 import { ApiError } from "../lib/api";
 import { characterLink, mapTalents } from "../lib/charTalents";
 import { iconStyle, useIcons, useIndex, useTalents } from "../lib/gameData";
 import { fmtDate, useI18n, type Key } from "../lib/i18n";
 import { store } from "../lib/store";
+import { CharacterSheet } from "./characters/CharacterSheet";
 import {
-  qColor, useCharacter, useCharacterActions, useCharacters, wowApi, type Character, type Region,
+  media, useCharacter, useCharacterActions, useCharacters, wowApi, type Character, type Region,
 } from "../lib/wowApi";
-
-const SLOT_ORDER = [
-  "HEAD", "NECK", "SHOULDER", "BACK", "CHEST", "SHIRT", "TABARD", "WRIST", "HANDS", "WAIST", "LEGS", "FEET",
-  "FINGER_1", "FINGER_2", "TRINKET_1", "TRINKET_2", "MAIN_HAND", "OFF_HAND", "RANGED",
-];
 
 export function Characters() {
   const { t, lang } = useI18n();
@@ -125,15 +120,15 @@ function CharacterCard({ id }: { id: number }) {
   if (!c) return <div className="panel p-4 text-muted">…</div>;
   const s = c.summary?.[lang];
   const k = D.data?.classes.find((x) => x.id === s?.classId);
-  const eq = [...(c.equipment?.[lang] || [])].sort((a, b) => SLOT_ORDER.indexOf(a.slot) - SLOT_ORDER.indexOf(b.slot));
   const m = k && c.talents ? mapTalents(k, c.talents) : null;
   const link = k && c.talents && idx.data ? characterLink(k, c.talents, s?.level ?? null, +idx.data.latest.split(".").pop()!) : null;
-  const err = c.error ? t(c.error === "not_found" || c.error === "not_configured" ? (`ch_err_${c.error}` as Key) : "ch_err", { e: c.error }) : null;
+  const known = ["not_found", "not_configured", "low_level"];
+  const err = c.error ? t(known.includes(c.error) ? (`ch_err_${c.error}` as Key) : "ch_err", { e: c.error }) : null;
 
   return (
     <section className="panel space-y-4 p-4">
       <header className="flex flex-wrap items-start gap-4">
-        {c.avatar ? <img src={c.avatar} alt="" className="h-16 w-16 rounded-md border border-edge object-cover" /> : <ClassIcon classId={s?.classId ?? null} size={64} />}
+        {c.avatar ? <img src={media(c.avatar)} alt="" className="h-16 w-16 rounded-md border border-edge object-cover" /> : <ClassIcon classId={s?.classId ?? null} size={64} />}
         <div className="min-w-[200px] flex-1">
           <h2 className="font-display text-2xl" style={{ color: k?.color }}>{s?.name || c.name}</h2>
           {s && (
@@ -152,7 +147,7 @@ function CharacterCard({ id }: { id: number }) {
         </div>
       </header>
       {err && <p className="rounded-md border border-bad/50 bg-bad/10 p-2.5 text-sm">{err}</p>}
-      {c.error && (c.account || c.tried) && (
+      {c.error && c.error !== "low_level" && (c.account || c.tried) && (
         <details className="text-xs">
           <summary className="cursor-pointer text-gold">{t("ch_raw")}</summary>
           {c.tried && <p className="mt-1 text-muted">{t("ch_tried")}: <span className="font-mono">{c.tried.join(", ")}</span></p>}
@@ -162,33 +157,10 @@ function CharacterCard({ id }: { id: number }) {
 
       {s?.guild?.href && <GuildRoster cid={c.id} name={s.guild.name} />}
 
-      {c.summary && (
-        <div className="grid gap-4 xl:grid-cols-2">
-          <div>
-            <h3 className="panel-title mb-2">{t("ch_equipment")}</h3>
-            {c.missing?.includes("equipment") ? <p className="text-sm text-muted">{t("ch_no_part")}</p> : (
-              <ul className="grid gap-1.5 sm:grid-cols-2">
-                {eq.map((x) => (
-                  <li key={x.slot}>
-                    <ItemHover
-                      id={x.id}
-                      extra={(x.enchants || []).filter((e) => typeof e === "string").map((e) => <div key={e} className="text-[#1eff00]">{e}</div>)}
-                      fallback={{ id: x.id, name: x.name, quality: x.quality, level: x.ilvl, slot: x.slotName, stats: x.stats || [], spells: [] }}
-                    >
-                      <span tabIndex={0} className="flex items-center gap-2 rounded-md border border-edge/50 bg-bg/40 p-1.5">
-                        <ItemIcon src={x.icon} quality={x.quality} size={32} />
-                        <span className="grid min-w-0 leading-tight">
-                          <b className="truncate text-sm font-medium" style={{ color: qColor(x.quality) }}>{x.name}</b>
-                          <span className="truncate text-[11px] text-muted">{x.slotName}{x.ilvl ? ` · ${x.ilvl}` : ""}</span>
-                        </span>
-                      </span>
-                    </ItemHover>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <div>
+      {c.summary && !c.error && <CharacterSheet c={c} k={k} />}
+
+      {c.summary && !c.error && (
+        <div>
             <h3 className="panel-title mb-2">{t("ch_talents")}</h3>
             {c.missing?.includes("talents") || !c.talents ? <p className="text-sm text-muted">{t("ch_no_part")}</p> : (
               <>
@@ -199,7 +171,6 @@ function CharacterCard({ id }: { id: number }) {
                 </ul>
               </>
             )}
-          </div>
         </div>
       )}
     </section>

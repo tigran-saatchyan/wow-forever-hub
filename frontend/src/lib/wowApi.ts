@@ -45,6 +45,9 @@ export interface Character {
   equipment?: Record<Lang, EquipItem[]> | null; talents?: CharTalent[] | null; avatar?: string | null;
   missing?: string[];
   account?: Record<string, unknown> | null; tried?: string[] | null;
+  model?: string | null;
+  stats?: Record<Lang, Record<string, number | string>> | null;
+  professions?: Record<Lang, { name: string; id?: number; kind: "primary" | "secondary"; skill: number | null; max: number | null }[]> | null;
 }
 export interface ItemInfo {
   id: number; name: string; quality?: string; level?: number; required?: number; class?: string; subclass?: string;
@@ -126,3 +129,6 @@ export function rulesetName(r: Ruleset, t: (k: Key, v?: Record<string, string | 
   if (r.name && r.name !== String(r.id)) return r.name;
   return [1, 2, 3, 15].includes(r.id) ? t(`rs_${r.id}` as Key) : t("rs_n", { n: r.id });
 }
+
+/** Blizzard images through the hub (ad blockers drop some render.worldofwarcraft.com icons). */
+export const media = (url?: string | null) => (url ? `/api/media?u=${encodeURIComponent(url)}` : undefined);

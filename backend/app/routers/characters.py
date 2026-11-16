@@ -40,7 +40,8 @@ def _out(c: Character, full: bool = False) -> dict:
     }
     if full:
         d |= {"equipment": p.get("equipment"), "talents": p.get("talents"), "avatar": p.get("avatar"),
-              "missing": p.get("missing", []), "account": p.get("account"), "tried": p.get("tried")}
+              "missing": p.get("missing", []), "account": p.get("account"), "tried": p.get("tried"),
+              "model": p.get("model"), "stats": p.get("stats"), "professions": p.get("professions")}
     return d
 
 
@@ -80,6 +81,13 @@ async def refresh(session: AsyncSession, c: Character) -> Character:
     if prof is None:
         c.error = "not_found" if last is None or last.status == 404 else f"{last.status}"
         c.profile = {"account": account, "tried": tried} if account else {"tried": tried}
+        if account:
+            # Blizzard keeps profiles of low characters to itself (under 10 in retail); Battle.net's
+            # account list still knows their name, level, class and race
+            c.profile["summary"] = {lg: wow.character_summary(account, lg) for lg in LANGS}
+            lvl = account.get("level")
+            if c.error == "not_found" and isinstance(lvl, int) and lvl < 10:
+                c.error = "low_level"
         c.fetched = utcnow()
         await session.commit()
         return c
@@ -90,8 +98,12 @@ async def refresh(session: AsyncSession, c: Character) -> Character:
         except BnetError as e:
             return e
 
-    eq, specs, media = await asyncio.gather(part("/equipment"), part("/specializations"), part("/character-media"))
-    missing = [n for n, x in (("equipment", eq), ("talents", specs), ("media", media)) if isinstance(x, BnetError)]
+    eq, specs, media, stats, profs = await asyncio.gather(
+        part("/equipment"), part("/specializations"), part("/character-media"), part("/statistics"),
+        part("/professions"),
+    )
+    missing = [n for n, x in (("equipment", eq), ("talents", specs), ("media", media), ("stats", stats),
+                              ("professions", profs)) if isinstance(x, BnetError)]
     profile: dict = {"summary": {lg: wow.character_summary(prof, lg) for lg in LANGS}, "missing": missing,
                      "path": base}
     if account:
@@ -114,6 +126,12 @@ async def refresh(session: AsyncSession, c: Character) -> Character:
         profile["talents"] = wow.talents(specs)
     if not isinstance(media, BnetError):
         profile["avatar"] = wow.media_url(media, "avatar", "inset", "main")
+        # the full-body render for the character window, transparent when Blizzard has one
+        profile["model"] = wow.media_url(media, "main-raw", "main", "inset", strict=True)
+    if not isinstance(stats, BnetError):
+        profile["stats"] = {lg: wow.statistics(stats, lg) for lg in LANGS}
+    if not isinstance(profs, BnetError):
+        profile["professions"] = {lg: wow.professions(profs, lg) for lg in LANGS}
     c.profile = profile
     c.name = profile["summary"]["en"]["name"] or c.name
     c.error = None

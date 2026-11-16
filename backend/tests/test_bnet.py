@@ -66,6 +66,8 @@ def handler(req: httpx.Request) -> httpx.Response:
             {"name": "Joe Gun", "key": {"href": href.format("joe-gun")}},
             {"name": "Ann Bell", "key": {"href": href.format("ann-bell")}},
             {"name": "Joe", "surname": "Gun", "level": 42},  # no link: the surname makes the lookup work
+            {"name": "Tiny", "level": 1, "playable_class": {"id": 4}, "playable_race": {"id": 5},
+             "key": {"href": href.format("tiny")}},  # Blizzard keeps profiles under 10 to itself
         ]}]})
     if p == "/data/wow/guild/deathwish/roster":
         return httpx.Response(200, json={"guild": {"name": "Deathwish"}, "members": [
@@ -107,6 +109,17 @@ def handler(req: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json=SPECS_RETAIL)
     if p == "/profile/wow/character/joe-gun/character-media":
         return httpx.Response(404, json={"code": 404})
+    if p == "/profile/wow/character/joe-gun/statistics":
+        return httpx.Response(200, json={"health": 1200, "power": 900, "power_type": {"name": "Mana"},
+                                         "intellect": {"base": 80, "effective": 95}, "spell_crit": {"value": 3.456}})
+    if p == "/profile/wow/character/joe-gun/professions":
+        return httpx.Response(200, json={
+            "primaries": [{"profession": {"id": 197, "name": "Tailoring"},
+                           "skill_points": 150, "max_skill_points": 225}],
+            "secondaries": [{"profession": {"id": 185, "name": "Cooking"},
+                             "tiers": [{"skill_points": 40, "max_skill_points": 75}]}]})
+    if req.url.host == "render.worldofwarcraft.com":
+        return httpx.Response(200, content=b"\xff\xd8jpeg", headers={"content-type": "image/jpeg"})
     return httpx.Response(404, json={"code": 404, "path": p})
 
 
@@ -148,6 +161,10 @@ def test_character_card(client):
     assert eq["name"] == "Thunderfury" and eq["stats"] == ["+5 Agility"] and eq["icon"] == "https://render/19019.jpg"
     assert c["talents"] == [{"node": 105958, "talent": 77, "spell": 12282, "name": "Improved Heroic Strike", "rank": 3}]
     assert c["missing"] == ["media"]
+    assert c["stats"]["en"] == {"health": 1200, "power": 900, "intellect": 95, "spell_crit": 3.46, "powerName": "Mana"}
+    assert c["professions"]["en"] == [
+        {"name": "Tailoring", "id": 197, "kind": "primary", "skill": 150, "max": 225},
+        {"name": "Cooking", "id": 185, "kind": "secondary", "skill": 40, "max": 75}]
     assert len(client.get("/api/characters").json()) == 1
     assert client.delete(f"/api/characters/{c['id']}").status_code == 204
 
@@ -169,7 +186,10 @@ def test_battlenet_sign_in_imports_characters(client):
     r = client.get(f"/api/bnet/callback?code=good&state={loc.params['state']}", follow_redirects=False)
     assert r.headers["location"] == "/characters?bnet=ok"
     chars = {c["slug"]: c for c in client.get("/api/characters").json()}
-    assert set(chars) == {"joe-gun", "ann-bell", "joe"} and chars["joe-gun"]["source"] == "bnet"
+    assert set(chars) == {"joe-gun", "ann-bell", "joe", "tiny"} and chars["joe-gun"]["source"] == "bnet"
+    tiny = chars["tiny"]
+    assert tiny["error"] == "low_level" and tiny["summary"]["en"]["level"] == 1
+    assert tiny["summary"]["en"]["classId"] == 4
     assert chars["joe"]["summary"]["en"]["level"] == 42 and chars["joe"]["error"] is None
     bad = client.get(f"/api/characters/{chars['ann-bell']['id']}").json()
     assert bad["account"]["name"] == "Ann Bell" and bad["tried"] == ["/profile/wow/character/ann-bell"]
@@ -177,6 +197,12 @@ def test_battlenet_sign_in_imports_characters(client):
     assert client.get("/api/bnet/account").json()["battletag"] == "Joe#1234"
     for c in chars.values():
         client.delete(f"/api/characters/{c['id']}")
+
+
+def test_media_proxy(client):
+    r = client.get("/api/media?u=https://render.worldofwarcraft.com/eu/icons/56/inv_misc.jpg")
+    assert r.status_code == 200 and r.headers["content-type"] == "image/jpeg"
+    assert client.get("/api/media?u=https://evil.example/x.jpg").status_code == 422
 
 
 def test_unknown_character(client):
