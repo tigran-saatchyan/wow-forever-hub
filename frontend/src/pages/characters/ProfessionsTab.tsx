@@ -174,7 +174,7 @@ function Recipes({ cid, line, own }: { cid: number; line: number; own: CharProfe
         )}
         <input className="input ml-auto w-48 py-1" placeholder={t("ar_filter")} value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
-      <p className="text-xs text-muted">{t("pf_mark_hint")}</p>
+      <p className="text-xs text-muted">{t(own.hasKnown ? "pf_from_api" : "pf_mark_hint")}</p>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[680px] text-sm">
           <thead className="text-left text-xs text-muted">
