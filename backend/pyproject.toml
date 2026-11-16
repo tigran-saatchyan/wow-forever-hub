@@ -13,6 +13,7 @@ dependencies = [
   "pwdlib[argon2]>=0.2",
   "pyjwt>=2.9",
   "sse-starlette>=2.1",
+  "httpx>=0.27",
 ]
 
 [dependency-groups]

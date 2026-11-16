@@ -1,3 +1,5 @@
+import asyncio
+import contextlib
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
@@ -5,10 +7,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import auth
+from . import auth, bnet
 from .config import get_settings
 from .db import init_db
-from .routers import builds, live
+from .routers import bnet as bnet_routes
+from .routers import builds, characters, items, live, market
 
 
 @asynccontextmanager
@@ -16,7 +19,15 @@ async def lifespan(_: FastAPI):
     get_settings().check_production()
     await init_db()
     await auth.ensure_superadmin()
+    s = get_settings()
+    task = asyncio.create_task(market.poller()) if s.ah_poll_minutes > 0 and bnet.client().configured else None
     yield
+    if task:
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await task
+    await bnet.client().aclose()
+    bnet.set_client(None)
 
 
 def create_app() -> FastAPI:
@@ -32,6 +43,10 @@ def create_app() -> FastAPI:
     app.include_router(auth.router)
     app.include_router(builds.router)
     app.include_router(live.router)
+    app.include_router(bnet_routes.router)
+    app.include_router(characters.router)
+    app.include_router(items.router)
+    app.include_router(market.router)
 
     @app.get("/api/health")
     async def health():

@@ -53,6 +53,15 @@ async def current_user(request: Request, session: Annotated[AsyncSession, Depend
 CurrentUser = Annotated[User, Depends(current_user)]
 
 
+async def admin_user(user: CurrentUser) -> User:
+    if user.role != "superadmin":
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "superadmin only")
+    return user
+
+
+AdminUser = Annotated[User, Depends(admin_user)]
+
+
 @router.post("/login", response_model=UserOut)
 async def login(body: LoginIn, response: Response, session: Annotated[AsyncSession, Depends(get_session)]):
     user = (await session.execute(select(User).where(User.email == body.email.strip().lower()))).scalar_one_or_none()

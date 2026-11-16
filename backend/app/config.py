@@ -3,6 +3,7 @@
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -25,6 +26,15 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
     live_poll_seconds: float = 5.0
+
+    # Blizzard API (https://develop.battle.net). Empty -> every Blizzard feature reports "not configured".
+    bnet_client_id: str = Field("", validation_alias=AliasChoices("FH_BNET_CLIENT_ID", "BNET_CLIENT_ID"))
+    bnet_client_secret: str = Field("", validation_alias=AliasChoices("FH_BNET_CLIENT_SECRET", "BNET_CLIENT_SECRET"))
+    bnet_region: str = "eu"  # default region for lookups: eu | us
+    # Public address of the hub, for the Battle.net sign-in redirect (…/api/bnet/callback).
+    public_url: str = ""
+    # Auction house poll interval in minutes; 0 turns the poller off (tests, local runs without keys).
+    ah_poll_minutes: int = 60
 
     env: str = "development"  # "production" on Railway
     static_dir: Path | None = None  # built frontend (frontend/dist); set in the Docker image

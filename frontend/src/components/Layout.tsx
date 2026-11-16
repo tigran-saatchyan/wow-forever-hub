@@ -29,9 +29,11 @@ export function Layout({ children }: { children: ReactNode }) {
             <span className="font-display text-lg font-bold tracking-widest text-gold">FOREVER HUB</span>
           </NavLink>
           {me.data && (
-            <nav className="flex gap-1 text-sm">
+            <nav className="flex flex-wrap gap-1 text-sm">
               <NavLink to="/" end className={link} onClick={() => sfx("click")}>{t("nav_dashboard")}</NavLink>
               <NavLink to="/talents" className={link} onClick={() => sfx("click")}>{t("nav_talents")}</NavLink>
+              <NavLink to="/characters" className={link} onClick={() => sfx("click")}>{t("nav_chars")}</NavLink>
+              <NavLink to="/market" className={link} onClick={() => sfx("click")}>{t("nav_market")}</NavLink>
             </nav>
           )}
           <div className="ml-auto flex flex-wrap items-center gap-2 text-sm">

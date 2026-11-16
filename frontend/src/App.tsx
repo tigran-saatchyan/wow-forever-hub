@@ -2,8 +2,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { useMe } from "./lib/auth";
+import { Characters } from "./pages/Characters";
 import { Dashboard } from "./pages/Dashboard";
 import { Login } from "./pages/Login";
+import { Market } from "./pages/Market";
 import { Talents } from "./pages/Talents";
 
 /** The whole hub is private for now: only the superadmin (and later guild members) can open it. */
@@ -29,6 +31,8 @@ export function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<Private><Dashboard /></Private>} />
             <Route path="/talents" element={<Private><Talents /></Private>} />
+            <Route path="/characters" element={<Private><Characters /></Private>} />
+            <Route path="/market" element={<Private><Market /></Private>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </motion.div>

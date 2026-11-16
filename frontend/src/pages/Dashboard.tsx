@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useIndex, useLive } from "../lib/gameData";
 import { fmtDate, useI18n, type Key } from "../lib/i18n";
 import { computeState, launchMs, nextReset, type ServerState } from "../lib/status";
+import { ApiPanel, MyCharacters } from "./dashboard/ApiPanel";
 
 function useNow(ms = 30e3) {
   const [now, setNow] = useState(Date.now());
@@ -136,7 +137,10 @@ export function Dashboard() {
           </ul>
         </Panel>
         <Panel title={t("chars_title")} delay={0.25}>
-          <p className="text-sm text-muted">{t("chars_soon")}</p>
+          <MyCharacters />
+        </Panel>
+        <Panel title={t("api_title")} delay={0.3}>
+          <ApiPanel />
         </Panel>
       </div>
     </div>
