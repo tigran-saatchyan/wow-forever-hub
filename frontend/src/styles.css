@@ -311,6 +311,24 @@ body {
     fill: #f0c541;
   }
 
+  /* armory tabs: the game's tab strip, gold underline on the open one */
+  .armory-tabs {
+    @apply -mx-1 flex gap-1 overflow-x-auto border-b px-1;
+    border-color: rgb(var(--edge) / 0.6);
+    scrollbar-width: none;
+  }
+  .armory-tabs button {
+    @apply whitespace-nowrap rounded-t-md px-3 py-1.5 font-display text-sm tracking-wide text-muted transition;
+  }
+  .armory-tabs button:hover {
+    @apply text-ink;
+  }
+  .armory-tabs button.on {
+    @apply text-gold;
+    background: linear-gradient(180deg, rgb(var(--accent) / 0.18), transparent);
+    box-shadow: inset 0 -2px 0 #ffd100;
+  }
+
   /* character window: slots down both sides, the model in the middle, as the game's paper doll */
   .char-sheet {
     @apply grid gap-4 lg:grid-cols-[minmax(0,460px)_minmax(0,1fr)];
@@ -327,9 +345,15 @@ body {
   .char-model {
     @apply flex min-h-full flex-col items-center justify-between gap-2 px-1 py-1;
   }
+  /* Blizzard's render is a wide canvas with the character small in the middle: zoom in and crop */
+  .char-render-box {
+    @apply relative w-full flex-1 overflow-hidden;
+    min-height: 340px;
+  }
   .char-render {
-    @apply w-full object-contain;
-    max-height: 360px;
+    @apply absolute inset-0 h-full w-full object-contain;
+    transform: scale(var(--zoom, 2.3));
+    transform-origin: 50% 52%;
     filter: drop-shadow(0 8px 18px #000);
   }
   .char-render-empty {

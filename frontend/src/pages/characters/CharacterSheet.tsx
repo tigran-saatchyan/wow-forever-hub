@@ -56,7 +56,7 @@ export function CharacterSheet({ c, k }: { c: Character; k?: ClassData }) {
             <div className="text-xs text-muted">{t("ch_level", { l: s?.level ?? "?" })} {s?.race} {s?.className}</div>
             {s?.guild?.name && <div className="text-xs text-ink">&lt;{s.guild.name}&gt;</div>}
           </div>
-          {model ? <img src={model} alt="" className="char-render" /> : <div className="char-render-empty" />}
+          {model ? <div className="char-render-box"><img src={model} alt="" className="char-render" /></div> : <div className="char-render-empty" />}
           {s?.ilvl ? <div className="text-center text-xs text-muted">{t("ch_ilvl", { i: s.ilvl })}</div> : null}
         </div>
         <div className="flex flex-col gap-1.5">{RIGHT.map((sl) => <Slot key={sl} slot={sl} x={eq.get(sl)} />)}</div>

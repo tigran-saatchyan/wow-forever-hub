@@ -286,9 +286,95 @@ def professions(p: dict, lang: str | None = None) -> list[dict]:
             if skill is None and tiers:
                 t = tiers[-1]
                 skill, mx = t.get("skill_points"), t.get("max_skill_points")
+            known = [r for t in ([x] + tiers) for r in (t.get("known_recipes") or []) if isinstance(r, dict)]
             if name:
                 out.append({
                     "name": name, "id": _get(x, "profession", "id"),
                     "kind": "primary" if kind == "primaries" else "secondary", "skill": _num(skill), "max": _num(mx),
+                    # recipes the character knows, when Blizzard lists them (retail shape: per tier)
+                    "known": [r.get("id") for r in known if isinstance(r.get("id"), int)],
+                    "knownNames": [n for r in known if (n := name_of(r, "en"))],
+                    "hasKnown": any("known_recipes" in t for t in [x] + tiers),
                 })
     return out
+
+
+# ---------- armory tabs: every reader tolerates the retail and classic shapes and missing parts ----------
+
+def pvp(p: dict, lang: str | None = None) -> dict:
+    out: dict = {}
+    for k in ("honorable_kills", "honor_level", "pvp_rank", "lifetime_honorable_kills", "dishonorable_kills"):
+        v = p.get(k)
+        if isinstance(v, dict):
+            v = v.get("value", v.get("id"))
+        if _num(v) is not None:
+            out[k] = v
+    rank = p.get("pvp_rank") or p.get("rank")
+    if isinstance(rank, dict) and name_of(rank, lang):
+        out["rankName"] = name_of(rank, lang)
+    out["maps"] = []
+    for m in p.get("pvp_map_statistics") or []:
+        mp = m.get("match_statistics") or {}
+        out["maps"].append({"name": name_of(m.get("world_map"), lang), "played": _num(mp.get("played")),
+                            "won": _num(mp.get("won")), "lost": _num(mp.get("lost"))})
+    out["brackets"] = [name_of(b, lang) or _get(b, "href") for b in p.get("brackets") or []]
+    return out
+
+
+def reputations(p: dict, lang: str | None = None) -> list[dict]:
+    out = []
+    for r in p.get("reputations") or []:
+        st = r.get("standing") or {}
+        out.append({"name": name_of(r.get("faction"), lang), "standing": name_of(st, lang),
+                    "tier": _num(st.get("tier")), "value": _num(st.get("value")), "max": _num(st.get("max")),
+                    "raw": _num(st.get("raw"))})
+    return sorted(out, key=lambda x: (-(x["tier"] or 0), -(x["raw"] or 0)))
+
+
+def achievements(p: dict, lang: str | None = None) -> dict:
+    done = [a for a in p.get("achievements") or [] if a.get("completed_timestamp")]
+    done.sort(key=lambda a: -a["completed_timestamp"])
+    return {
+        "points": _num(p.get("total_points")),
+        "count": _num(p.get("total_quantity")) or len(done),
+        "recent": [{"name": name_of(a.get("achievement"), lang), "id": _get(a, "achievement", "id"),
+                    "at": a["completed_timestamp"]} for a in done[:30]],
+        "categories": [{"name": name_of(c.get("category"), lang),
+                        "done": _num(_get(c, "progress", "quantity")), "points": _num(_get(c, "progress", "points"))}
+                       for c in p.get("category_progress") or []],
+    }
+
+
+def collection(p: dict, key: str, lang: str | None = None) -> list[dict]:
+    out = []
+    for x in p.get(key) or []:
+        inner = x.get(key[:-1]) or x.get("species") or x.get("mount") or x.get("toy") or x
+        out.append({"name": name_of(inner, lang), "id": _get(inner, "id"),
+                    "favorite": bool(x.get("is_favorite")), "level": _num(x.get("level"))})
+    return sorted(out, key=lambda x: x["name"] or "")
+
+
+def encounters(p: dict, lang: str | None = None) -> list[dict]:
+    out = []
+    for ex in p.get("expansions") or []:
+        for inst in ex.get("instances") or []:
+            modes = []
+            for m in inst.get("modes") or []:
+                pr = m.get("progress") or {}
+                bosses = [{"name": name_of(e.get("encounter"), lang), "kills": _num(e.get("completed_count"))}
+                          for e in pr.get("encounters") or []]
+                modes.append({"mode": name_of(m.get("difficulty"), lang), "done": _num(pr.get("completed_count")),
+                              "total": _num(pr.get("total_count")), "bosses": bosses})
+            out.append({"name": name_of(inst.get("instance"), lang), "modes": modes})
+    return out
+
+
+def titles(p: dict, lang: str | None = None) -> dict:
+    return {"active": name_of(p.get("active_title"), lang) or None,
+            "all": sorted(n for t in p.get("titles") or [] if (n := name_of(t, lang)))}
+
+
+def quests(p: dict, lang: str | None = None) -> dict:
+    qs = p.get("quests") or []
+    return {"count": len(qs), "recent": [n for q in qs[-15:] if (n := name_of(q, lang))]}
+

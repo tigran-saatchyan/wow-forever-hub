@@ -118,6 +118,13 @@ def handler(req: httpx.Request) -> httpx.Response:
                            "skill_points": 150, "max_skill_points": 225}],
             "secondaries": [{"profession": {"id": 185, "name": "Cooking"},
                              "tiers": [{"skill_points": 40, "max_skill_points": 75}]}]})
+    if p == "/profile/wow/character/joe-gun/pvp-summary":
+        return httpx.Response(200, json={"honorable_kills": 321, "pvp_map_statistics": [
+            {"world_map": {"name": "Warsong Gulch"}, "match_statistics": {"played": 10, "won": 6, "lost": 4}}]})
+    if p == "/profile/wow/character/joe-gun/reputations":
+        return httpx.Response(200, json={"reputations": [
+            {"faction": {"name": "Undercity"}, "standing": {"raw": 9000, "value": 3000, "max": 6000, "tier": 4,
+                                                             "name": "Friendly"}}]})
     if req.url.host == "render.worldofwarcraft.com":
         return httpx.Response(200, content=b"\xff\xd8jpeg", headers={"content-type": "image/jpeg"})
     return httpx.Response(404, json={"code": 404, "path": p})
@@ -162,9 +169,10 @@ def test_character_card(client):
     assert c["talents"] == [{"node": 105958, "talent": 77, "spell": 12282, "name": "Improved Heroic Strike", "rank": 3}]
     assert c["missing"] == ["media"]
     assert c["stats"]["en"] == {"health": 1200, "power": 900, "intellect": 95, "spell_crit": 3.46, "powerName": "Mana"}
-    assert c["professions"]["en"] == [
-        {"name": "Tailoring", "id": 197, "kind": "primary", "skill": 150, "max": 225},
-        {"name": "Cooking", "id": 185, "kind": "secondary", "skill": 40, "max": 75}]
+    tail, cook = c["professions"]["en"]
+    assert tail | {"known": [], "knownNames": [], "hasKnown": False} == tail
+    assert (tail["name"], tail["kind"], tail["skill"], tail["max"]) == ("Tailoring", "primary", 150, 225)
+    assert (cook["name"], cook["kind"], cook["skill"], cook["max"]) == ("Cooking", "secondary", 40, 75)
     assert len(client.get("/api/characters").json()) == 1
     assert client.delete(f"/api/characters/{c['id']}").status_code == 204
 
@@ -282,3 +290,91 @@ def test_not_configured_is_reported(client):
 def test_slug():
     assert bnet.slug("  Joe   Gun ") == "joe-gun"
     assert market.HISTORY_DAYS == 30
+
+
+TABLES = {
+    "SkillLine": [{"ID": "197", "DisplayName_lang": "Tailoring", "CategoryID": "11", "ParentSkillLineID": "0"},
+                  {"ID": "6", "DisplayName_lang": "Frost", "CategoryID": "7", "ParentSkillLineID": "0"}],
+    "SkillLine@ru": [{"ID": "197", "DisplayName_lang": "Портняжное дело"}],
+    "SkillLineAbility": [
+        {"ID": "1", "SkillLine": "197", "Spell": "3908", "MinSkillLineRank": "1", "AcquireMethod": "0",
+         "TrivialSkillLineRankLow": "0", "TrivialSkillLineRankHigh": "0", "ClassMask": "0"},  # the profession
+        {"ID": "2", "SkillLine": "197", "Spell": "2387", "MinSkillLineRank": "1", "AcquireMethod": "1",
+         "TrivialSkillLineRankLow": "35", "TrivialSkillLineRankHigh": "60", "ClassMask": "0"},
+        {"ID": "3", "SkillLine": "197", "Spell": "3914", "MinSkillLineRank": "30", "AcquireMethod": "0",
+         "TrivialSkillLineRankLow": "55", "TrivialSkillLineRankHigh": "75", "ClassMask": "0"},
+        {"ID": "4", "SkillLine": "197", "Spell": "3866", "MinSkillLineRank": "110", "AcquireMethod": "0",
+         "TrivialSkillLineRankLow": "135", "TrivialSkillLineRankHigh": "155", "ClassMask": "0"},
+        {"ID": "5", "SkillLine": "6", "Spell": "116", "MinSkillLineRank": "1", "ClassMask": "128"},  # a class spell
+    ],
+    "SpellName": [{"ID": "2387", "Name_lang": "Linen Cloak"}, {"ID": "3914", "Name_lang": "Brown Linen Pants"},
+                  {"ID": "3866", "Name_lang": "Stylish Red Shirt"}],
+    "SpellName@ru": [{"ID": "2387", "Name_lang": "Льняной плащ"}],
+    "SpellEffect": [
+        {"SpellID": "2387", "Effect": "24", "EffectItemType": "2570", "DifficultyID": "0"},
+        {"SpellID": "3914", "Effect": "24", "EffectItemType": "4343", "DifficultyID": "0"},
+        {"SpellID": "3866", "Effect": "24", "EffectItemType": "6833", "DifficultyID": "0"},
+        {"SpellID": "3871", "Effect": "36", "EffectTriggerSpell": "3866", "DifficultyID": "0"},
+    ],
+    "SpellReagents": [{"SpellID": "2387", "Reagent_0": "2996", "ReagentCount_0": "1",
+                       "Reagent_1": "2320", "ReagentCount_1": "1"}],
+    "ItemSparse": [{"ID": "2570", "Display_lang": "Linen Cloak", "OverallQualityID": "1"},
+                   {"ID": "2996", "Display_lang": "Bolt of Linen Cloth", "OverallQualityID": "1"},
+                   {"ID": "6833", "Display_lang": "White Tuxedo Shirt", "OverallQualityID": "1"},
+                   {"ID": "6272", "Display_lang": "Pattern: Stylish Red Shirt", "OverallQualityID": "2"}],
+    "ItemSparse@ru": [{"ID": "2570", "Display_lang": "Льняной плащ"}],
+    "ItemEffect": [{"ID": "50", "SpellID": "3871", "ParentItemID": "0"}],
+    "ItemXItemEffect": [{"ItemID": "6272", "ItemEffectID": "50"}],
+}
+
+
+def test_recipes_dataset():
+    from app import recipes
+
+    ds = recipes.build_dataset(TABLES, "1.60.1.70755")
+    assert list(ds["professions"]) == ["197"]
+    p = ds["professions"]["197"]
+    assert p["name"] == {"en": "Tailoring", "ru": "Портняжное дело"}
+    by = {r["spell"]: r for r in p["recipes"]}
+    assert set(by) == {2387, 3914, 3866}  # the profession spell itself and class spells are not recipes
+    assert by[2387]["source"] == "auto" and by[2387]["reagents"] == [[2996, 1], [2320, 1]]
+    assert by[2387]["name"]["ru"] == "Льняной плащ" and by[2387]["yellow"] == 35 and by[2387]["gray"] == 60
+    assert by[3914]["source"] == "trainer" and by[3914]["skill"] == 30
+    assert by[3866]["source"] == "item" and by[3866]["recipeItem"] == 6272
+    assert ds["items"]["2570"]["ru"] == "Льняной плащ" and ds["items"]["6272"]["q"] == 2
+
+
+def test_professions_api(client, monkeypatch):
+    from app import recipes
+
+    async def fake_fetch(build, http=None):
+        return TABLES
+
+    monkeypatch.setattr(recipes, "fetch_tables", fake_fetch)
+    import time as _t
+
+    st = client.get("/api/professions").json()
+    for _ in range(50):
+        if st["status"] == "ready":
+            break
+        _t.sleep(0.05)
+        st = client.get("/api/professions").json()
+    assert st["status"] == "ready" and st["professions"][0]["recipes"] == 3
+    p = client.get("/api/professions/197?lang=ru").json()
+    cloak = next(r for r in p["recipes"] if r["spell"] == 2387)
+    assert p["name"] == "Портняжное дело" and cloak["item"]["name"] == "Льняной плащ"
+    assert cloak["reagents"][0] == {"id": 2996, "name": "Bolt of Linen Cloth", "q": 1, "count": 1}
+    assert cloak["reagents"][1]["name"] == "#2320"  # not in the item table: shown by id
+
+
+def test_armory_tabs(client):
+    c = client.post("/api/characters", json={"name": "Joe Gun"}).json()
+    pvp = client.get(f"/api/characters/{c['id']}/tab/pvp?lang=en").json()
+    assert pvp["available"] and pvp["data"]["honorable_kills"] == 321
+    assert pvp["data"]["maps"] == [{"name": "Warsong Gulch", "played": 10, "won": 6, "lost": 4}]
+    rep = client.get(f"/api/characters/{c['id']}/tab/reputations?lang=en").json()["data"]
+    assert rep == [{"name": "Undercity", "standing": "Friendly", "tier": 4, "value": 3000, "max": 6000, "raw": 9000}]
+    off = client.get(f"/api/characters/{c['id']}/tab/mounts?lang=en").json()
+    assert off == {"available": False, "status": 404, "data": None, "at": None}
+    assert client.get(f"/api/characters/{c['id']}/tab/nope").status_code == 404
+    client.delete(f"/api/characters/{c['id']}")

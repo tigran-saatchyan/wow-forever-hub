@@ -48,7 +48,7 @@ export interface Character {
   model?: string | null;
   favorite?: boolean;
   stats?: Record<Lang, Record<string, number | string>> | null;
-  professions?: Record<Lang, { name: string; id?: number; kind: "primary" | "secondary"; skill: number | null; max: number | null }[]> | null;
+  professions?: Record<Lang, CharProfession[]> | null;
 }
 export interface ItemInfo {
   id: number; name: string; quality?: string; level?: number; required?: number; class?: string; subclass?: string;
@@ -79,6 +79,11 @@ export const wowApi = {
   guild: (id: number, lang: Lang) =>
     req<{ name: string; members: { name: string; level: number | null; classId: number | null; rank: number | null }[] }>(
       `/api/characters/${id}/guild?lang=${lang}`),
+  tab: <T,>(cid: number, name: string, lang: Lang) =>
+    req<{ available: boolean; status?: number; data: T | null; at?: string | null }>(`/api/characters/${cid}/tab/${name}?lang=${lang}`),
+  professions: () => req<ProfIndex>("/api/professions"),
+  profession: (line: number, lang: Lang) => req<ProfDetail>(`/api/professions/${line}?lang=${lang}`),
+  rebuildRecipes: () => req<ProfIndex>("/api/professions/rebuild", { method: "POST" }),
   item: (id: number, lang: Lang) => req<ItemInfo>(`/api/items/${id}?lang=${lang}`),
   searchItems: (q: string, lang: Lang) =>
     req<{ id: number; name: string; quality?: string }[]>(`/api/items/search?q=${encodeURIComponent(q)}&lang=${lang}`),
@@ -133,3 +138,22 @@ export function rulesetName(r: Ruleset, t: (k: Key, v?: Record<string, string | 
 
 /** Blizzard images through the hub (ad blockers drop some render.worldofwarcraft.com icons). */
 export const media = (url?: string | null) => (url ? `/api/media?u=${encodeURIComponent(url)}` : undefined);
+
+export interface CharProfession {
+  name: string; id?: number; kind: "primary" | "secondary"; skill: number | null; max: number | null;
+  known?: number[]; knownNames?: string[]; hasKnown?: boolean;
+}
+export interface ProfIndex {
+  status: "ready" | "building" | "error"; build: string; error?: string;
+  professions?: { id: number; name: { en: string; ru: string }; recipes: number }[];
+}
+export interface RefItem { id: number; name: string; q?: number | null }
+export interface Recipe {
+  id: number; spell: number; name: string; nameEn: string; skill: number; yellow: number | null; gray: number | null;
+  source: "trainer" | "auto" | "item"; count: number | null; item: RefItem | null; recipeItem: RefItem | null;
+  reagents: (RefItem & { count: number })[];
+}
+export interface ProfDetail { status: "ready" | "building"; build: string; id?: number; name?: string; recipes?: Recipe[] }
+
+/** Item quality index (client files) -> the API's quality names used for colors. */
+export const Q_BY_INDEX = ["POOR", "COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY", "ARTIFACT", "HEIRLOOM"];

@@ -7,7 +7,9 @@ import { iconStyle, useIcons, useIndex, useTalents } from "../lib/gameData";
 import { fmtDate, useI18n, type Key } from "../lib/i18n";
 import { store } from "../lib/store";
 import { CharacterList } from "./characters/CharacterList";
+import { AchievementsTab, CollectionsTab, InstancesTab, PvpTab, ReputationTab } from "./characters/ArmoryTabs";
 import { CharacterSheet } from "./characters/CharacterSheet";
+import { ProfessionsTab } from "./characters/ProfessionsTab";
 import {
   media, useCharacter, useCharacterActions, useCharacters, wowApi, type Character, type Region,
 } from "../lib/wowApi";
@@ -93,8 +95,12 @@ function ClassIcon({ classId, size = 40 }: { classId: number | null; size?: numb
   );
 }
 
+const ARMORY_TABS = ["overview", "talents", "professions", "pvp", "reputation", "achievements", "collections", "instances", "guild"] as const;
+type ArmoryTab = (typeof ARMORY_TABS)[number];
+
 function CharacterCard({ id }: { id: number }) {
   const { t, lang } = useI18n();
+  const [tab, setTab] = useState<ArmoryTab>(() => store.get<ArmoryTab>("chTab", "overview"));
   const q = useCharacter(id);
   const acts = useCharacterActions();
   const D = useTalents(lang);
@@ -139,23 +145,36 @@ function CharacterCard({ id }: { id: number }) {
         </details>
       )}
 
-      {s?.guild?.href && <GuildRoster cid={c.id} name={s.guild.name} />}
-
-      {c.summary && !c.error && <CharacterSheet c={c} k={k} />}
-
       {c.summary && !c.error && (
-        <div>
-            <h3 className="panel-title mb-2">{t("ch_talents")}</h3>
-            {c.missing?.includes("talents") || !c.talents ? <p className="text-sm text-muted">{t("ch_no_part")}</p> : (
-              <>
+        <>
+          <nav className="armory-tabs" role="tablist">
+            {ARMORY_TABS.map((x) => (
+              <button key={x} role="tab" aria-selected={tab === x} className={tab === x ? "on" : ""}
+                onClick={() => (store.set("chTab", x), setTab(x))}>
+                {t(`ar_${x}` as Key)}
+              </button>
+            ))}
+          </nav>
+          {tab === "overview" && <CharacterSheet c={c} k={k} />}
+          {tab === "talents" && (
+            c.missing?.includes("talents") || !c.talents ? <p className="text-sm text-muted">{t("ch_no_part")}</p> : (
+              <div>
                 {m && <p className="mb-2 text-sm text-muted">{t("ch_talents_matched", { n: m.matched, m: m.total })}</p>}
                 {link && <button className="btn-primary mb-3" onClick={() => nav(`/talents#${link.replace(/^#/, "")}`)}>{t("ch_open_calc")}</button>}
                 <ul className="flex flex-wrap gap-1.5 text-xs">
                   {c.talents.map((x, i) => <li key={i} className="chip">{x.name || x.node || x.spell} {x.rank}</li>)}
                 </ul>
-              </>
-            )}
-        </div>
+              </div>
+            )
+          )}
+          {tab === "professions" && <ProfessionsTab c={c} />}
+          {tab === "pvp" && <PvpTab cid={c.id} />}
+          {tab === "reputation" && <ReputationTab cid={c.id} />}
+          {tab === "achievements" && <AchievementsTab cid={c.id} />}
+          {tab === "collections" && <CollectionsTab cid={c.id} />}
+          {tab === "instances" && <InstancesTab cid={c.id} />}
+          {tab === "guild" && (s?.guild?.href ? <GuildRoster cid={c.id} name={s.guild.name} /> : <p className="text-sm text-muted">{t("gd_none")}</p>)}
+        </>
       )}
     </section>
   );
@@ -163,13 +182,13 @@ function CharacterCard({ id }: { id: number }) {
 
 function GuildRoster({ cid, name }: { cid: number; name: string }) {
   const { t, lang } = useI18n();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const D = useTalents(lang);
   const icons = useIcons();
   const q = useQuery({ queryKey: ["guild", cid, lang], queryFn: () => wowApi.guild(cid, lang), enabled: open, retry: false });
   const cls = (id: number | null) => D.data?.classes.find((k) => k.id === id);
   return (
-    <details className="rounded-md border border-edge/50 bg-bg/40 p-2.5" onToggle={(e) => setOpen((e.target as HTMLDetailsElement).open)}>
+    <details open className="rounded-md border border-edge/50 bg-bg/40 p-2.5" onToggle={(e) => setOpen((e.target as HTMLDetailsElement).open)}>
       <summary className="cursor-pointer text-sm">
         <span className="text-gold">{t("gd_show")}</span> <span className="text-ink">&lt;{name}&gt;</span>
         {q.data && <span className="ml-2 text-muted">{t("gd_members", { n: q.data.members.length })}</span>}

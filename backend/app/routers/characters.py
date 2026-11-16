@@ -216,6 +216,50 @@ async def refresh_character(cid: int, user: CurrentUser, session: Session):
     return _out(await refresh(session, c), full=True)
 
 
+# armory tabs: profile sub-resource and its reader
+TABS = {
+    "pvp": ("/pvp-summary", wow.pvp),
+    "reputations": ("/reputations", wow.reputations),
+    "achievements": ("/achievements", wow.achievements),
+    "mounts": ("/collections/mounts", lambda p, lg: wow.collection(p, "mounts", lg)),
+    "pets": ("/collections/pets", lambda p, lg: wow.collection(p, "pets", lg)),
+    "dungeons": ("/encounters/dungeons", wow.encounters),
+    "raids": ("/encounters/raids", wow.encounters),
+    "titles": ("/titles", wow.titles),
+    "quests": ("/quests/completed", wow.quests),
+}
+_tab_cache: dict[tuple[int, str, str], tuple[float, dict]] = {}
+
+
+@router.get("/{cid}/tab/{name}")
+async def tab(cid: int, name: str, user: CurrentUser, session: Session, lang: str = "ru"):
+    """One armory tab, fetched when opened (15 min cache). If Blizzard refuses, the last good copy is
+    returned with available=false, so the tab can still show something and say why."""
+    if name not in TABS:
+        raise HTTPException(404, "no such tab")
+    c = await _own(session, user, cid)
+    key = (cid, name, lang)
+    hit = _tab_cache.get(key)
+    if hit and hit[0] > time.time():
+        return hit[1]
+    base = (c.profile or {}).get("path")
+    if not base:
+        return {"available": False, "status": 404}
+    suffix, read = TABS[name]
+    tabs = dict((c.profile or {}).get("tabs") or {})
+    try:
+        raw = await client().get(base + suffix, "profile", c.region, lang)
+    except BnetError as e:
+        old = (tabs.get(name) or {}).get(lang)
+        return {"available": False, "status": e.status, "data": old, "at": (tabs.get(name) or {}).get("at")}
+    out = {"available": True, "data": read(raw, lang), "at": utcnow().isoformat()}
+    tabs[name] = {**(tabs.get(name) or {}), lang: out["data"], "at": out["at"]}
+    c.profile = {**(c.profile or {}), "tabs": tabs}
+    await session.commit()
+    _tab_cache[key] = (time.time() + 900, out)
+    return out
+
+
 _roster_cache: dict[str, tuple[float, dict]] = {}
 
 

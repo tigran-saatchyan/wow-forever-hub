@@ -1,0 +1,206 @@
+/** Armory tabs read from the character's profile sub-resources; each says plainly when Blizzard gives nothing. */
+import { useQuery } from "@tanstack/react-query";
+import { useState, type ReactNode } from "react";
+import { fmtDate, useI18n } from "../../lib/i18n";
+import { wowApi } from "../../lib/wowApi";
+
+function useTab<T>(cid: number, name: string) {
+  const { lang } = useI18n();
+  return useQuery({ queryKey: ["tab", cid, name, lang], queryFn: () => wowApi.tab<T>(cid, name, lang), staleTime: 10 * 60e3, retry: false });
+}
+
+/** Loading, "Blizzard does not give this" (with the last good copy if any), or the content. */
+function Frame<T>({ q, empty, children }: { q: ReturnType<typeof useTab<T>>; empty?: (d: T) => boolean; children: (d: T) => ReactNode }) {
+  const { t, lang } = useI18n();
+  if (q.isLoading) return <p className="text-sm text-muted">…</p>;
+  if (q.isError) return <p className="text-sm text-bad">{String(q.error)}</p>;
+  const r = q.data!;
+  const d = r.data;
+  return (
+    <div className="space-y-3">
+      {!r.available && (
+        <p className="rounded-md border border-edge/60 bg-bg/50 p-2.5 text-sm text-muted">
+          {t("ar_unavailable", { s: r.status ?? "?" })}{d && r.at ? " " + t("ar_cached", { d: fmtDate(lang, r.at) }) : ""}
+        </p>
+      )}
+      {d != null && (empty?.(d) ? <p className="text-sm text-muted">{t("ar_empty")}</p> : children(d))}
+    </div>
+  );
+}
+
+const Stat = ({ k, v }: { k: string; v: ReactNode }) => (
+  <div className="rounded-md border border-edge/60 bg-bg/50 p-3">
+    <div className="eyebrow">{k}</div>
+    <div className="mt-1 font-display text-xl text-gold">{v}</div>
+  </div>
+);
+
+interface Pvp {
+  honorable_kills?: number; lifetime_honorable_kills?: number; dishonorable_kills?: number; honor_level?: number;
+  pvp_rank?: number; rankName?: string; maps: { name: string; played: number | null; won: number | null; lost: number | null }[];
+}
+export function PvpTab({ cid }: { cid: number }) {
+  const { t } = useI18n();
+  const q = useTab<Pvp>(cid, "pvp");
+  return (
+    <Frame q={q}>
+      {(d) => (
+        <>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {d.honorable_kills != null && <Stat k={t("pv_hk")} v={d.honorable_kills} />}
+            {d.lifetime_honorable_kills != null && <Stat k={t("pv_hk_life")} v={d.lifetime_honorable_kills} />}
+            {d.dishonorable_kills != null && <Stat k={t("pv_dk")} v={d.dishonorable_kills} />}
+            {d.honor_level != null && <Stat k={t("pv_honor")} v={d.honor_level} />}
+            {(d.rankName || d.pvp_rank != null) && <Stat k={t("pv_rank")} v={d.rankName ?? d.pvp_rank} />}
+          </div>
+          {d.maps.length > 0 && (
+            <table className="w-full text-sm">
+              <thead className="text-left text-xs text-muted">
+                <tr><th className="p-1.5 font-normal">{t("pv_bg")}</th><th className="p-1.5 text-right font-normal">{t("pv_played")}</th>
+                  <th className="p-1.5 text-right font-normal">{t("pv_won")}</th><th className="p-1.5 text-right font-normal">{t("pv_rate")}</th></tr>
+              </thead>
+              <tbody>
+                {d.maps.map((m) => (
+                  <tr key={m.name} className="border-t border-edge/40">
+                    <td className="p-1.5">{m.name}</td>
+                    <td className="p-1.5 text-right font-mono">{m.played ?? "—"}</td>
+                    <td className="p-1.5 text-right font-mono text-good">{m.won ?? "—"}</td>
+                    <td className="p-1.5 text-right font-mono">{m.played ? Math.round(((m.won ?? 0) / m.played) * 100) + "%" : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </>
+      )}
+    </Frame>
+  );
+}
+
+interface Rep { name: string; standing: string; tier: number | null; value: number | null; max: number | null }
+const REP_COLORS = ["#cc2222", "#ff0000", "#ee6622", "#ffff00", "#00ff88", "#00bb44", "#00a0b4", "#00ccff"];
+export function ReputationTab({ cid }: { cid: number }) {
+  const { t } = useI18n();
+  const q = useTab<Rep[]>(cid, "reputations");
+  const [f, setF] = useState("");
+  return (
+    <Frame q={q} empty={(d) => !d.length}>
+      {(d) => (
+        <>
+          <input className="input w-60" placeholder={t("ar_filter")} value={f} onChange={(e) => setF(e.target.value)} />
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {d.filter((r) => r.name.toLowerCase().includes(f.toLowerCase())).map((r) => {
+              const c = REP_COLORS[Math.min(7, Math.max(0, r.tier ?? 3))];
+              return (
+                <li key={r.name} className="rounded-md border border-edge/50 bg-bg/40 p-2">
+                  <div className="flex justify-between text-sm"><span>{r.name}</span><span style={{ color: c }}>{r.standing}</span></div>
+                  {r.max ? (
+                    <div className="mt-1 flex items-center gap-2">
+                      <div className="prof-bar flex-1"><span style={{ width: `${Math.min(100, ((r.value ?? 0) / r.max) * 100)}%`, background: c }} /></div>
+                      <span className="font-mono text-[11px] text-muted">{r.value}/{r.max}</span>
+                    </div>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      )}
+    </Frame>
+  );
+}
+
+interface Ach { points: number | null; count: number; recent: { name: string; id: number; at: number }[]; categories: { name: string; done: number | null; points: number | null }[] }
+export function AchievementsTab({ cid }: { cid: number }) {
+  const { t, lang } = useI18n();
+  const q = useTab<Ach>(cid, "achievements");
+  const quests = useTab<{ count: number; recent: string[] }>(cid, "quests");
+  const titles = useTab<{ active: string | null; all: string[] }>(cid, "titles");
+  return (
+    <div className="space-y-4">
+      <Frame q={q}>
+        {(d) => (
+          <>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {d.points != null && <Stat k={t("ac_points")} v={d.points} />}
+              <Stat k={t("ac_count")} v={d.count} />
+              {quests.data?.data && <Stat k={t("ac_quests")} v={quests.data.data.count} />}
+              {titles.data?.data?.active && <Stat k={t("ac_title")} v={titles.data.data.active} />}
+            </div>
+            {d.categories.length > 0 && (
+              <ul className="flex flex-wrap gap-1.5 text-xs">
+                {d.categories.map((c) => <li key={c.name} className="chip">{c.name}: {c.done ?? 0}</li>)}
+              </ul>
+            )}
+            {d.recent.length > 0 && (
+              <div>
+                <div className="eyebrow mb-1">{t("ac_recent")}</div>
+                <ul className="divide-y divide-edge/40 text-sm">
+                  {d.recent.map((a) => (
+                    <li key={a.id} className="flex justify-between gap-3 py-1.5">
+                      <span>{a.name}</span><span className="text-xs text-muted">{fmtDate(lang, new Date(a.at).toISOString())}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </>
+        )}
+      </Frame>
+      {titles.data?.data && titles.data.data.all.length > 0 && (
+        <div>
+          <div className="eyebrow mb-1">{t("ac_titles")}</div>
+          <ul className="flex flex-wrap gap-1.5 text-xs">{titles.data.data.all.map((x) => <li key={x} className="chip">{x}</li>)}</ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface Coll { name: string; id: number; favorite: boolean; level: number | null }
+export function CollectionsTab({ cid }: { cid: number }) {
+  const { t } = useI18n();
+  const mounts = useTab<Coll[]>(cid, "mounts");
+  const pets = useTab<Coll[]>(cid, "pets");
+  const list = (xs: Coll[]) => (
+    <ul className="grid gap-1 text-sm sm:grid-cols-2 lg:grid-cols-3">
+      {xs.map((x) => <li key={x.id + x.name} className="truncate rounded border border-edge/40 bg-bg/40 px-2 py-1">{x.favorite ? "★ " : ""}{x.name}{x.level ? ` · ${x.level}` : ""}</li>)}
+    </ul>
+  );
+  return (
+    <div className="space-y-4">
+      <div><h3 className="panel-title mb-2">{t("co_mounts")} {mounts.data?.data ? `(${mounts.data.data.length})` : ""}</h3><Frame q={mounts} empty={(d) => !d.length}>{list}</Frame></div>
+      <div><h3 className="panel-title mb-2">{t("co_pets")} {pets.data?.data ? `(${pets.data.data.length})` : ""}</h3><Frame q={pets} empty={(d) => !d.length}>{list}</Frame></div>
+    </div>
+  );
+}
+
+interface Inst { name: string; modes: { mode: string; done: number | null; total: number | null; bosses: { name: string; kills: number | null }[] }[] }
+export function InstancesTab({ cid }: { cid: number }) {
+  const { t } = useI18n();
+  const dungeons = useTab<Inst[]>(cid, "dungeons");
+  const raids = useTab<Inst[]>(cid, "raids");
+  const list = (xs: Inst[]) => (
+    <ul className="grid gap-2 sm:grid-cols-2">
+      {xs.map((i) => (
+        <li key={i.name} className="rounded-md border border-edge/50 bg-bg/40 p-2">
+          <b className="text-sm">{i.name}</b>
+          {i.modes.map((m) => (
+            <details key={m.mode} className="mt-1 text-sm">
+              <summary className="cursor-pointer text-muted">{m.mode}: <span className="text-ink">{m.done ?? 0}/{m.total ?? "?"}</span></summary>
+              <ul className="mt-1 space-y-0.5 pl-3 text-xs">
+                {m.bosses.map((b) => <li key={b.name} className={b.kills ? "text-good" : "text-muted"}>{b.name}{b.kills ? ` ×${b.kills}` : ""}</li>)}
+              </ul>
+            </details>
+          ))}
+        </li>
+      ))}
+    </ul>
+  );
+  return (
+    <div className="space-y-4">
+      <div><h3 className="panel-title mb-2">{t("in_dungeons")}</h3><Frame q={dungeons} empty={(d) => !d.length}>{list}</Frame></div>
+      <div><h3 className="panel-title mb-2">{t("in_raids")}</h3><Frame q={raids} empty={(d) => !d.length}>{list}</Frame></div>
+    </div>
+  );
+}
