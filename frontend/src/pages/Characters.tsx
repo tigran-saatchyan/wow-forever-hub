@@ -6,7 +6,7 @@ import { iconStyle, useIcons, useTalents } from "../lib/gameData";
 import { fmtDate, useI18n, type Key } from "../lib/i18n";
 import { store } from "../lib/store";
 import { CharacterList } from "./characters/CharacterList";
-import { AchievementsTab, CollectionsTab, InstancesTab, PvpTab, ReputationTab } from "./characters/ArmoryTabs";
+import { AchievementsTab, CollectionsTab, InstancesTab, PvpTab, QuestsTab, ReputationTab, StatisticsTab } from "./characters/ArmoryTabs";
 import { CharacterSheet } from "./characters/CharacterSheet";
 import { ProfessionsTab } from "./characters/ProfessionsTab";
 import { TalentsTab } from "./characters/TalentsTab";
@@ -112,7 +112,7 @@ function ClassIcon({ classId, size = 40 }: { classId: number | null; size?: numb
   );
 }
 
-const ARMORY_TABS = ["overview", "talents", "professions", "pvp", "reputation", "achievements", "collections", "instances", "guild"] as const;
+const ARMORY_TABS = ["overview", "talents", "professions", "quests", "pvp", "reputation", "achievements", "statistics", "collections", "instances", "guild"] as const;
 type ArmoryTab = (typeof ARMORY_TABS)[number];
 
 function CharacterCard({ id }: { id: number }) {
@@ -171,6 +171,8 @@ function CharacterCard({ id }: { id: number }) {
           {tab === "overview" && <CharacterSheet c={c} k={k} />}
           {tab === "talents" && <TalentsTab c={c} k={k} />}
           {tab === "professions" && <ProfessionsTab c={c} />}
+          {tab === "quests" && <QuestsTab cid={c.id} />}
+          {tab === "statistics" && <StatisticsTab cid={c.id} />}
           {tab === "pvp" && <PvpTab cid={c.id} />}
           {tab === "reputation" && <ReputationTab cid={c.id} />}
           {tab === "achievements" && <AchievementsTab cid={c.id} />}

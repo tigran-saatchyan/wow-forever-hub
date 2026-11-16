@@ -2,7 +2,7 @@
 import { Component, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useI18n } from "../lib/i18n";
-import { media, qColor, useItem, type ItemInfo } from "../lib/wowApi";
+import { media, qColor, useItem, type EquipItem, type ItemInfo, type ItemSet } from "../lib/wowApi";
 import { TipBox } from "../pages/talents/Tooltip";
 
 /** Copper as gold, silver and copper, colored like the game's money frame. */
@@ -49,6 +49,34 @@ export function ItemIcon({ src, quality, size = 36, itemId }: { src?: string | n
         boxShadow: `0 0 0 1px #000, 0 0 0 2px ${qColor(quality) ?? "#555"}88`,
       }}
     />
+  );
+}
+
+/** A set in an item's tooltip, as the game shows it: name (worn/total), the pieces, then the bonuses. */
+export function SetBonus({ set }: { set: ItemSet }) {
+  return (
+    <div className="mt-2 space-y-0.5 text-[13px]">
+      <div className="text-[#ffd100]">{set.name} ({set.worn}/{set.items.length})</div>
+      {set.items.map((x) => (
+        <div key={x.name} className={`pl-3 ${x.equipped ? "text-[#ffff98]" : "text-[#808080]"}`}>{x.name}</div>
+      ))}
+      <div className="pt-1" />
+      {set.effects.map((e) => (
+        <div key={e.text} className={(e.count ?? 99) <= set.worn ? "text-[#1eff00]" : "text-[#808080]"}>{e.text}</div>
+      ))}
+    </div>
+  );
+}
+
+/** Extra lines under an equipped item's tooltip: its enchants (green) and its set. */
+export function EquipExtra({ x }: { x: EquipItem }) {
+  const ench = (x.enchants || []).filter((e) => typeof e === "string");
+  if (!ench.length && !x.setInfo) return null;
+  return (
+    <>
+      {ench.map((e) => <div key={e} className="text-[#1eff00]">{e}</div>)}
+      {x.setInfo && <SetBonus set={x.setInfo} />}
+    </>
   );
 }
 

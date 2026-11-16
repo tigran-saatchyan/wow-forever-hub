@@ -123,8 +123,23 @@ def equipment(eq: dict, lang: str | None = None) -> list[dict]:
             "stats": _lines(it.get("stats"), lang),
             "enchants": _lines(it.get("enchantments"), lang),
             "set": name_of(_get(it, "set", "item_set"), lang) or None,
+            "setInfo": item_set(it.get("set"), lang),
         })
     return out
+
+
+def item_set(st: dict | None, lang: str | None = None) -> dict | None:
+    """The set an equipped item belongs to: its pieces (which are worn) and its bonuses with their piece counts."""
+    if not isinstance(st, dict) or not st.get("item_set"):
+        return None
+    items = [{"name": name_of(x.get("item"), lang), "equipped": bool(x.get("is_equipped"))} for x in st.get("items") or []]
+    return {
+        "name": name_of(st.get("item_set"), lang),
+        "items": items,
+        "worn": sum(x["equipped"] for x in items),
+        "effects": [{"text": txt(e.get("display_string"), lang), "count": _num(e.get("required_count"))}
+                    for e in st.get("effects") or [] if e.get("display_string")],
+    }
 
 
 def _talent_rows(x: Any) -> Iterable[dict]:
@@ -424,3 +439,52 @@ def quests(p: dict, lang: str | None = None) -> dict:
 def quests_active(p: dict, lang: str | None = None) -> list[dict]:
     """Quests in the character's log (/quests -> in_progress)."""
     return [{"id": q.get("id"), "name": name_of(q, lang)} for q in p.get("in_progress") or [] if isinstance(q, dict)]
+
+
+def stat_tree(p: dict, lang: str | None = None) -> list[dict]:
+    """Character statistics (/achievements/statistics) as flat groups: "Deaths / World" -> [{id, name, value}]."""
+    out: list[dict] = []
+
+    def walk(c: dict, path: str) -> None:
+        name = name_of(c, lang)
+        full = f"{path} / {name}" if path else name
+        rows = [{"id": _num(x.get("id")), "name": name_of(x, lang), "value": x.get("quantity")}
+                for x in c.get("statistics") or [] if isinstance(x, dict)]
+        if rows:
+            out.append({"group": full, "rows": rows})
+        for sc in c.get("sub_categories") or []:
+            walk(sc, full)
+
+    for c in p.get("categories") or []:
+        walk(c, "")
+    return out
+
+
+def quest(q: dict, lang: str | None = None) -> dict:
+    """A quest from the static data: where, what it asks, what it gives."""
+    rw = q.get("rewards") or {}
+    rq = q.get("requirements") or {}
+    money = rw.get("money")
+    if isinstance(money, dict):
+        money = money.get("value")
+    items = []
+    for key in ("items", "choice_of"):
+        v = rw.get(key)
+        if isinstance(v, dict):
+            v = v.get("items") or v.get("choice_of") or []
+        for x in v or []:
+            it = x.get("item") if isinstance(x, dict) else None
+            if it:
+                items.append({"id": _num(it.get("id")), "name": name_of(it, lang), "choice": key == "choice_of"})
+    return {
+        "id": _num(q.get("id")),
+        "title": txt(q.get("title"), lang) or "",
+        "area": name_of(q.get("area"), lang) or None,
+        "description": txt(q.get("description"), lang),
+        "level": _num(rq.get("min_character_level")),
+        "xp": _num(rw.get("experience")),
+        "money": _num(money),
+        "reputations": [{"name": name_of(r.get("reward"), lang), "value": _num(r.get("value"))}
+                        for r in rw.get("reputations") or [] if isinstance(r, dict)],
+        "items": items,
+    }

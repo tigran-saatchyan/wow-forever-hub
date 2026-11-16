@@ -2,9 +2,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import { fmtDate, useI18n } from "../../lib/i18n";
-import { wowApi } from "../../lib/wowApi";
+import { Money } from "../../components/Wow";
+import { useCharacter, wowApi, type StatGroup } from "../../lib/wowApi";
 
-function useTab<T>(cid: number, name: string) {
+export function useTab<T>(cid: number, name: string) {
   const { lang } = useI18n();
   return useQuery({ queryKey: ["tab", cid, name, lang], queryFn: () => wowApi.tab<T>(cid, name, lang), staleTime: 10 * 60e3, retry: false });
 }
@@ -202,5 +203,102 @@ export function InstancesTab({ cid }: { cid: number }) {
       <div><h3 className="panel-title mb-2">{t("in_dungeons")}</h3><Frame q={dungeons} empty={(d) => !d.length}>{list}</Frame></div>
       <div><h3 className="panel-title mb-2">{t("in_raids")}</h3><Frame q={raids} empty={(d) => !d.length}>{list}</Frame></div>
     </div>
+  );
+}
+
+/** The quest log: each quest opens to its zone, the text from the quest giver and the rewards. */
+export function QuestsTab({ cid }: { cid: number }) {
+  const { t } = useI18n();
+  const q = useTab<{ id: number; name: string }[]>(cid, "quests_active");
+  const done = useTab<{ count: number; recent: string[] }>(cid, "quests");
+  const [open, setOpen] = useState<number | null>(null);
+  const { lang } = useI18n();
+  const s = useCharacter(cid).data?.summary?.[lang];
+  const who = { name: s?.name ?? "", cls: s?.className ?? "", race: s?.race ?? "" };
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {q.data?.data && <Stat k={t("qs_log")} v={q.data.data.length} />}
+        {done.data?.data && <Stat k={t("ac_quests")} v={done.data.data.count} />}
+      </div>
+      <Frame q={q} empty={(d) => !d.length}>
+        {(d) => (
+          <ul className="divide-y divide-edge/40">
+            {d.map((x) => (
+              <li key={x.id}>
+                <button className="flex w-full items-center gap-2 py-2 text-left hover:text-gold" onClick={() => setOpen(open === x.id ? null : x.id)}
+                  aria-expanded={open === x.id}>
+                  <span className="text-[#ffd100]">!</span><span className="flex-1">{x.name}</span>
+                  <span className="text-xs text-muted">{open === x.id ? "▲" : "▼"}</span>
+                </button>
+                {open === x.id && <QuestDetails id={x.id} who={who} />}
+              </li>
+            ))}
+          </ul>
+        )}
+      </Frame>
+      {done.data?.data && done.data.data.recent.length > 0 && (
+        <div>
+          <div className="eyebrow mb-1">{t("qs_recent")}</div>
+          <ul className="flex flex-wrap gap-1.5 text-xs">{[...done.data.data.recent].reverse().map((x) => <li key={x} className="chip">{x}</li>)}</ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function QuestDetails({ id, who }: { id: number; who: { name: string; cls: string; race: string } }) {
+  const { t, lang } = useI18n();
+  const q = useQuery({ queryKey: ["quest", id, lang], queryFn: () => wowApi.quest(id, lang), staleTime: Infinity, retry: false });
+  if (q.isLoading) return <p className="pb-2 pl-5 text-sm text-muted">…</p>;
+  if (!q.data) return <p className="pb-2 pl-5 text-sm text-muted">{t("qs_none")}</p>;
+  const d = q.data;
+  // the game's placeholders: $N / {name} the character, $C / {class}, $R / {race}
+  const sub: Record<string, string> = { n: who.name, name: who.name, c: who.cls, class: who.cls, r: who.race, race: who.race };
+  const plain = (s: string) =>
+    s.replace(/\$([nNcCrR])/g, (_, k: string) => sub[k.toLowerCase()] || "…").replace(/\{(\w+)\}/g, (_, k: string) => sub[k.toLowerCase()] || "…");
+  return (
+    <div className="mb-3 ml-5 space-y-2 rounded-md border border-edge/50 bg-bg/40 p-3 text-sm">
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
+        {d.area && <span>{t("qs_area")}: <span className="text-ink">{d.area}</span></span>}
+        {d.level ? <span>{t("qs_level", { l: d.level })}</span> : null}
+      </div>
+      {d.description && <p className="whitespace-pre-line text-[#e8dcc0]">{plain(d.description)}</p>}
+      {(d.xp || d.money || d.reputations.length > 0 || d.items.length > 0) && (
+        <div>
+          <div className="eyebrow mb-1">{t("qs_rewards")}</div>
+          <ul className="space-y-0.5">
+            {d.xp ? <li>{t("qs_xp", { n: d.xp })}</li> : null}
+            {d.money ? <li><Money c={d.money} /></li> : null}
+            {d.items.map((x) => <li key={x.id}>{x.choice ? t("qs_choice") + ": " : ""}{x.name}</li>)}
+            {d.reputations.map((r) => <li key={r.name} className="text-good">{r.name} +{r.value}</li>)}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Everything the game counts about the character, by its own groups. */
+export function StatisticsTab({ cid }: { cid: number }) {
+  const q = useTab<StatGroup[]>(cid, "statistics");
+  const nf = (v: number | null) => (v == null ? "—" : Number.isInteger(v) ? v.toLocaleString() : v.toFixed(2));
+  return (
+    <Frame q={q} empty={(d) => !d.length}>
+      {(d) => (
+        <div className="columns-1 gap-4 md:columns-2 xl:columns-3">
+          {d.map((g) => (
+            <div key={g.group} className="char-stats mb-4 break-inside-avoid">
+              <div className="eyebrow mb-1.5">{g.group}</div>
+              {g.rows.map((r) => (
+                <div key={`${r.id}-${r.name}`} className="flex justify-between gap-3 text-sm">
+                  <span className="text-muted">{r.name}</span><span className="font-mono tabular-nums">{nf(r.value)}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+    </Frame>
   );
 }

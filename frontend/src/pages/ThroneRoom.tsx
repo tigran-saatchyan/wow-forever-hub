@@ -8,13 +8,13 @@ import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform, type MotionValue } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ItemHover, ItemIcon } from "../components/Wow";
+import { EquipExtra, ItemHover, ItemIcon } from "../components/Wow";
 import { iconStyle, useIcons, useTalents } from "../lib/gameData";
 import { fmtDate, useI18n, type Key } from "../lib/i18n";
 import { store } from "../lib/store";
 import { xpToCap, xpToNext } from "../lib/xp";
-import { fullName, media, qColor, useCharacter, useCharacters, wowApi, type Character, type EquipItem } from "../lib/wowApi";
-import { REP_COLORS, type Rep } from "./characters/ArmoryTabs";
+import { fullName, media, qColor, useCharacter, useCharacters, wowApi, type Character, type EquipItem, type StatGroup } from "../lib/wowApi";
+import { REP_COLORS, useTab, type Rep } from "./characters/ArmoryTabs";
 import { CONTENT, loadViewer, type Viewer } from "../theme/Lamenters";
 import { sylvanasLine } from "../theme/music";
 import { Professions } from "./characters/CharacterSheet";
@@ -116,7 +116,7 @@ function Gear({ x, slot, i, side, size }: { x?: EquipItem; slot: string; i: numb
       {x ? (
         <ItemHover
           id={x.id}
-          extra={ench ? <div className="text-[#1eff00]">{ench}</div> : undefined}
+          extra={<EquipExtra x={x} />}
           fallback={{ id: x.id, name: x.name, quality: x.quality, level: x.ilvl, slot: x.slotName, stats: x.stats || [], spells: [] }}
         >
           <span tabIndex={0} className="tr-gear-icon" aria-label={`${name}: ${x.name}`}>
@@ -427,6 +427,27 @@ function Vital({ label, v, cls }: { label: string; v: number; cls: string }) {
   );
 }
 
+// the game's statistic ids for the deeds shown in the chronicle (the names come with them, in the page's language)
+const DEEDS = [98, 1197, 1487, 60, 932, 349];
+
+/** A few of the game's own counters: quests done, kills, killing blows, deaths, dungeons, flights. */
+function Deeds({ cid }: { cid: number }) {
+  const q = useTab<StatGroup[]>(cid, "statistics");
+  const all = new Map((q.data?.data || []).flatMap((g) => g.rows).map((r) => [r.id, r]));
+  const rows = DEEDS.map((id) => all.get(id)).filter((r): r is NonNullable<typeof r> => !!r && r.value != null);
+  if (!rows.length) return null;
+  return (
+    <div className="mt-3 grid grid-cols-2 gap-2 border-t border-edge/40 pt-3">
+      {rows.map((r) => (
+        <div key={r.id} className="min-w-0">
+          <div className="font-display text-lg leading-tight text-gold">{Math.round(r.value!).toLocaleString()}</div>
+          <div className="truncate text-[11px] text-muted" title={r.name}>{r.name}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function Chronicle({ c }: { c: Character }) {
   const { t, lang } = useI18n();
   const s = c.summary?.[lang];
@@ -453,6 +474,7 @@ function Chronicle({ c }: { c: Character }) {
         ))}
         {s?.lastLogin ? <p className="pt-1 text-xs text-muted">{t("tr_last", { d: fmtDate(lang, s.lastLogin) })}</p> : null}
       </dl>
+      <Deeds cid={c.id} />
     </motion.section>
   );
 }

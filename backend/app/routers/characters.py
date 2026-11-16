@@ -228,6 +228,7 @@ TABS = {
     "titles": ("/titles", wow.titles),
     "quests": ("/quests/completed", wow.quests),
     "quests_active": ("/quests", wow.quests_active),
+    "statistics": ("/achievements/statistics", wow.stat_tree),
 }
 _tab_cache: dict[tuple[int, str, str], tuple[float, dict]] = {}
 

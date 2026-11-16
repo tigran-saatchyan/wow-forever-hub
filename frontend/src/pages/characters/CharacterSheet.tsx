@@ -1,5 +1,5 @@
 /** The character window as in the game: slots down both sides, weapons below, the model in the middle. */
-import { ItemHover, ItemIcon } from "../../components/Wow";
+import { EquipExtra, ItemHover, ItemIcon } from "../../components/Wow";
 import type { ClassData } from "../../engine";
 import { useI18n, type Key } from "../../lib/i18n";
 import { fullName, media, qColor, type Character, type EquipItem } from "../../lib/wowApi";
@@ -20,7 +20,7 @@ function Slot({ slot, x }: { slot: string; x?: EquipItem }) {
   return (
     <ItemHover
       id={x.id}
-      extra={(x.enchants || []).filter((e) => typeof e === "string").map((e) => <div key={e} className="text-[#1eff00]">{e}</div>)}
+      extra={<EquipExtra x={x} />}
       fallback={{ id: x.id, name: x.name, quality: x.quality, level: x.ilvl, slot: x.slotName, stats: x.stats || [], spells: [] }}
     >
       <span tabIndex={0} className="relative block outline-none" aria-label={`${name}: ${x.name}`}>

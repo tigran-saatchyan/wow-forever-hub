@@ -34,9 +34,17 @@ export interface CharSummary {
   faction?: string; guild: { name: string; href?: string } | null; ruleset: string | null; ilvl?: number;
   lastLogin?: number; xp?: number | null;
 }
+export interface QuestInfo {
+  id: number; title: string; area: string | null; description: string | null; level: number | null; xp: number | null;
+  money: number | null; reputations: { name: string; value: number | null }[]; items: { id: number; name: string; choice: boolean }[];
+}
+export interface StatGroup { group: string; rows: { id: number | null; name: string; value: number | null }[] }
+export interface ItemSet {
+  name: string; worn: number; items: { name: string; equipped: boolean }[]; effects: { text: string; count: number | null }[];
+}
 export interface EquipItem {
   slot: string; slotName: string; id: number; name: string; quality?: string; ilvl?: number;
-  stats: string[]; enchants: string[]; set?: string | null; icon?: string | null;
+  stats: string[]; enchants: string[]; set?: string | null; icon?: string | null; setInfo?: ItemSet | null;
 }
 export interface CharTalent { node: number | null; talent: number | null; spell: number | null; name: string; rank: number }
 export interface Character {
@@ -72,6 +80,7 @@ export const wowApi = {
   probe: (character?: string) => req<ProbeRow[]>(`/api/bnet/probe${character ? `?character=${encodeURIComponent(character)}` : ""}`),
   account: () => req<{ battletag?: string; characters?: number; linked?: string; error?: string } | null>("/api/bnet/account"),
   characters: () => req<Character[]>("/api/characters"),
+  quest: (id: number, lang: Lang) => req<QuestInfo>(`/api/quests/${id}?lang=${lang}`),
   character: (id: number) => req<Character>(`/api/characters/${id}`),
   addCharacter: (b: { name: string; region: Region }) => req<Character>("/api/characters", { method: "POST", body: JSON.stringify(b) }),
   refreshCharacter: (id: number) => req<Character>(`/api/characters/${id}/refresh`, { method: "POST" }),
