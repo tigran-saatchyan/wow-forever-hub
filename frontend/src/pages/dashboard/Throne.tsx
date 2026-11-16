@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useI18n } from "../../lib/i18n";
 import { fullName, useCharacters } from "../../lib/wowApi";
 import { sylvanasLine } from "../../theme/music";
-import { useTheme } from "../../theme/ThemeProvider";
 
 const WORDS: { ru: string; en: string }[] = [
   { ru: "Победа Отрёкшимся!", en: "Victory for the Forsaken!" },
@@ -16,7 +15,6 @@ const WORDS: { ru: string; en: string }[] = [
 
 export function Throne() {
   const { t, lang } = useI18n();
-  const { sound, setSound } = useTheme();
   const chars = useCharacters();
   const [i, setI] = useState(() => Math.floor(Math.random() * WORDS.length));
   useEffect(() => {
@@ -52,7 +50,7 @@ export function Throne() {
             </AnimatePresence>
           </div>
         </div>
-        <button className="btn-primary" onClick={() => (sound || setSound(true), sylvanasLine(lang))} title={t("uc_voice")}>
+        <button className="btn-primary" onClick={() => sylvanasLine(lang)} title={t("uc_voice")}>
           ☠ {t("uc_voice")}
         </button>
       </div>
