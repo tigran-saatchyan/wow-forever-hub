@@ -98,7 +98,7 @@ export function Lamenters() {
     <AnimatePresence>
       {on && (
         <motion.div
-          key="lamenters" aria-hidden className="pointer-events-none fixed inset-0 z-[5] overflow-hidden"
+          key="lamenters" aria-hidden className="pointer-events-none fixed inset-0 z-[25] overflow-hidden"
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 2.2 }}
         >
           <Lamenter side="left" />

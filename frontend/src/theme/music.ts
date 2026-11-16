@@ -24,7 +24,11 @@ export const PLAYLIST: Track[] = [
 ];
 
 export type Repeat = "all" | "one" | "shuffle";
-export interface PlayerState { index: number; playing: boolean; repeat: Repeat; volume: number; time: number; duration: number }
+export interface PlayerState {
+  index: number; playing: boolean; repeat: Repeat; volume: number; time: number; duration: number;
+  /** tracks left out of the queue (by file id): skipped by next and shuffle, still playable by a click */
+  off: number[];
+}
 
 let state: PlayerState = {
   index: Math.min(store.get<number>("musicIndex", 0), PLAYLIST.length - 1),
@@ -33,6 +37,7 @@ let state: PlayerState = {
   volume: store.get<number>("musicVolume", 0.35),
   time: 0,
   duration: 0,
+  off: store.get<number[]>("musicOff", []),
 };
 const subs = new Set<() => void>();
 const emit = (patch: Partial<PlayerState>) => {
@@ -118,7 +123,10 @@ export const player = {
   next,
   prev() {
     if (audio && audio.currentTime > 4) audio.currentTime = 0;
-    else load((state.index - 1 + PLAYLIST.length) % PLAYLIST.length, true);
+    else {
+      const q = queue();
+      load([...q].reverse().find((x) => x < state.index) ?? q[q.length - 1], true);
+    }
   },
   seek(t: number) {
     if (audio && isFinite(t)) audio.currentTime = t;
@@ -134,14 +142,30 @@ export const player = {
   },
 };
 
+/** The tracks the queue plays (indices), never empty. */
+function queue(): number[] {
+  const on = PLAYLIST.map((_, i) => i).filter((i) => !state.off.includes(PLAYLIST[i].id));
+  return on.length ? on : [state.index];
+}
+
 function next() {
-  const n = PLAYLIST.length;
-  let i = (state.index + 1) % n;
-  if (state.repeat === "shuffle" && n > 1) {
-    do i = Math.floor(Math.random() * n);
-    while (i === state.index);
+  const q = queue();
+  let i: number;
+  if (state.repeat === "shuffle" && q.length > 1) {
+    const others = q.filter((x) => x !== state.index);
+    i = others[Math.floor(Math.random() * others.length)];
+  } else {
+    i = q.find((x) => x > state.index) ?? q[0]; // the next one in the queue, around the end
   }
   load(i, true);
+}
+
+/** Put a track in or out of the queue; the last one in stays in. */
+export function setInQueue(id: number, on: boolean) {
+  const off = on ? state.off.filter((x) => x !== id) : [...new Set([...state.off, id])];
+  if (off.length >= PLAYLIST.length) return;
+  emit({ off });
+  store.set("musicOff", off);
 }
 
 export function usePlayer(): PlayerState {

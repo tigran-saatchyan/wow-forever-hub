@@ -2,7 +2,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "../lib/i18n";
-import { PLAYLIST, player, usePlayer, type Repeat } from "../theme/music";
+import { PLAYLIST, player, setInQueue, usePlayer, type Repeat } from "../theme/music";
 import { useTheme } from "../theme/ThemeProvider";
 
 const fmt = (s: number) => (isFinite(s) && s > 0 ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}` : "0:00");
@@ -69,18 +69,29 @@ export function MusicPlayer() {
               </div>
             </div>
             <ol className="max-h-64 overflow-y-auto border-t border-edge/60 py-1 text-sm">
-              {PLAYLIST.map((tr, i) => (
-                <li key={tr.id}>
-                  <button
-                    className={`flex w-full items-center gap-2 px-3 py-1.5 text-left transition hover:bg-accent/10 ${i === st.index ? "text-gold" : ""}`}
-                    onClick={play(() => player.pick(i))}
-                  >
-                    <span className="w-4 text-center text-xs">{i === st.index && st.playing ? "♪" : i + 1}</span>
-                    <span className="flex-1 truncate">{tr[lang]}</span>
-                    <span className={`mp-tag ${tr.group}`}>{t(`mp_g_${tr.group}`)}</span>
-                  </button>
-                </li>
-              ))}
+              {PLAYLIST.map((tr, i) => {
+                const inQueue = !st.off.includes(tr.id);
+                return (
+                  <li key={tr.id} className={`flex items-center ${inQueue ? "" : "opacity-45"}`}>
+                    <button
+                      className={`mp-q ${inQueue ? "on" : ""}`} aria-pressed={inQueue}
+                      title={t(inQueue ? "mp_q_on" : "mp_q_off")} aria-label={t(inQueue ? "mp_q_on" : "mp_q_off")}
+                      disabled={inQueue && st.off.length >= PLAYLIST.length - 1}
+                      onClick={() => setInQueue(tr.id, !inQueue)}
+                    >
+                      {inQueue ? "✓" : ""}
+                    </button>
+                    <button
+                      className={`flex min-w-0 flex-1 items-center gap-2 py-1.5 pr-3 text-left transition hover:bg-accent/10 ${i === st.index ? "text-gold" : ""}`}
+                      onClick={play(() => player.pick(i))}
+                    >
+                      <span className="w-4 text-center text-xs">{i === st.index && st.playing ? "♪" : i + 1}</span>
+                      <span className="flex-1 truncate">{tr[lang]}</span>
+                      <span className={`mp-tag ${tr.group}`}>{t(`mp_g_${tr.group}`)}</span>
+                    </button>
+                  </li>
+                );
+              })}
             </ol>
           </motion.div>
         )}
