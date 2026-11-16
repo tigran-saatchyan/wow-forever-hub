@@ -1,0 +1,132 @@
+/** Slide-over from the right (half the screen, full on a phone): where an item drops, who sells it, which quest gives it. */
+import { useQuery } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect } from "react";
+import { createPortal } from "react-dom";
+import { fmtDate, useI18n } from "../lib/i18n";
+import { qColor, wowApi } from "../lib/wowApi";
+import { ItemIcon, ItemTip, Money } from "./Wow";
+
+const wh = (lang: string, kind: "item" | "npc" | "quest", id: number) =>
+  `https://www.wowhead.com/classic/${lang === "ru" ? "ru/" : ""}${kind}=${id}`;
+
+export function SourcePanel({ item, onClose }: { item: { id: number; name?: string } | null; onClose: () => void }) {
+  useEffect(() => {
+    if (!item) return;
+    const key = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    addEventListener("keydown", key);
+    return () => removeEventListener("keydown", key);
+  }, [item, onClose]);
+  return createPortal(
+    <AnimatePresence>
+      {item && (
+        <>
+          <motion.div key="shade" className="fixed inset-0 z-[80] bg-black/50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
+          <motion.aside
+            key="panel" role="dialog" aria-modal="true"
+            className="source-panel fixed inset-y-0 right-0 z-[81] flex w-full flex-col md:w-1/2"
+            initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "tween", duration: 0.22 }}
+          >
+            <Body id={item.id} fallbackName={item.name} onClose={onClose} />
+          </motion.aside>
+        </>
+      )}
+    </AnimatePresence>,
+    document.body,
+  );
+}
+
+function Body({ id, fallbackName, onClose }: { id: number; fallbackName?: string; onClose: () => void }) {
+  const { t, lang } = useI18n();
+  const q = useQuery({ queryKey: ["sources", id, lang], queryFn: () => wowApi.sources(id, lang), staleTime: 30 * 60e3, retry: false });
+  const d = q.data;
+  const it = d?.item;
+  const npc = (n: { npc: number; name: string | null }) => (
+    <a className="hover:text-gold hover:underline" href={wh(lang, "npc", n.npc)} target="_blank" rel="noopener noreferrer">{n.name || `NPC #${n.npc}`}</a>
+  );
+  const empty = d && !d.sold.length && !d.drops.length && !d.quests.length;
+  return (
+    <>
+      <header className="flex items-center gap-3 border-b border-edge/60 p-4">
+        <ItemIcon src={it?.icon} quality={it?.quality} size={40} />
+        <div className="min-w-0 flex-1">
+          <div className="eyebrow">{t("so_title")}</div>
+          <h2 className="truncate font-display text-xl" style={{ color: qColor(it?.quality) }}>{it?.name || fallbackName || `#${id}`}</h2>
+        </div>
+        <button className="btn px-2.5" onClick={onClose} aria-label={t("so_close")} title={t("so_close")}>×</button>
+      </header>
+      <div className="flex-1 space-y-5 overflow-y-auto p-4 text-sm">
+        {q.isLoading && <p className="text-muted">{t("so_loading")}</p>}
+        {q.isError && <p className="text-bad">{String(q.error)}</p>}
+        {d && (
+          <>
+            {d.sold.length > 0 && (
+              <section>
+                <h3 className="panel-title mb-2">{t("so_sold")}</h3>
+                <ul className="space-y-1.5">
+                  {d.sold.map((s) => (
+                    <li key={s.npc} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-edge/50 bg-bg/40 p-2">
+                      <span>{npc(s)}{s.limited ? <span className="ml-2 text-xs text-[#ff9a3c]">{t("so_limited")}</span> : null}</span>
+                      <span className="flex items-center gap-3">
+                        {s.copper != null && <Money c={s.copper} />}
+                        {s.installs ? <span className="text-xs text-muted">{t("so_seen", { n: s.installs })}</span> : null}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+            {d.drops.length > 0 && (
+              <section>
+                <h3 className="panel-title mb-2">{t("so_drops")}</h3>
+                <table className="w-full">
+                  <tbody>
+                    {d.drops.map((x) => (
+                      <tr key={x.npc} className="border-t border-edge/40">
+                        <td className="py-1.5 pr-2">{npc(x)}</td>
+                        <td className="py-1.5 pr-2 text-right font-mono">{x.rate != null ? `${(x.rate * 100).toFixed(x.rate < 0.1 ? 1 : 0)}%` : "—"}</td>
+                        <td className="py-1.5 text-right text-xs text-muted">{x.kills != null ? t("so_kills", { k: x.kills }) : ""}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </section>
+            )}
+            {d.quests.length > 0 && (
+              <section>
+                <h3 className="panel-title mb-2">{t("so_quests")}</h3>
+                <ul className="space-y-1">
+                  {d.quests.map((x) => (
+                    <li key={x.quest}>
+                      <a className="hover:text-gold hover:underline" href={wh(lang, "quest", x.quest)} target="_blank" rel="noopener noreferrer">{x.title || `#${x.quest}`}</a>
+                      {x.installs ? <span className="ml-2 text-xs text-muted">{t("so_seen", { n: x.installs })}</span> : null}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+            {empty && <p className="rounded-md border border-edge/60 bg-bg/50 p-2.5 text-muted">{t("so_none")}</p>}
+            {d.wiki.length > 0 && (
+              <section>
+                <h3 className="panel-title mb-1">{t("so_wiki")}</h3>
+                <p className="mb-2 text-xs text-muted">{t("so_wiki_note")}</p>
+                {d.wiki.map((w) => (
+                  <blockquote key={w.text} className="rounded-md border-l-2 border-gold/50 bg-bg/40 px-3 py-2">
+                    {w.text.replace(/^[^:]+:\s*/, "")}
+                    {w.url && <a className="ml-1 text-xs text-gold hover:underline" href={w.url} target="_blank" rel="noopener noreferrer">→</a>}
+                  </blockquote>
+                ))}
+              </section>
+            )}
+            {it && <section className="wow-tip !w-auto"><ItemTip it={it} /></section>}
+          </>
+        )}
+      </div>
+      <footer className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-edge/60 p-3 text-xs text-muted">
+        <a className="text-gold hover:underline" href={d?.everloot || `https://everloot.app/database/items/${id}`} target="_blank" rel="noopener noreferrer">Everloot →</a>
+        <a className="text-gold hover:underline" href={wh(lang, "item", id)} target="_blank" rel="noopener noreferrer">Wowhead →</a>
+        <span className="ml-auto">{t("so_credit")}{d?.dataAsOf ? ` · ${fmtDate(lang, d.dataAsOf)}` : ""}</span>
+      </footer>
+    </>
+  );
+}

@@ -7,6 +7,7 @@
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
+import { SourcePanel } from "../../components/SourcePanel";
 import { ItemHover } from "../../components/Wow";
 import { useMe } from "../../lib/auth";
 import { useI18n, type Key } from "../../lib/i18n";
@@ -33,18 +34,23 @@ export function difficulty(r: Recipe, skill: number | null): { color: string; ke
   return { color: "#808080", key: "pf_d_gray" };
 }
 
-const wowhead = (lang: string, id: number) => `https://www.wowhead.com/classic/${lang === "ru" ? "ru/" : ""}item=${id}`;
-
 /** An item by name; names the client tables lack ("#13480") are asked from Blizzard when shown. */
-function Item({ x, count }: { x: RefItem; count?: number | null }) {
-  const { lang } = useI18n();
+function Item({ x, count, onOpen }: { x: RefItem; count?: number | null; onOpen?: (x: RefItem) => void }) {
+  const { t, lang } = useI18n();
   const missing = x.name.startsWith("#");
   const q = useItem(missing ? x.id : null, lang);
   const name = missing ? q.data?.name || x.name : x.name;
   const color = qColor(missing ? q.data?.quality : Q_BY_INDEX[x.q ?? 1]);
   return (
     <ItemHover id={x.id}>
-      <span tabIndex={0} style={{ color }}>{name}{count && count > 1 ? ` ×${count}` : ""}</span>
+      <span
+        tabIndex={0} style={{ color }} role={onOpen ? "button" : undefined} title={onOpen ? t("so_open") : undefined}
+        className={onOpen ? "cursor-pointer underline decoration-dotted decoration-1 underline-offset-2 hover:brightness-125" : ""}
+        onClick={onOpen ? () => onOpen({ ...x, name }) : undefined}
+        onKeyDown={onOpen ? (e) => e.key === "Enter" && onOpen({ ...x, name }) : undefined}
+      >
+        {name}{count && count > 1 ? ` ×${count}` : ""}
+      </span>
     </ItemHover>
   );
 }
@@ -64,12 +70,13 @@ export function ProfessionsTab({ c }: { c: Character }) {
     return <p className="text-sm text-muted">{c.missing?.includes("professions") ? t("ch_no_prof") : t("ch_prof_none")}</p>;
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-2">
+      {/* one row across the page: equal columns, names on one line, so picking one never reflows the row */}
+      <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, ${mine.length > 4 ? 170 : 220}px), 1fr))` }}>
         {mine.map((p) => (
           <button key={p.name} className={`char-stats text-left ${own?.id === p.id ? "!border-gold/70" : ""}`} onClick={() => p.id && setSel(p.id)}>
             <div className="flex justify-between text-sm">
-              <b className="font-medium">{(p.id && names.get(p.id)) || p.name}</b>
-              <span className="font-mono text-xs">{p.skill ?? "?"}{p.max ? ` / ${p.max}` : ""}</span>
+              <b className="truncate font-medium">{(p.id && names.get(p.id)) || p.name}</b>
+              <span className="ml-2 shrink-0 font-mono text-xs">{p.skill ?? "?"}{p.max ? ` / ${p.max}` : ""}</span>
             </div>
             {p.skill != null && p.max ? <div className="prof-bar"><span style={{ width: `${Math.min(100, (p.skill / p.max) * 100)}%` }} /></div> : null}
           </button>
@@ -113,6 +120,7 @@ function Recipes({ cid, line, own }: { cid: number; line: number; own: CharProfe
   const [showNew, setShowNew] = useState(() => store.get<boolean>("pfNew", true));
   const [range, setRange] = useState<Range>(() => store.get<Range>("pfRange", "mine"));
   const [search, setSearch] = useState("");
+  const [panel, setPanel] = useState<RefItem | null>(null);
   const skill = own.skill ?? null;
   const apiIds = useMemo(() => new Set(own.known || []), [own]);
   const apiNames = useMemo(() => new Set((own.knownNames || []).map((n) => n.toLowerCase())), [own]);
@@ -135,8 +143,8 @@ function Recipes({ cid, line, own }: { cid: number; line: number; own: CharProfe
   const source = (r: Recipe) =>
     r.source === "item" && r.recipeItem ? (
       <span className="grid">
-        <Item x={r.recipeItem} />
-        <a className="text-[11px] text-gold hover:underline" href={wowhead(lang, r.recipeItem.id)} target="_blank" rel="noopener noreferrer">{t("pf_where")}</a>
+        <Item x={r.recipeItem} onOpen={setPanel} />
+        <button className="text-left text-[11px] text-gold hover:underline" onClick={() => setPanel(r.recipeItem)}>{t("pf_where")}</button>
       </span>
     ) : r.source === "auto" ? <span className="text-muted">{t("pf_src_auto")}</span>
       : <span className="text-muted">{t("pf_src_trainer")}</span>;
@@ -197,11 +205,11 @@ function Recipes({ cid, line, own }: { cid: number; line: number; own: CharProfe
                   </td>
                   <td className="p-1.5">
                     <span className="mr-1.5 inline-block h-2 w-2 rounded-full align-middle" style={{ background: d.color }} title={t(d.key)} />
-                    {r.item ? <Item x={r.item} count={r.count} /> : <span>{r.name}</span>}
+                    {r.item ? <Item x={r.item} count={r.count} onOpen={setPanel} /> : <span>{r.name}</span>}
                     {r.item && r.name && <div className="text-[11px] text-muted">{r.name}</div>}
                   </td>
                   <td className="p-1.5 text-xs">
-                    {r.reagents.map((x, i) => <span key={x.id}>{i ? ", " : ""}<Item x={x} />{x.count > 1 ? ` ×${x.count}` : ""}</span>)}
+                    {r.reagents.map((x, i) => <span key={x.id}>{i ? ", " : ""}<Item x={x} onOpen={setPanel} />{x.count > 1 ? ` ×${x.count}` : ""}</span>)}
                   </td>
                   <td className="p-1.5 text-xs">{source(r)}</td>
                 </tr>
@@ -211,6 +219,7 @@ function Recipes({ cid, line, own }: { cid: number; line: number; own: CharProfe
         </table>
         {!rows.length && <p className="p-2 text-sm text-muted">{t("ar_empty")}</p>}
       </div>
+      <SourcePanel item={panel} onClose={() => setPanel(null)} />
     </div>
   );
 }

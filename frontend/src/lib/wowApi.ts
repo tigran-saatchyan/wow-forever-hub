@@ -85,6 +85,7 @@ export const wowApi = {
   known: (cid: number) => req<Record<string, number[]>>(`/api/characters/${cid}/known`),
   markKnown: (cid: number, b: { line: number; ids: number[]; known: boolean }) =>
     req<Record<string, number[]>>(`/api/characters/${cid}/known`, { method: "PUT", body: JSON.stringify(b) }),
+  sources: (id: number, lang: Lang) => req<ItemSources>(`/api/sources/item/${id}?lang=${lang}`),
   profession: (line: number, lang: Lang) => req<ProfDetail>(`/api/professions/${line}?lang=${lang}`),
   rebuildRecipes: () => req<ProfIndex>("/api/professions/rebuild", { method: "POST" }),
   item: (id: number, lang: Lang) => req<ItemInfo>(`/api/items/${id}?lang=${lang}`),
@@ -161,3 +162,12 @@ export interface ProfDetail { status: "ready" | "building"; build: string; id?: 
 
 /** Item quality index (client files) -> the API's quality names used for colors. */
 export const Q_BY_INDEX = ["POOR", "COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY", "ARTIFACT", "HEIRLOOM"];
+
+export interface ItemSources {
+  item: ItemInfo | null;
+  sold: { npc: number; name: string | null; installs: number | null; lastSeen?: string; copper: number | null; limited: number | null; unlimited: boolean | null }[];
+  drops: { npc: number; name: string | null; rate: number | null; kills: number | null; reporters: number | null }[];
+  quests: { quest: number; title: string | null; installs: number | null }[];
+  wiki: { text: string; url: string | null; asOf: string | null }[];
+  everloot: string; dataAsOf?: string; errors: string[]; at: string;
+}

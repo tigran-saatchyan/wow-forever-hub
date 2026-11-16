@@ -391,3 +391,40 @@ def test_armory_tabs(client):
     assert off == {"available": False, "status": 404, "data": None, "at": None}
     assert client.get(f"/api/characters/{c['id']}/tab/nope").status_code == 404
     client.delete(f"/api/characters/{c['id']}")
+
+
+def test_item_sources(client, monkeypatch):
+    from app import everloot
+    from app.routers import sources
+
+    async def fake_call(http, tool, args):
+        if tool == "entity_relations":
+            return {"text": "", "data": {"url": "https://everloot.app/database/items/2589", "page": {"edges": [
+                {"rel": "sold_by", "toKind": "npc", "toId": 5783, "evidence": "observed", "installs": 3,
+                 "lastSeen": "2026-11-09T23:17:59.000Z"},
+                {"rel": "reagent_for", "toKind": "spell", "toId": 2162, "evidence": "client"},
+                {"rel": "reward_from", "toKind": "quest", "toId": 7, "evidence": "observed", "installs": 4},
+            ]}}}
+        if tool == "item_page":
+            return {"text": "", "data": {"dataAsOf": "2026-11-16T09:00:00Z", "page": {"drops": [
+                {"sourceNpcId": 3101, "kills": 61, "drops": 19, "rate": 0.311, "reporters": 3},
+                {"sourceNpcId": 3258, "kills": 2, "drops": 1, "rate": 0.5, "reporters": 3}]}}}
+        if tool == "vendor_page":
+            return {"text": "", "data": {"page": {"offers": [{"itemId": 2589, "priceCopper": 120, "unlimited": True}]}}}
+        if tool == "quest_page":
+            return {"text": "", "data": {"page": {"title": "Kobold Camp Cleanup"}}}
+        if tool == "answer_sources":
+            return {"text": "", "data": {"evidence": [
+                {"kind": "lore", "claim": "Linen Cloth is cheap.", "source": {"title": "Linen Cloth", "url": "w"}},
+                {"kind": "lore", "claim": "Patch notes", "source": {"title": "Patch 2.3.0", "url": "p"}}]}}
+        raise AssertionError(tool)
+
+    monkeypatch.setattr(everloot, "call", fake_call)
+    sources._cache.clear()
+    r = client.get("/api/sources/item/2589?lang=en").json()
+    assert r["sold"] == [{"npc": 5783, "name": None, "installs": 3, "lastSeen": "2026-11-09T23:17:59.000Z",
+                          "copper": 120, "limited": None, "unlimited": True}]
+    assert [d["npc"] for d in r["drops"]] == [3101, 3258]  # 61 kills at 31% before 2 kills at 50%
+    assert r["quests"] == [{"quest": 7, "title": "Kobold Camp Cleanup", "installs": 4}]
+    assert r["wiki"] == [{"text": "Linen Cloth is cheap.", "url": "w", "asOf": None}]
+    assert r["item"]["name"] == "Linen Cloth"

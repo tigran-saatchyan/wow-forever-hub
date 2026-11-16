@@ -311,6 +311,14 @@ body {
     fill: #f0c541;
   }
 
+  /* "how to get it" slide-over */
+  .source-panel {
+    background: linear-gradient(180deg, #0d1117f7, #07090cf7);
+    border-left: 1px solid rgb(var(--gold) / 0.45);
+    box-shadow: -20px 0 50px #000c;
+    color: rgb(var(--ink));
+  }
+
   /* armory tabs: the game's tab strip, gold underline on the open one */
   .armory-tabs {
     @apply -mx-1 flex gap-1 overflow-x-auto border-b px-1;
