@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import auth, bnet
+from . import auth, bnet, gamedata
 from .config import get_settings
 from .db import init_db
 from .routers import bnet as bnet_routes
@@ -25,6 +25,8 @@ async def lifespan(_: FastAPI):
         tasks.append(asyncio.create_task(market.poller()))
     if s.everloot_prefetch:
         tasks.append(asyncio.create_task(sources.prefetcher()))
+    if s.collector:
+        tasks.append(asyncio.create_task(gamedata.runner()))
     if s.refresh_hours > 0 and bnet.client().configured:
         tasks.append(asyncio.create_task(characters.refresher()))
     yield

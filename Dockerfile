@@ -20,6 +20,8 @@ RUN uv sync --frozen --no-dev --no-install-project
 
 COPY backend/ ./
 COPY data/ /app/data/
+# the game data collector the backend runs in the background (app/gamedata.py)
+COPY legacy/collector/ /app/legacy/collector/
 COPY --from=web /web/dist /app/frontend/dist
 
 ENV FH_ENV=production \

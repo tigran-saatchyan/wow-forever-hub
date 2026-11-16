@@ -127,6 +127,12 @@ def update_news() -> dict:
         topics = [t for t in topics if not t.get("beta") or (t["kind"] == "patch" and (t.get("last") or "") >= closed)]
     # the same blue post goes up on the US and EU forums: show it once, newest activity first
     topics = sorted(forums.dedupe_regions(topics, "first", window_h=6), key=lambda t: t.get("last") or "", reverse=True)
+    if not posts:
+        # the forums did not answer (network, a block, an outage): an empty list would read as "no news",
+        # so the last good one stays
+        prev = (_read(config.WEB_DATA / "news.json", {}) or {}).get("topics") or []
+        log.warning("news: no posts fetched, keeping the previous %d topics", len(prev))
+        return {"topics": prev}
     _write(config.WEB_DATA / "news.json", {"generated": ribbit.now_iso(), "topics": topics[:120]})
     return {"topics": topics}
 

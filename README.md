@@ -50,8 +50,8 @@ cd frontend && npm test && npm run typecheck
 
 ## Обновление данных
 
-Пока данные в `data/` статические (снимок от 16 ноября 2026, сборка 1.60.1.70938). Сборщик прототипа
-запускается так (перенос в бэкенд — этап 2 в ROADMAP):
+На сервере данные обновляет сам бэкенд (`app/gamedata.py`, см. docs/DEPLOY.md); в `data/` лежит снимок
+(16 ноября 2026, сборка 1.60.1.70938). Вручную сборщик запускается так:
 
 ```bash
 cd legacy && python -m venv .venv && .venv/bin/pip install -r requirements.txt && FH_WEB_DATA=../data .venv/bin/python -m collector update

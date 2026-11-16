@@ -40,6 +40,8 @@ class Settings(BaseSettings):
     # Refresh every character from Blizzard this often, in hours, so the leveling pace has points to go on
     # (0 turns it off: tests, local runs without keys).
     refresh_hours: float = 3
+    # Run the game data collector in the background: news, server status, new client builds (off in tests).
+    collector: bool = True
 
     env: str = "development"  # "production" on Railway
     static_dir: Path | None = None  # built frontend (frontend/dist); set in the Docker image

@@ -7,5 +7,7 @@
 **/*.db
 **/.env
 .git
-legacy
+# the old prototype stays out; only its collector goes in (the backend runs it, app/gamedata.py)
+legacy/*
+!legacy/collector
 docs

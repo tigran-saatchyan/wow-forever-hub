@@ -9,6 +9,7 @@ os.environ["FH_ADMIN_EMAIL"] = "boss@test"
 os.environ["FH_ADMIN_PASSWORD"] = "s3cret"
 os.environ["FH_EVERLOOT_PREFETCH"] = "0"
 os.environ["FH_REFRESH_HOURS"] = "0"
+os.environ["FH_COLLECTOR"] = "0"
 
 from fastapi.testclient import TestClient  # noqa: E402
 
