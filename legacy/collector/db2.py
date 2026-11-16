@@ -9,12 +9,20 @@ from . import config, net
 
 # Tables whose text differs per locale; everything else is fetched once (enUS).
 LOCALIZED = {"SpellName", "Spell", "TalentTab", "ChrClasses", "SpellRange"}
+# Tables a client build may leave out when they are empty: TraitNodeXTraitCond has only a header in
+# 1.60.1.70755 and is gone from 1.60.1.70790 on (wago answers 400). Missing means no rows.
+OPTIONAL = {"TraitNodeXTraitCond"}
 
 
 def table(name: str, build: str, locale: str = "enUS") -> list[dict]:
     loc = locale if name in LOCALIZED else "enUS"
     url = config.WAGO_DB2.format(table=name, build=build, locale=loc)
-    text = net.cached_text(url, config.CACHE / "db2" / build / loc / f"{name}.csv")
+    try:
+        text = net.cached_text(url, config.CACHE / "db2" / build / loc / f"{name}.csv")
+    except RuntimeError:
+        if name in OPTIONAL:
+            return []
+        raise
     if text.lstrip().startswith("{"):
         raise RuntimeError(f"wago.tools returned an error for {name}@{build}: {text[:200]}")
     return list(csv.DictReader(io.StringIO(text)))

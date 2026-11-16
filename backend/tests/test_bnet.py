@@ -22,6 +22,8 @@ from app.main import app  # noqa: E402
 from app.routers import market  # noqa: E402
 
 CALLS: list[str] = []
+# the client build the hub serves (data/index.json): Blizzard's versioned static namespace is named after it
+VER = bnet.current_version(get_settings())
 
 PROFILE = {
     "name": "Joe Gun", "level": 42, "character_class": {"id": 5, "name": "Priest"}, "race": {"name": "Undead"},
@@ -90,7 +92,7 @@ def handler(req: httpx.Request) -> httpx.Response:
     if p.startswith("/data/wow/item/") or p.startswith("/data/wow/media/item/"):
         if ns == "static-forever-eu":
             return httpx.Response(403, text="forbidden")  # plain static refused: versioned one works
-        assert ns == "static-1.60.1_70755-forever-eu", ns
+        assert ns == f"static-{VER}-forever-eu", ns
         iid = int(p.rsplit("/", 1)[1])
         if iid == 778 and "media" in p and FLAKY_ICON:
             FLAKY_ICON.pop()
@@ -133,6 +135,16 @@ def handler(req: httpx.Request) -> httpx.Response:
             {"world_map": {"name": "Warsong Gulch"}, "match_statistics": {"played": 10, "won": 6, "lost": 4}}]})
     if p == "/profile/wow/character/joe-gun/quests":
         return httpx.Response(200, json={"in_progress": [{"id": 515, "name": "Elixir of Agony"}], "completed": {}})
+    if p == "/data/wow/quest/783":
+        return httpx.Response(200, json={"id": 783, "title": "A Threat Within", "area": {"name": "Northshire", "id": 9},
+            "description": "Speak to Marshal McBride.", "requirements": {"min_character_level": 1},
+            "rewards": {"experience": 40, "money": {"value": 75},
+                        "reputations": [{"reward": {"name": "Stormwind", "id": 72}, "value": 50}],
+                        "items": {"items": [{"item": {"name": "Worn Cloak", "id": 1}}]}}})
+    if p == "/profile/wow/character/joe-gun/achievements/statistics":
+        return httpx.Response(200, json={"categories": [
+            {"name": "Deaths", "statistics": [{"id": 60, "name": "Total deaths", "quantity": 28.0}],
+             "sub_categories": [{"name": "World", "statistics": [{"id": 112, "name": "Deaths from drowning", "quantity": 1.0}]}]}]})
     if p == "/profile/wow/character/joe-gun/reputations":
         return httpx.Response(200, json={"reputations": [
             {"faction": {"name": "Undercity", "id": 68}, "standing": {"raw": 9000, "value": 3000, "max": 6000, "tier": 4,
@@ -519,3 +531,30 @@ def test_game_sound(client):
     assert r.status_code == 200 and r.headers["content-type"] == "audio/ogg" and r.content.startswith(b"OggS")
     assert client.get("/api/media/game/12345").status_code == 404
     assert client.get("/api/media/game/561230?lang=ru").content.startswith(b"OggSruRU")  # Russian recording
+
+
+def test_item_set_bonuses():
+    st = {"item_set": {"name": {"en_US": "Violet Raiment", "ru_RU": "Лиловые одежды"}, "id": 2134},
+          "items": [{"item": {"name": "Mantle"}, "is_equipped": True}, {"item": {"name": "Leggings"}}],
+          "effects": [{"display_string": "Set (2): +5 Arcane Resistance.", "required_count": 2}]}
+    s = wow.item_set(st, "ru")
+    assert s == {"name": "Лиловые одежды", "worn": 1, "items": [{"name": "Mantle", "equipped": True},
+                 {"name": "Leggings", "equipped": False}], "effects": [{"text": "Set (2): +5 Arcane Resistance.", "count": 2}]}
+    assert wow.item_set(None) is None
+    eq = wow.equipment({"equipped_items": [{"slot": {"type": "SHOULDER"}, "item": {"id": 1}, "set": st}]}, "en")
+    assert eq[0]["set"] == "Violet Raiment" and eq[0]["setInfo"]["worn"] == 1
+
+
+
+def test_quest_details_and_statistics(client):
+    qd = client.get("/api/quests/783?lang=en").json()
+    assert qd == {"id": 783, "title": "A Threat Within", "area": "Northshire", "description": "Speak to Marshal McBride.",
+                  "level": 1, "xp": 40, "money": 75, "reputations": [{"name": "Stormwind", "value": 50}],
+                  "items": [{"id": 1, "name": "Worn Cloak", "choice": False}]}
+    n = len(CALLS)
+    assert client.get("/api/quests/783?lang=en").json()["title"] == "A Threat Within"
+    assert len(CALLS) == n  # kept: not asked again
+    c = client.post("/api/characters", json={"name": "Joe Gun", "region": "eu"}).json()
+    st = client.get(f"/api/characters/{c['id']}/tab/statistics?lang=en").json()["data"]
+    assert st == [{"group": "Deaths", "rows": [{"id": 60, "name": "Total deaths", "value": 28.0}]},
+                  {"group": "Deaths / World", "rows": [{"id": 112, "name": "Deaths from drowning", "value": 1.0}]}]
