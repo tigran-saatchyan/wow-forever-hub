@@ -46,9 +46,9 @@ export function stopMusic() {
   if (audio) fadeTo(audio, 0, 900, () => audio?.pause());
 }
 
-/** One of Sylvanas' lines, at random (the caller checks that sounds are on). */
-export function sylvanasLine(volume = 0.85) {
-  const a = new Audio(GAME(SYLVANAS[Math.floor(Math.random() * SYLVANAS.length)]));
+/** One of Sylvanas' lines, at random, in the page's language (the Russian client has its own voice). */
+export function sylvanasLine(lang: "ru" | "en" = "ru", volume = 0.85) {
+  const a = new Audio(`${GAME(SYLVANAS[Math.floor(Math.random() * SYLVANAS.length)])}?lang=${lang}`);
   a.volume = volume;
   void a.play().catch(() => {});
 }

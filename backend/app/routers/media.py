@@ -64,15 +64,22 @@ GAME_BUILD = "1.60.1.70938"
 CACHE_DIR = Path(tempfile.gettempdir()) / "fh-game-media"
 
 
+LOCALES = {"ru": "ruRU", "en": "enUS"}
+
+
 @router.get("/game/{fdid}")
-async def game_file(fdid: int, _: CurrentUser):
+async def game_file(fdid: int, _: CurrentUser, lang: str = "en"):
+    """A client file; voice lines exist per language (the Russian client has its own recordings)."""
     mime = GAME_FILES.get(fdid)
     if not mime:
         raise HTTPException(404, "not an allowed file")
-    path = CACHE_DIR / f"{fdid}"
+    locale = LOCALES.get(lang, "enUS")
+    path = CACHE_DIR / f"{fdid}-{locale}"
     if not path.is_file():
         try:
-            r = await client().http.get(f"https://wago.tools/api/casc/{fdid}?version={GAME_BUILD}", timeout=60)
+            r = await client().http.get(
+                f"https://wago.tools/api/casc/{fdid}?version={GAME_BUILD}&locale={locale}", timeout=60
+            )
         except Exception as e:  # noqa: BLE001
             raise HTTPException(502, "file unavailable") from e
         if r.status_code != 200 or len(r.content) < 64:

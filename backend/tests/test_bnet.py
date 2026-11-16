@@ -133,7 +133,8 @@ def handler(req: httpx.Request) -> httpx.Response:
             {"faction": {"name": "Undercity"}, "standing": {"raw": 9000, "value": 3000, "max": 6000, "tier": 4,
                                                              "name": "Friendly"}}]})
     if req.url.host == "wago.tools" and p.startswith("/api/casc/"):
-        return httpx.Response(200, content=b"OggS" + b"\0" * 100, headers={"content-type": "application/octet-stream"})
+        body = b"OggS" + req.url.params.get("locale", "enUS").encode() + b"\0" * 100
+        return httpx.Response(200, content=body, headers={"content-type": "application/octet-stream"})
     if req.url.host == "render.worldofwarcraft.com":
         return httpx.Response(200, content=b"\xff\xd8jpeg", headers={"content-type": "image/jpeg"})
     return httpx.Response(404, json={"code": 404, "path": p})
@@ -498,3 +499,4 @@ def test_game_sound(client):
     r = client.get("/api/media/game/561230")
     assert r.status_code == 200 and r.headers["content-type"] == "audio/ogg" and r.content.startswith(b"OggS")
     assert client.get("/api/media/game/12345").status_code == 404
+    assert client.get("/api/media/game/561230?lang=ru").content.startswith(b"OggSruRU")  # Russian recording

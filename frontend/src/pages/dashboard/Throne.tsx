@@ -50,7 +50,7 @@ export function Throne() {
             </AnimatePresence>
           </div>
         </div>
-        <button className="btn-primary" onClick={() => sylvanasLine()} title={t("uc_voice")}>
+        <button className="btn-primary" onClick={() => sylvanasLine(lang)} title={t("uc_voice")}>
           ☠ {t("uc_voice")}
         </button>
       </div>
