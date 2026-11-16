@@ -4,6 +4,7 @@
  * banners from the game client, plague braziers and the mist of the Royal Quarter. Below, their chronicle,
  * strength, professions and the orders of the day.
  */
+import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform, type MotionValue } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -11,7 +12,9 @@ import { ItemHover, ItemIcon } from "../components/Wow";
 import { iconStyle, useIcons, useTalents } from "../lib/gameData";
 import { fmtDate, useI18n, type Key } from "../lib/i18n";
 import { store } from "../lib/store";
-import { fullName, media, qColor, useCharacter, useCharacters, type Character, type EquipItem } from "../lib/wowApi";
+import { xpToCap, xpToNext } from "../lib/xp";
+import { fullName, media, qColor, useCharacter, useCharacters, wowApi, type Character, type EquipItem } from "../lib/wowApi";
+import { REP_COLORS, type Rep } from "./characters/ArmoryTabs";
 import { CONTENT, loadViewer, type Viewer } from "../theme/Lamenters";
 import { sylvanasLine } from "../theme/music";
 import { Professions } from "./characters/CharacterSheet";
@@ -253,6 +256,7 @@ export function ThroneRoom() {
               </motion.p>
             </AnimatePresence>
           </div>
+          {c && <Progress c={c} />}
         </div>
       </section>
 
@@ -281,6 +285,71 @@ export function ThroneRoom() {
         </div>
       )}
       <Orders />
+    </div>
+  );
+}
+
+/** The bar along the bottom of the hall, as in the game: experience until 60, then a reputation of your choice. */
+function Progress({ c }: { c: Character }) {
+  const { t, lang } = useI18n();
+  const s = c.summary?.[lang];
+  const level = s?.level ?? null;
+  const need = xpToNext(level);
+  if (need != null && typeof s?.xp === "number") {
+    const xp = Math.min(s.xp, need);
+    const pct = (xp / need) * 100;
+    const nf = new Intl.NumberFormat(lang);
+    return (
+      <div className="tr-bar-wrap">
+        <div className="tr-bar xp" role="progressbar" aria-valuenow={xp} aria-valuemax={need} aria-label={t("xp_title")}>
+          <motion.span className="fill" initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 1.6, delay: 0.8, ease: "easeOut" }} />
+          <span className="ticks" />
+          <span className="txt">{t("xp_title")}: {nf.format(xp)} / {nf.format(need)} ({pct.toFixed(1)}%)</span>
+        </div>
+        <div className="tr-bar-sub">
+          <span>{t("xp_left", { l: level! + 1, n: nf.format(need - xp) })}</span>
+          <span>{t("xp_cap", { n: nf.format(xpToCap(level!, xp)) })}</span>
+        </div>
+      </div>
+    );
+  }
+  return level != null && need == null ? <RepBar cid={c.id} /> : null;
+}
+
+function RepBar({ cid }: { cid: number }) {
+  const { t, lang } = useI18n();
+  const key = `repTrack:${cid}`;
+  const [pick, setPick] = useState<string | null>(() => store.get<string | null>(key, null));
+  const [choosing, setChoosing] = useState(false);
+  const q = useQuery({
+    queryKey: ["tab", cid, "reputations", lang], queryFn: () => wowApi.tab<Rep[]>(cid, "reputations", lang),
+    staleTime: 10 * 60e3, retry: false,
+  });
+  const reps = q.data?.data || [];
+  const idOf = (r: Rep) => (r.id != null ? String(r.id) : r.name);
+  const cur = pick ? reps.find((r) => idOf(r) === pick) : undefined;
+  const choose = (v: string | null) => (setPick(v), store.set(key, v), setChoosing(false));
+  if (q.isLoading) return null;
+  if (!reps.length) return <p className="tr-bar-sub justify-center">{t("rep_none")}</p>;
+  const picker = (
+    <select className="tr-rep-pick" value={pick ?? ""} autoFocus={choosing} aria-label={t("rep_pick")}
+      onChange={(e) => choose(e.target.value || null)} onBlur={() => setChoosing(false)}>
+      <option value="">{t("rep_off")}</option>
+      {reps.map((r) => <option key={idOf(r)} value={idOf(r)}>{r.name} — {r.standing}</option>)}
+    </select>
+  );
+  if (!cur || choosing)
+    return <div className="tr-bar-wrap flex justify-center">{cur || choosing ? picker : <button className="btn text-sm" onClick={() => setChoosing(true)}>☩ {t("rep_track")}</button>}</div>;
+  const max = cur.max || 0, val = Math.min(cur.value ?? 0, max || Infinity);
+  const pct = max ? (val / max) * 100 : 100;
+  const color = REP_COLORS[cur.tier ?? 3] ?? "#ffff00";
+  return (
+    <div className="tr-bar-wrap">
+      <button className="tr-bar rep w-full" onClick={() => setChoosing(true)} title={t("rep_pick")} style={{ ["--rep" as string]: color }}>
+        <motion.span className="fill" initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 1.4, delay: 0.6, ease: "easeOut" }} />
+        <span className="ticks" />
+        <span className="txt">{cur.name} — {cur.standing}{max ? ` ${val} / ${max}` : ""}</span>
+      </button>
     </div>
   );
 }

@@ -1073,7 +1073,7 @@ button.order-line:hover { @apply text-gold; }
 @media (max-width: 1023px) { .tr-braziers .brazier { display: block; transform: scale(0.9); } .tr-braziers .brazier.left { left: 4px; } .tr-braziers .brazier.right { right: 4px; } }
 
 /* the dais */
-.tr-dais { left: 50%; bottom: 19%; width: 0; height: 0; }
+.tr-dais { left: 50%; bottom: 22%; width: 0; height: 0; }
 .tr-sigil {
   position: absolute; left: -210px; top: -232px; width: 420px; height: 420px;
   transform: perspective(700px) rotateX(74deg);
@@ -1097,7 +1097,7 @@ button.order-line:hover { @apply text-gold; }
 
 /* the servant */
 .tr-hero-wrap {
-  left: 50%; bottom: 19%; height: 52%; aspect-ratio: 1 / 1.5;
+  left: 50%; bottom: 22%; height: 50%; aspect-ratio: 1 / 1.5;
   translate: -50% 0; display: flex; justify-content: center; align-items: flex-end;
 }
 .tr-hero-btn { position: relative; height: 100%; display: flex; align-items: flex-end; justify-content: center; cursor: pointer; }
@@ -1183,6 +1183,32 @@ button.order-line:hover { @apply text-gold; }
 .tr-servant:hover { opacity: 1; transform: translateY(-2px); }
 .tr-servant.on { opacity: 1; box-shadow: 0 0 0 2px rgb(140 240 106 / 0.8), 0 0 16px rgb(116 214 84 / 0.7); }
 .tr-vital { width: 100%; }
+
+/* the experience / reputation bar, as at the bottom of the game screen */
+.tr-bar-wrap { margin: 12px auto 0; max-width: 980px; }
+.tr-bar {
+  position: relative; display: block; height: 20px; overflow: hidden; border-radius: 3px;
+  background: linear-gradient(180deg, #0c0a14, #17121f);
+  box-shadow: 0 0 0 1px #000, 0 0 0 2px rgb(var(--gold) / 0.45), inset 0 2px 6px #000;
+}
+.tr-bar .fill { position: absolute; left: 0; top: 0; bottom: 0; }
+.tr-bar.xp .fill {
+  background: linear-gradient(180deg, #c58cff, #8a3fd6 45%, #5a1f9a);
+  box-shadow: 0 0 12px rgb(168 108 232 / 0.8);
+}
+.tr-bar.xp .fill::after, .tr-bar.rep .fill::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.25) 50%, transparent 70%) 0 0 / 200% 100%;
+  animation: tr-shine 3.5s linear infinite;
+}
+.tr-bar.rep .fill { background: linear-gradient(180deg, color-mix(in srgb, var(--rep) 80%, #fff), var(--rep) 50%, color-mix(in srgb, var(--rep) 60%, #000)); }
+@keyframes tr-shine { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+/* the game's bar is split in twenty bubbles */
+.tr-bar .ticks { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 calc(5% - 1px), rgb(0 0 0 / 0.55) calc(5% - 1px) 5%); }
+.tr-bar .txt { position: relative; display: block; line-height: 20px; font-size: 12px; color: #fff; text-shadow: 0 1px 2px #000, 0 0 4px #000; }
+.tr-bar-sub { display: flex; justify-content: space-between; gap: 12px; margin-top: 4px; font-size: 11px; color: rgb(var(--muted, 150 150 150)); }
+.tr-rep-pick { @apply rounded-md border border-edge/70 bg-panel px-2 py-1 text-sm text-ink; max-width: 100%; }
+@media (prefers-reduced-motion: reduce) { .tr-bar .fill::after { animation: none; } }
 
 @media (prefers-reduced-motion: reduce) {
   .tr-clouds i, .tr-shafts i, .tr-throne-glow, .tr-banner, .tr-sigil img, .tr-sigil::before, .tr-pillar,

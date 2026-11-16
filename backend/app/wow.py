@@ -366,7 +366,7 @@ def reputations(p: dict, lang: str | None = None) -> list[dict]:
     out = []
     for r in p.get("reputations") or []:
         st = r.get("standing") or {}
-        out.append({"name": name_of(r.get("faction"), lang), "standing": name_of(st, lang),
+        out.append({"id": _get(r, "faction", "id"), "name": name_of(r.get("faction"), lang), "standing": name_of(st, lang),
                     "tier": _num(st.get("tier")), "value": _num(st.get("value")), "max": _num(st.get("max")),
                     "raw": _num(st.get("raw"))})
     return sorted(out, key=lambda x: (-(x["tier"] or 0), -(x["raw"] or 0)))

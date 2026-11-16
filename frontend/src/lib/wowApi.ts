@@ -32,7 +32,7 @@ export interface ProbeRow { name: string; path: string; namespace: string; statu
 export interface CharSummary {
   name: string; surname?: string | null; level: number | null; classId: number | null; className: string; race: string; gender?: string;
   faction?: string; guild: { name: string; href?: string } | null; ruleset: string | null; ilvl?: number;
-  lastLogin?: number;
+  lastLogin?: number; xp?: number | null;
 }
 export interface EquipItem {
   slot: string; slotName: string; id: number; name: string; quality?: string; ilvl?: number;

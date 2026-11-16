@@ -77,8 +77,8 @@ export function PvpTab({ cid }: { cid: number }) {
   );
 }
 
-interface Rep { name: string; standing: string; tier: number | null; value: number | null; max: number | null }
-const REP_COLORS = ["#cc2222", "#ff0000", "#ee6622", "#ffff00", "#00ff88", "#00bb44", "#00a0b4", "#00ccff"];
+export interface Rep { id?: number | null; name: string; standing: string; tier: number | null; value: number | null; max: number | null }
+export const REP_COLORS = ["#cc2222", "#ff0000", "#ee6622", "#ffff00", "#00ff88", "#00bb44", "#00a0b4", "#00ccff"];
 export function ReputationTab({ cid }: { cid: number }) {
   const { t } = useI18n();
   const q = useTab<Rep[]>(cid, "reputations");
