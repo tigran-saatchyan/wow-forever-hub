@@ -66,6 +66,7 @@ def handler(req: httpx.Request) -> httpx.Response:
             {"name": "Joe Gun", "key": {"href": href.format("joe-gun")}},
             {"name": "Ann Bell", "key": {"href": href.format("ann-bell")}},
             {"name": "Joe", "surname": "Gun", "level": 42},  # no link: the surname makes the lookup work
+            {"name": "Valthanis", "key": {"href": href.format("valthanis-deadrunner")}},  # Forever: first name + link
             {"name": "Tiny", "level": 1, "playable_class": {"id": 4}, "playable_race": {"id": 5},
              "key": {"href": href.format("tiny")}},  # Blizzard keeps profiles under 10 to itself
         ]}]})
@@ -194,7 +195,8 @@ def test_battlenet_sign_in_imports_characters(client):
     r = client.get(f"/api/bnet/callback?code=good&state={loc.params['state']}", follow_redirects=False)
     assert r.headers["location"] == "/characters?bnet=ok"
     chars = {c["slug"]: c for c in client.get("/api/characters").json()}
-    assert set(chars) == {"joe-gun", "ann-bell", "joe", "tiny"} and chars["joe-gun"]["source"] == "bnet"
+    assert set(chars) == {"joe-gun", "ann-bell", "joe", "tiny", "valthanis-deadrunner"}
+    assert chars["joe-gun"]["source"] == "bnet"
     tiny = chars["tiny"]
     assert tiny["error"] == "low_level" and tiny["summary"]["en"]["level"] == 1
     assert tiny["summary"]["en"]["classId"] == 4
@@ -428,3 +430,28 @@ def test_item_sources(client, monkeypatch):
     assert r["quests"] == [{"quest": 7, "title": "Kobold Camp Cleanup", "installs": 4}]
     assert r["wiki"] == [{"text": "Linen Cloth is cheap.", "url": "w", "asOf": None}]
     assert r["item"]["name"] == "Linen Cloth"
+
+
+def test_surname():
+    # profile: its own field (real answer for asavar-kul, November 2026)
+    assert wow.character_summary({"name": "Asavar", "surname": "Kul", "name_search": "Asavar Kul"})["surname"] == "Kul"
+    assert wow.surname({"name": "Asavar", "name_search": "Asavar Kul"}) == "Kul"
+    # guild roster: no field, only the link /character/name-surname
+    r = wow.roster({"members": [{"rank": 2, "character": {
+        "name": "Valthanis", "level": 32,
+        "key": {"href": "https://eu.api.blizzard.com/profile/wow/character/valthanis-deadrunner?namespace=x"}}}]})
+    assert r[0]["surname"] == "Deadrunner"
+    assert wow.surname({"name": "Solo"}) is None
+
+
+
+def test_reimport_keeps_first_name_card(client):
+    old = client.post("/api/characters", json={"name": "Valthanis"}).json()  # an early import: first name only
+    r = client.get("/api/bnet/login?region=eu", follow_redirects=False)
+    state = httpx.URL(r.headers["location"]).params["state"]
+    client.get(f"/api/bnet/callback?code=good&state={state}", follow_redirects=False)
+    chars = client.get("/api/characters").json()
+    vals = [c for c in chars if c["slug"].startswith("valthanis")]
+    assert [(c["id"], c["slug"]) for c in vals] == [(old["id"], "valthanis-deadrunner")]
+    for c in chars:
+        client.delete(f"/api/characters/{c['id']}")

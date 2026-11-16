@@ -33,6 +33,10 @@ def surname(p: Any, lang: str | None = None, depth: int = 0) -> str | None:
         s = v if isinstance(v, str) else name_of(v, lang) if isinstance(v, dict) else None
         if s and s.strip():
             return s.strip()
+    # "name_search": "Asavar Kul" next to "name": "Asavar"
+    full, first = p.get("name_search"), name_of(p.get("name"), lang)
+    if isinstance(full, str) and first and full.lower().startswith(first.lower() + " "):
+        return full[len(first):].strip() or None
     for k, v in p.items():
         if k in ("_links", "guild", "realm", "race", "character_class", "playable_class", "playable_race",
                  "faction", "gender", "active_spec", "covenant_progress"):
@@ -44,11 +48,23 @@ def surname(p: Any, lang: str | None = None, depth: int = 0) -> str | None:
     return None
 
 
+def surname_from_href(ch: dict) -> str | None:
+    """Roster entries carry no surname field, but their link is /character/name-surname."""
+    href = _get(ch, "key", "href") or ""
+    slug = href.split("/character/", 1)[1].split("?")[0] if "/character/" in href else ""
+    first = (name_of(ch.get("name")) or "").lower()
+    if first and slug.lower().startswith(first + "-"):
+        rest = slug[len(first) + 1:]
+        return " ".join(w.capitalize() for w in rest.split("-") if w) or None
+    return None
+
+
 def character_summary(p: dict, lang: str | None = None) -> dict:
     """Profile summary: name, level, class, race, guild (with its API link for the roster)."""
     guild = p.get("guild") or {}
     return {
         "name": name_of(p.get("name"), lang) or "",
+        "surname": surname(p, lang) or surname_from_href(p),
         "level": p.get("level"),
         # profile: character_class / race; Battle.net account list: playable_class / playable_race
         "classId": _get(p, "character_class", "id") or _get(p, "playable_class", "id"),
@@ -267,7 +283,7 @@ def roster(r: dict, lang: str | None = None) -> list[dict]:
         ch = m.get("character") or {}
         out.append({
             "name": name_of(ch.get("name"), lang),
-            "surname": surname(ch, lang),
+            "surname": surname(ch, lang) or surname_from_href(ch),
             "level": ch.get("level"),
             "classId": _get(ch, "playable_class", "id"),
             "raceId": _get(ch, "playable_race", "id"),

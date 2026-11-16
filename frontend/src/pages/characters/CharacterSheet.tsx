@@ -2,7 +2,7 @@
 import { ItemHover, ItemIcon } from "../../components/Wow";
 import type { ClassData } from "../../engine";
 import { useI18n, type Key } from "../../lib/i18n";
-import { media, qColor, type Character, type EquipItem } from "../../lib/wowApi";
+import { fullName, media, qColor, type Character, type EquipItem } from "../../lib/wowApi";
 
 const LEFT = ["HEAD", "NECK", "SHOULDER", "BACK", "CHEST", "SHIRT", "TABARD", "WRIST"];
 const RIGHT = ["HANDS", "WAIST", "LEGS", "FEET", "FINGER_1", "FINGER_2", "TRINKET_1", "TRINKET_2"];
@@ -52,7 +52,7 @@ export function CharacterSheet({ c, k }: { c: Character; k?: ClassData }) {
         <div className="flex flex-col gap-1.5">{LEFT.map((sl) => <Slot key={sl} slot={sl} x={eq.get(sl)} />)}</div>
         <div className="char-model">
           <div className="text-center leading-tight">
-            <div className="font-display text-xl" style={{ color: k?.color }}>{s?.name || c.name}</div>
+            <div className="font-display text-xl" style={{ color: k?.color }}>{fullName(c, lang)}</div>
             <div className="text-xs text-muted">{t("ch_level", { l: s?.level ?? "?" })} {s?.race} {s?.className}</div>
             {s?.guild?.name && <div className="text-xs text-ink">&lt;{s.guild.name}&gt;</div>}
           </div>

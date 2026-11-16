@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 import { ApiError } from "../../lib/api";
 import { useI18n } from "../../lib/i18n";
 import { store } from "../../lib/store";
-import type { Character } from "../../lib/wowApi";
+import { fullName, type Character } from "../../lib/wowApi";
 
 type Row = Character & { favorite?: boolean };
 
@@ -86,7 +86,7 @@ export function CharacterList({ chars, cur, onSelect, icon }: Props) {
         <button className="flex min-w-0 flex-1 items-center gap-3 text-left" onClick={() => onSelect(c.id)}>
           {icon(c)}
           <span className="grid min-w-0">
-            <b className="truncate">{s?.name || c.name}</b>
+            <b className="truncate">{fullName(c, lang)}</b>
             <span className="truncate text-xs text-muted">
               {s ? `${t("ch_level", { l: s.level ?? "?" })} · ${s.className}` : c.error ? "!" : "…"} · {c.region.toUpperCase()}
             </span>

@@ -151,6 +151,15 @@ async def callback(request: Request, session: Session, code: str = "", state: st
                 continue
             q = select(Character).where(Character.user_id == uid, Character.region == region, Character.slug == sl)
             c = (await session.execute(q)).scalar_one_or_none()
+            first = slug(name_of(ch.get("name")))
+            if c is None and first and sl != first:
+                # imported earlier by first name only: keep that card (its marks, order) and give it the full slug
+                q = select(Character).where(
+                    Character.user_id == uid, Character.region == region, Character.slug == first
+                )
+                c = (await session.execute(q)).scalar_one_or_none()
+                if c is not None:
+                    c.slug = sl
             if c is None:
                 c = Character(user_id=uid, region=region, slug=sl, name=name_of(ch.get("name")) or sl, source="bnet")
                 session.add(c)

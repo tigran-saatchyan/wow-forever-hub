@@ -11,7 +11,7 @@ import { CharacterSheet } from "./characters/CharacterSheet";
 import { ProfessionsTab } from "./characters/ProfessionsTab";
 import { TalentsTab } from "./characters/TalentsTab";
 import {
-  media, useCharacter, useCharacterActions, useCharacters, wowApi, type Character, type Region,
+  fullName, media, useCharacter, useCharacterActions, useCharacters, wowApi, type Character, type Region,
 } from "../lib/wowApi";
 
 export function Characters() {
@@ -133,7 +133,7 @@ function CharacterCard({ id }: { id: number }) {
       <header className="flex flex-wrap items-start gap-4">
         {c.avatar ? <img src={media(c.avatar)} alt="" className="h-16 w-16 rounded-md border border-edge object-cover" /> : <ClassIcon classId={s?.classId ?? null} size={64} />}
         <div className="min-w-[200px] flex-1">
-          <h2 className="font-display text-2xl" style={{ color: k?.color }}>{s?.name || c.name}</h2>
+          <h2 className="font-display text-2xl" style={{ color: k?.color }}>{fullName(c, lang)}</h2>
           {s && (
             <p className="text-sm text-muted">
               {t("ch_level", { l: s.level ?? "?" })} · {s.race} {s.className}
@@ -207,7 +207,7 @@ function GuildRoster({ cid, name }: { cid: number; name: string }) {
                   <td className="py-1 pr-2">
                     <span className="flex items-center gap-2">
                       <span className="h-5 w-5 flex-none rounded-sm" style={k ? iconStyle(icons.data, k.icon) : undefined} />
-                      <span style={{ color: k?.color }}>{m.name}</span>
+                      <span style={{ color: k?.color }}>{m.surname ? `${m.name} ${m.surname}` : m.name}</span>
                     </span>
                   </td>
                   <td className="py-1 pr-2 text-right font-mono">{m.level ?? "?"}</td>

@@ -30,7 +30,7 @@ export interface ApiStatus {
 export interface ProbeRow { name: string; path: string; namespace: string; status: number; ms: number; sample: string }
 
 export interface CharSummary {
-  name: string; level: number | null; classId: number | null; className: string; race: string; gender?: string;
+  name: string; surname?: string | null; level: number | null; classId: number | null; className: string; race: string; gender?: string;
   faction?: string; guild: { name: string; href?: string } | null; ruleset: string | null; ilvl?: number;
   lastLogin?: number;
 }
@@ -77,7 +77,7 @@ export const wowApi = {
   refreshCharacter: (id: number) => req<Character>(`/api/characters/${id}/refresh`, { method: "POST" }),
   deleteCharacter: (id: number) => req<void>(`/api/characters/${id}`, { method: "DELETE" }),
   guild: (id: number, lang: Lang) =>
-    req<{ name: string; members: { name: string; level: number | null; classId: number | null; rank: number | null }[] }>(
+    req<{ name: string; members: { name: string; surname?: string | null; level: number | null; classId: number | null; rank: number | null }[] }>(
       `/api/characters/${id}/guild?lang=${lang}`),
   tab: <T,>(cid: number, name: string, lang: Lang) =>
     req<{ available: boolean; status?: number; data: T | null; at?: string | null }>(`/api/characters/${cid}/tab/${name}?lang=${lang}`),
@@ -170,4 +170,18 @@ export interface ItemSources {
   quests: { quest: number; title: string | null; installs: number | null }[];
   wiki: { text: string; url: string | null; asOf: string | null }[];
   everloot: string; dataAsOf?: string; errors: string[]; at: string;
+}
+
+/**
+ * "Name Surname", Forever's way. The surname comes from the profile; for cards fetched before it was read,
+ * from the lookup slug (name-surname), capitalised.
+ */
+export function fullName(c: { name: string; slug?: string; summary?: Record<Lang, CharSummary> | null }, lang: Lang): string {
+  const s = c.summary?.[lang];
+  const first = s?.name || c.name;
+  let sur = s?.surname;
+  if (!sur && c.slug && c.slug.toLowerCase().startsWith(first.toLowerCase() + "-")) {
+    sur = c.slug.slice(first.length + 1).split("-").filter(Boolean).map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
+  }
+  return sur && !first.toLowerCase().endsWith(" " + sur.toLowerCase()) ? `${first} ${sur}` : first;
 }

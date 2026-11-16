@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useMe } from "../../lib/auth";
 import { useI18n } from "../../lib/i18n";
-import { rulesetName, useApiStatus, useCharacters, wowApi } from "../../lib/wowApi";
+import { fullName, rulesetName, useApiStatus, useCharacters, wowApi } from "../../lib/wowApi";
 
 /** Is the Blizzard API configured and answering, and (superadmin) which endpoints answer. */
 export function ApiPanel() {
@@ -68,7 +68,7 @@ export function MyCharacters() {
         return (
           <li key={c.id}>
             <Link to="/characters" className="flex justify-between gap-2 hover:text-gold">
-              <span className="truncate">{s?.name || c.name}</span>
+              <span className="truncate">{fullName(c, lang)}</span>
               <span className="text-muted">{s ? `${s.level ?? "?"} · ${s.className}` : "…"}</span>
             </Link>
           </li>
