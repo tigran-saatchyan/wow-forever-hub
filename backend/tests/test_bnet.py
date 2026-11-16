@@ -12,6 +12,7 @@ if "FH_DATABASE_URL" not in os.environ:  # run alone or after test_api (which se
     os.environ["FH_ADMIN_EMAIL"] = "boss@test"
     os.environ["FH_ADMIN_PASSWORD"] = "s3cret"
     os.environ["FH_EVERLOOT_PREFETCH"] = "0"
+os.environ["FH_REFRESH_HOURS"] = "0"
 os.environ["FH_EVERLOOT_PREFETCH"] = "0"
 
 from fastapi.testclient import TestClient  # noqa: E402
@@ -596,3 +597,14 @@ def test_profession_sections(client):
     d = client.get("/api/professions/171/categories?lang=en").json()
     assert d == {"order": ["Elixirs", "Potions"], "of": {"1378": 0, "2329": 1}}  # a recipe keeps its first section
     assert client.get("/api/professions/182/categories?lang=en").json() == {"order": [], "of": {}}  # none: gathering
+
+
+
+def test_xp_log_points():
+    from app.routers.characters import xp_log
+    log = xp_log(None, {"level": 32, "xp": 100}, 1000)
+    assert log == [{"t": 1000, "l": 32, "x": 100}]
+    assert xp_log(log, {"level": 32, "xp": 100}, 2000) == log  # nothing new: no point
+    assert len(xp_log(log, {"level": 32, "xp": 100}, 1000 + 7 * 3600)) == 2  # still a point every 6 hours
+    assert xp_log(log, {"level": 33, "xp": 5}, 3000)[-1] == {"t": 3000, "l": 33, "x": 5}
+    assert xp_log(log, {"level": None}, 4000) == log

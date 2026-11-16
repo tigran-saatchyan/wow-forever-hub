@@ -57,6 +57,7 @@ export interface Character {
   favorite?: boolean;
   stats?: Record<Lang, Record<string, number | string>> | null;
   professions?: Record<Lang, CharProfession[]> | null;
+  xpLog?: { t: number; l: number; x: number | null }[];
 }
 export interface ItemInfo {
   id: number; name: string; quality?: string; level?: number; required?: number; class?: string; subclass?: string;

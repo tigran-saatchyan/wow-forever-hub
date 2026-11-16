@@ -12,7 +12,7 @@ import { EquipExtra, ItemHover, ItemIcon } from "../components/Wow";
 import { iconStyle, useIcons, useTalents } from "../lib/gameData";
 import { fmtDate, useI18n, type Key } from "../lib/i18n";
 import { store } from "../lib/store";
-import { xpToCap, xpToNext } from "../lib/xp";
+import { pace, xpToCap, xpToNext } from "../lib/xp";
 import { fullName, media, qColor, useCharacter, useCharacters, wowApi, type Character, type EquipItem, type StatGroup } from "../lib/wowApi";
 import { REP_COLORS, useTab, type Rep } from "./characters/ArmoryTabs";
 import { CONTENT, loadViewer, type Viewer } from "../theme/Lamenters";
@@ -375,10 +375,25 @@ function Progress({ c }: { c: Character }) {
           <span>{t("xp_left", { l: level! + 1, n: nf.format(need - xp) })}</span>
           <span>{t("xp_cap", { n: nf.format(xpToCap(level!, xp)) })}</span>
         </div>
+        <PaceLine c={c} nf={nf} />
       </div>
     );
   }
   return level != null && need == null ? <RepBar cid={c.id} /> : null;
+}
+
+/** How fast the servant levels: experience a day from the points the hub keeps, and when 60 comes at that pace. */
+function PaceLine({ c, nf }: { c: Character; nf: Intl.NumberFormat }) {
+  const { t } = useI18n();
+  const p = pace(c.xpLog || []);
+  if (!p) return <div className="tr-pace text-muted">{t("pc_wait")}</div>;
+  return (
+    <div className="tr-pace">
+      <span>{t("pc_rate", { n: nf.format(Math.round(p.perDay)) })}</span>
+      {p.levels > 0 && <span>{t("pc_levels", { l: p.levels, d: Math.max(1, Math.round(p.days)) })}</span>}
+      {p.eta != null && <span className="text-gold">{t("pc_eta", { d: p.eta < 1 ? "<1" : Math.ceil(p.eta) })}</span>}
+    </div>
+  );
 }
 
 function RepBar({ cid }: { cid: number }) {

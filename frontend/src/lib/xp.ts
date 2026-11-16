@@ -23,3 +23,31 @@ export function xpToCap(level: number, xp: number): number {
   for (let l = level; l < LEVEL_CAP; l++) n += TO_NEXT[l];
   return Math.max(0, n);
 }
+
+/** All the experience gathered from level 1: the levels done plus what is in the current one. */
+export function totalXp(level: number, xp: number): number {
+  let n = xp;
+  for (let l = 1; l < Math.min(level, LEVEL_CAP); l++) n += TO_NEXT[l];
+  return n;
+}
+
+export interface XpPoint { t: number; l: number; x: number | null }
+export interface Pace { perDay: number; levels: number; days: number; eta: number | null }
+
+/**
+ * The leveling pace from the saved points: experience a day over the last week (or all there is),
+ * the levels gained in that time, and the days to 60 at that pace. Null until two points a few hours apart.
+ */
+export function pace(log: XpPoint[], now = Date.now() / 1000): Pace | null {
+  const pts = log.filter((p) => p.x != null && p.l < LEVEL_CAP + 1);
+  if (pts.length < 2) return null;
+  const last = pts[pts.length - 1];
+  const week = pts.filter((p) => p.t >= now - 7 * 86400);
+  const first = (week.length >= 2 ? week : pts)[0];
+  const span = (last.t - first.t) / 86400;
+  if (span < 3 / 24) return null;
+  const gained = totalXp(last.l, last.x!) - totalXp(first.l, first.x!);
+  const perDay = gained / span;
+  const left = last.l >= LEVEL_CAP ? 0 : xpToCap(last.l, last.x!);
+  return { perDay, levels: last.l - first.l, days: span, eta: perDay > 0 && left > 0 ? left / perDay : null };
+}

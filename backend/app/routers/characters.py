@@ -1,6 +1,7 @@
 """Characters a user follows: profile, equipment and talents from profile-forever."""
 
 import asyncio
+import logging
 import time
 from typing import Annotated
 from urllib.parse import quote, urlparse
@@ -13,12 +14,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .. import wow
 from ..auth import CurrentUser
 from ..bnet import REGIONS, BnetError, client, name_of, slug
-from ..db import Character, Setting, User, get_session, utcnow
+from ..config import get_settings
+from ..db import Character, SessionLocal, Setting, User, get_session, utcnow
 from .items import get_item
 
 router = APIRouter(prefix="/api/characters", tags=["characters"])
 Session = Annotated[AsyncSession, Depends(get_session)]
 LANGS = ("ru", "en")
+log = logging.getLogger("uvicorn.error")
 
 
 class CharacterIn(BaseModel):
@@ -41,8 +44,26 @@ def _out(c: Character, full: bool = False) -> dict:
     if full:
         d |= {"equipment": p.get("equipment"), "talents": p.get("talents"), "avatar": p.get("avatar"),
               "missing": p.get("missing", []), "account": p.get("account"), "tried": p.get("tried"),
-              "model": p.get("model"), "stats": p.get("stats"), "professions": p.get("professions")}
+              "model": p.get("model"), "stats": p.get("stats"), "professions": p.get("professions"),
+              "xpLog": p.get("xp_log") or []}
     return d
+
+
+XP_LOG_MAX = 500
+
+
+def xp_log(log: list | None, summary: dict, now: float) -> list[dict]:
+    """Level and experience over time, one point per change (or per 6 hours without one): the leveling pace."""
+    out = list(log or [])
+    lvl, xp = summary.get("level"), summary.get("xp")
+    if not isinstance(lvl, int):
+        return out
+    pt = {"t": int(now), "l": lvl, "x": xp if isinstance(xp, int) else None}
+    last = out[-1] if out else None
+    if last and last.get("l") == lvl and last.get("x") == pt["x"] and now - last.get("t", 0) < 6 * 3600:
+        return out
+    out.append(pt)
+    return out[-XP_LOG_MAX:]
 
 
 def candidate_paths(c: Character) -> list[str]:
@@ -132,6 +153,10 @@ async def refresh(session: AsyncSession, c: Character) -> Character:
         profile["stats"] = {lg: wow.statistics(stats, lg) for lg in LANGS}
     if not isinstance(profs, BnetError):
         profile["professions"] = {lg: wow.professions(profs, lg) for lg in LANGS}
+    old = c.profile or {}
+    profile["xp_log"] = xp_log(old.get("xp_log"), profile["summary"]["en"], time.time())
+    if old.get("tabs"):
+        profile["tabs"] = old["tabs"]  # the last good copy of each armory tab outlives a refresh
     c.profile = profile
     c.name = profile["summary"]["en"]["name"] or c.name
     c.error = None
@@ -319,3 +344,24 @@ async def guild(cid: int, user: CurrentUser, session: Session, lang: str = "ru")
 async def delete_character(cid: int, user: CurrentUser, session: Session):
     await session.delete(await _own(session, user, cid))
     await session.commit()
+
+
+async def refresher() -> None:
+    """Every character, from Blizzard, every few hours: fresh cards and points for the leveling pace."""
+    hours = get_settings().refresh_hours
+    await asyncio.sleep(120)  # let the app start first
+    while True:
+        try:
+            async with SessionLocal() as session:
+                chars = (await session.execute(select(Character))).scalars().all()
+                for c in chars:
+                    if c.error == "low_level":
+                        continue  # Blizzard keeps those profiles to itself
+                    try:
+                        await refresh(session, c)
+                    except Exception:  # noqa: BLE001 - one character must not stop the rest
+                        log.exception("refresh %s failed", c.id)
+                    await asyncio.sleep(3)
+        except Exception:  # noqa: BLE001
+            log.exception("refresher round failed")
+        await asyncio.sleep(hours * 3600)

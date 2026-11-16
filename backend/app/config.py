@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     ah_poll_minutes: int = 60
     # Fetch Everloot's "how to get it" for every recipe item in the background (off in tests).
     everloot_prefetch: bool = True
+    # Refresh every character from Blizzard this often, in hours, so the leveling pace has points to go on
+    # (0 turns it off: tests, local runs without keys).
+    refresh_hours: float = 3
 
     env: str = "development"  # "production" on Railway
     static_dir: Path | None = None  # built frontend (frontend/dist); set in the Docker image

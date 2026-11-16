@@ -25,6 +25,8 @@ async def lifespan(_: FastAPI):
         tasks.append(asyncio.create_task(market.poller()))
     if s.everloot_prefetch:
         tasks.append(asyncio.create_task(sources.prefetcher()))
+    if s.refresh_hours > 0 and bnet.client().configured:
+        tasks.append(asyncio.create_task(characters.refresher()))
     yield
     for task in tasks:
         task.cancel()
