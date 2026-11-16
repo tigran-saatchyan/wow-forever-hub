@@ -992,7 +992,7 @@ button.order-line:hover { @apply text-gold; }
 /* ===================== the throne room (home page) ===================== */
 .tr-stage {
   position: relative; overflow: hidden; isolation: isolate;
-  height: clamp(560px, 78vh, 880px);
+  height: max(560px, calc(100dvh - 104px)); /* almost the whole screen under the header */
   border-radius: 14px;
   border: 1px solid rgb(var(--gold) / 0.3);
   background: #050807;
@@ -1061,13 +1061,13 @@ button.order-line:hover { @apply text-gold; }
 /* the Forsaken banners, from the game client, hanging and stirring */
 .tr-banners { inset: 0; pointer-events: none; }
 .tr-banner {
-  position: absolute; top: -6px; width: clamp(110px, 13vw, 210px);
+  position: absolute; top: -6px; width: clamp(90px, 9vw, 170px);
   transform-origin: 50% 0;
   filter: brightness(0.85) drop-shadow(0 12px 18px #000);
   animation: tr-sway 7s ease-in-out infinite;
 }
-.tr-banner.left { left: 6%; }
-.tr-banner.right { right: 6%; animation-delay: -3.5s; }
+.tr-banner.left { left: 21%; }
+.tr-banner.right { right: 21%; animation-delay: -3.5s; }
 @keyframes tr-sway {
   0%, 100% { transform: rotate(0.8deg) skewX(0deg) scaleY(1); }
   30% { transform: rotate(-0.6deg) skewX(1.6deg) scaleY(1.01); }
@@ -1075,12 +1075,12 @@ button.order-line:hover { @apply text-gold; }
 }
 .tr-braziers { inset: 0; pointer-events: none; }
 .tr-braziers .brazier { top: auto; bottom: 9%; transform: scale(1.35); transform-origin: 50% 100%; max-height: none; height: 260px; }
-.tr-braziers .brazier.left { left: calc(6% + clamp(110px, 13vw, 210px) + 20px); }
-.tr-braziers .brazier.right { right: calc(6% + clamp(110px, 13vw, 210px) + 20px); }
+.tr-braziers .brazier.left { left: calc(50% - 30vw); }
+.tr-braziers .brazier.right { right: calc(50% - 30vw); }
 @media (max-width: 1023px) { .tr-braziers .brazier { display: block; transform: scale(0.9); } .tr-braziers .brazier.left { left: 4px; } .tr-braziers .brazier.right { right: 4px; } }
 
 /* the dais */
-.tr-dais { position: absolute; left: 50%; bottom: 4%; width: 0; height: 0; }
+.tr-dais { position: absolute; left: 50%; bottom: 13%; width: 0; height: 0; }
 .tr-sigil {
   position: absolute; left: -210px; top: -232px; width: 420px; height: 420px;
   transform: perspective(700px) rotateX(74deg);
@@ -1104,7 +1104,7 @@ button.order-line:hover { @apply text-gold; }
 
 /* the servant */
 .tr-hero-wrap {
-  position: absolute; left: 50%; bottom: 4%; height: 66%; aspect-ratio: 1 / 1.5;
+  position: absolute; left: 50%; bottom: 13%; height: 64%; aspect-ratio: 1 / 1.5;
   translate: -50% 0; display: flex; justify-content: center; align-items: flex-end;
 }
 .tr-hero-stand { position: relative; height: 100%; display: flex; align-items: flex-end; justify-content: center; }
@@ -1119,17 +1119,23 @@ button.order-line:hover { @apply text-gold; }
 @keyframes tr-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 @keyframes tr-ghost { 0%, 100% { transform: translate(-6px, -4px) scale(1.01); opacity: 0.12; } 50% { transform: translate(6px, -14px) scale(1.03); opacity: 0.3; } }
 
-/* gear on both sides of the servant */
-.tr-gear-col {
-  position: absolute; bottom: 0; max-height: 145%; /* from the feet up to the top of the scene (96% / 66%) */
-  display: flex; flex-direction: column; flex-wrap: wrap; align-content: flex-start; gap: 6px;
-}
-.tr-gear-col.left { flex-wrap: wrap-reverse; }
-.tr-gear-col.left { right: 100%; margin-right: clamp(10px, 4vw, 70px); }
-.tr-gear-col.right { left: 100%; margin-left: clamp(10px, 4vw, 70px); }
-.tr-gear { display: block; filter: drop-shadow(0 4px 6px #000); transition: transform 0.2s; }
-.tr-gear:hover { transform: scale(1.12); }
-@media (max-width: 767px) { .tr-gear-col { display: none; } }
+/* gear as in the armory: columns at the edges of the hall with names, weapons at the bottom centre */
+.tr-gear-col { position: absolute; top: 2%; display: flex; flex-direction: column; gap: 10px; z-index: 4; }
+.tr-gear-col.left { left: 2%; }
+.tr-gear-col.right { right: 2%; align-items: flex-end; }
+.tr-gear-row { position: absolute; bottom: 1%; left: 50%; translate: -50% 0; display: flex; gap: 14px; z-index: 4; }
+.tr-gear { display: flex; align-items: center; gap: 12px; }
+.tr-gear.right { flex-direction: row-reverse; text-align: right; }
+.slot-empty.tr-gear-icon { display: flex; }
+.tr-gear-icon { display: block; outline: none; filter: drop-shadow(0 4px 6px #000); transition: transform 0.2s; }
+.tr-gear-icon:hover, .tr-gear-icon:focus-visible { transform: scale(1.08); }
+.tr-gear-text { display: grid; min-width: 0; max-width: clamp(120px, 14vw, 240px); line-height: 1.25; text-shadow: 0 1px 2px #000, 0 0 6px #000; }
+.tr-gear-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.tr-gear-sub { display: flex; gap: 8px; font-size: 12px; color: #e8e8e8; overflow: hidden; white-space: nowrap; }
+.tr-gear.right .tr-gear-sub { justify-content: flex-end; }
+.tr-gear-sub > span:first-child:not(:last-child) { overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 1100px) { .tr-gear-text { display: none; } }
+@media (max-width: 767px) { .tr-gear-col, .tr-gear-row { display: none; } }
 
 /* souls rising, mist on the floor */
 .tr-wisps { inset: 0; pointer-events: none; }

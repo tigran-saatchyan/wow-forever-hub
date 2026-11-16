@@ -21,8 +21,10 @@ import { Professions } from "./characters/CharacterSheet";
 import { Brazier, WORDS } from "./dashboard/Throne";
 import { Orders } from "./dashboard/Orders";
 
-const LEFT = ["HEAD", "NECK", "SHOULDER", "BACK", "CHEST", "WRIST", "HANDS", "WAIST"];
-const RIGHT = ["LEGS", "FEET", "FINGER_1", "FINGER_2", "TRINKET_1", "TRINKET_2", "MAIN_HAND", "OFF_HAND", "RANGED"];
+// the armory's order: the left and right columns of the character window, weapons below
+const LEFT = ["HEAD", "NECK", "SHOULDER", "BACK", "CHEST", "SHIRT", "TABARD", "WRIST"];
+const RIGHT = ["HANDS", "WAIST", "LEGS", "FEET", "FINGER_1", "FINGER_2", "TRINKET_1", "TRINKET_2"];
+const BOTTOM = ["MAIN_HAND", "OFF_HAND", "RANGED"];
 
 /** Where the character is in Blizzard's render (it is a 1600×1200 canvas with the figure off-centre). */
 type Box = { x: number; y: number; w: number; h: number; W: number; H: number };
@@ -94,26 +96,54 @@ function Layer({ mx, my, depth, className, children }: { mx: MotionValue<number>
   return <motion.div className={className} style={{ x, y }} aria-hidden>{children}</motion.div>;
 }
 
-function Gear({ x, slot, i }: { x?: EquipItem; slot: string; i: number }) {
+/** One slot as in the armory: the icon, and beside it the name in its quality colour, item level and enchant. */
+function Gear({ x, slot, i, side, size }: { x?: EquipItem; slot: string; i: number; side: "left" | "right" | "none"; size: number }) {
   const { t } = useI18n();
-  if (!x) return null;
+  const name = t(`slot_${slot}` as Key);
+  const ench = (x?.enchants || []).find((e) => typeof e === "string");
   return (
-    <motion.span
-      initial={{ opacity: 0, scale: 0.6, filter: "blur(6px)" }}
-      animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-      transition={{ delay: 0.9 + i * 0.06, duration: 0.5 }}
-      className="tr-gear"
+    <motion.div
+      initial={{ opacity: 0, x: side === "left" ? -14 : side === "right" ? 14 : 0, filter: "blur(6px)" }}
+      animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+      transition={{ delay: 0.6 + i * 0.05, duration: 0.5 }}
+      className={`tr-gear ${side}`}
     >
-      <ItemHover
-        id={x.id}
-        fallback={{ id: x.id, name: x.name, quality: x.quality, level: x.ilvl, slot: x.slotName, stats: x.stats || [], spells: [] }}
-      >
-        <span tabIndex={0} className="block outline-none" aria-label={`${t(`slot_${slot}` as Key)}: ${x.name}`}>
-          <ItemIcon src={x.icon} itemId={x.id} quality={x.quality} size={40} />
+      {x ? (
+        <ItemHover
+          id={x.id}
+          extra={ench ? <div className="text-[#1eff00]">{ench}</div> : undefined}
+          fallback={{ id: x.id, name: x.name, quality: x.quality, level: x.ilvl, slot: x.slotName, stats: x.stats || [], spells: [] }}
+        >
+          <span tabIndex={0} className="tr-gear-icon" aria-label={`${name}: ${x.name}`}>
+            <ItemIcon src={x.icon} itemId={x.id} quality={x.quality} size={size} />
+          </span>
+        </ItemHover>
+      ) : (
+        <span className="slot-empty tr-gear-icon" style={{ width: size, height: size }} title={name} aria-label={name}>{name.slice(0, 1)}</span>
+      )}
+      {x && side !== "none" && (
+        <span className="tr-gear-text">
+          <span className="tr-gear-name" style={{ color: qColor(x.quality) }}>{x.name}</span>
+          <span className="tr-gear-sub">
+            {ench && <span className="text-[#1eff00]">{ench}</span>}
+            {x.ilvl ? <span>{x.ilvl}</span> : null}
+          </span>
         </span>
-      </ItemHover>
-    </motion.span>
+      )}
+    </motion.div>
   );
+}
+
+/** Slot icons a little smaller on short screens, so a whole column fits the hall. */
+function useGearSize() {
+  const pick = () => (window.innerHeight < 820 ? 40 : window.innerHeight < 980 ? 46 : 54);
+  const [n, setN] = useState(pick);
+  useEffect(() => {
+    const f = () => setN(pick());
+    window.addEventListener("resize", f);
+    return () => window.removeEventListener("resize", f);
+  }, []);
+  return n;
 }
 
 function Hero({ c, box }: { c: Character; box: Box }) {
@@ -189,6 +219,7 @@ export function ThroneRoom() {
   const eq = new Map((c?.equipment?.[lang] || []).map((x) => [x.slot, x]));
   const st = c?.stats?.[lang] as Record<string, number | string> | undefined;
   const pick = (id: number) => (setSel(id), store.set("throneSel", id));
+  const gi = useGearSize();
 
   return (
     <div className="space-y-5">
@@ -222,13 +253,16 @@ export function ThroneRoom() {
               {c && box && <Hero key={c.id} c={c} box={box} />}
             </AnimatePresence>
           </div>
-          {c && box && (
-            <>
-              <div className="tr-gear-col left">{LEFT.map((sl, i) => <Gear key={sl} slot={sl} x={eq.get(sl)} i={i} />)}</div>
-              <div className="tr-gear-col right">{RIGHT.map((sl, i) => <Gear key={sl} slot={sl} x={eq.get(sl)} i={i + LEFT.length} />)}</div>
-            </>
-          )}
         </div>
+        {c && box && (
+          <>
+            <div className="tr-gear-col left">{LEFT.map((sl, i) => <Gear key={sl} slot={sl} x={eq.get(sl)} i={i} side="left" size={gi} />)}</div>
+            <div className="tr-gear-col right">{RIGHT.map((sl, i) => <Gear key={sl} slot={sl} x={eq.get(sl)} i={i} side="right" size={gi} />)}</div>
+            <div className="tr-gear-row">
+              {BOTTOM.map((sl, i) => <Gear key={sl} slot={sl} x={eq.get(sl)} i={8 + i} side={i === 0 ? "right" : i === 2 ? "left" : "none"} size={gi} />)}
+            </div>
+          </>
+        )}
         </div>
         <div className="tr-wisps" aria-hidden>{Array.from({ length: 14 }, (_, i) => <i key={i} style={{ left: `${(i * 53) % 100}%`, animationDelay: `${(i * 1.7) % 11}s`, animationDuration: `${9 + (i % 5) * 2}s` }} />)}</div>
         <div className="tr-mist" aria-hidden><i /><i /></div>
