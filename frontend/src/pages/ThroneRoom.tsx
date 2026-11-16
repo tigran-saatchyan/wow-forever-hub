@@ -188,11 +188,12 @@ export function ThroneRoom() {
         </Layer>
 
         {/* the dais: the crest as a sigil in the floor, a pillar of plague light, the servant on it */}
-        <Layer mx={mx} my={my} depth={34} className="tr-dais">
+        {/* the dais and the servant stay put: only the hall behind them drifts with the mouse */}
+        <div className="tr-dais" aria-hidden>
           <div className="tr-sigil"><img src="/undercity/crest.webp" alt="" draggable={false} /></div>
           <div className="tr-pillar" />
-        </Layer>
-        <motion.div className="tr-hero-wrap" style={{ x: useTransform(mx, (v) => v * 34), y: useTransform(my, (v) => v * 14) }}>
+        </div>
+        <div className="tr-hero-wrap">
           <button className="tr-hero-btn" onClick={() => setPoke((p) => p + 1)} title={t("tr_poke")} aria-label={t("tr_poke")}>
             <AnimatePresence mode="wait">
               {c && box && <Hero key={c.id} c={c} box={box} poke={poke} />}
@@ -204,7 +205,7 @@ export function ThroneRoom() {
               <div className="tr-gear-col right">{RIGHT.map((sl, i) => <Gear key={sl} slot={sl} x={eq.get(sl)} i={i + LEFT.length} />)}</div>
             </>
           )}
-        </motion.div>
+        </div>
         <div className="tr-wisps" aria-hidden>{Array.from({ length: 14 }, (_, i) => <i key={i} style={{ left: `${(i * 53) % 100}%`, animationDelay: `${(i * 1.7) % 11}s`, animationDuration: `${9 + (i % 5) * 2}s` }} />)}</div>
         <div className="tr-mist" aria-hidden><i /><i /></div>
 
