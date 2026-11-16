@@ -1066,8 +1066,8 @@ button.order-line:hover { @apply text-gold; }
   filter: brightness(0.85) drop-shadow(0 12px 18px #000);
   animation: tr-sway 7s ease-in-out infinite;
 }
-.tr-banner.left { left: 21%; }
-.tr-banner.right { right: 21%; animation-delay: -3.5s; }
+.tr-banner.left { left: 3%; }
+.tr-banner.right { right: 3%; animation-delay: -3.5s; }
 @keyframes tr-sway {
   0%, 100% { transform: rotate(0.8deg) skewX(0deg) scaleY(1); }
   30% { transform: rotate(-0.6deg) skewX(1.6deg) scaleY(1.01); }
@@ -1075,8 +1075,8 @@ button.order-line:hover { @apply text-gold; }
 }
 .tr-braziers { inset: 0; pointer-events: none; }
 .tr-braziers .brazier { top: auto; bottom: 9%; transform: scale(1.35); transform-origin: 50% 100%; max-height: none; height: 260px; }
-.tr-braziers .brazier.left { left: calc(50% - 30vw); }
-.tr-braziers .brazier.right { right: calc(50% - 30vw); }
+.tr-braziers .brazier.left { left: calc(50% - 37vw); }
+.tr-braziers .brazier.right { right: calc(50% - 37vw); }
 @media (max-width: 1023px) { .tr-braziers .brazier { display: block; transform: scale(0.9); } .tr-braziers .brazier.left { left: 4px; } .tr-braziers .brazier.right { right: 4px; } }
 
 /* the dais */
@@ -1097,7 +1097,7 @@ button.order-line:hover { @apply text-gold; }
 @keyframes tr-pulse { 0%, 100% { opacity: 0.5; transform: scale(0.98); } 50% { opacity: 1; transform: scale(1.03); } }
 .tr-pillar {
   position: absolute; left: -110px; bottom: 30px; width: 220px; height: 70vh; max-height: 640px;
-  background: linear-gradient(0deg, rgb(140 240 106 / 0.28), rgb(140 240 106 / 0.06) 55%, transparent);
+  background: linear-gradient(0deg, rgb(140 240 106 / 0.14), rgb(140 240 106 / 0.03) 55%, transparent);
   filter: blur(18px); border-radius: 50% 50% 0 0;
   animation: tr-breathe 5s ease-in-out infinite;
 }
@@ -1111,28 +1111,32 @@ button.order-line:hover { @apply text-gold; }
 .tr-hero { position: relative; height: 100%; max-width: 100%; }
 .tr-hero-float { position: absolute; inset: 0; animation: tr-float 6s ease-in-out infinite; }
 .tr-hero-img, .tr-hero-ghost { position: absolute; max-width: none; height: auto; user-select: none; }
-.tr-hero-img { filter: drop-shadow(0 0 2px rgb(180 255 150 / 0.6)) drop-shadow(0 0 22px rgb(116 214 84 / 0.45)) drop-shadow(0 18px 18px #000); }
+.tr-hero-img { filter: drop-shadow(0 0 1px rgb(180 255 150 / 0.3)) drop-shadow(0 0 12px rgb(116 214 84 / 0.18)) drop-shadow(0 18px 18px #000); }
 .tr-hero-ghost {
-  opacity: 0.22; mix-blend-mode: screen; filter: blur(6px) brightness(1.6) sepia(1) hue-rotate(60deg) saturate(3);
+  opacity: 0.1; mix-blend-mode: screen; filter: blur(6px) brightness(1.3) sepia(1) hue-rotate(60deg) saturate(2);
   animation: tr-ghost 6s ease-in-out infinite;
 }
 @keyframes tr-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-@keyframes tr-ghost { 0%, 100% { transform: translate(-6px, -4px) scale(1.01); opacity: 0.12; } 50% { transform: translate(6px, -14px) scale(1.03); opacity: 0.3; } }
+@keyframes tr-ghost { 0%, 100% { transform: translate(-6px, -4px) scale(1.01); opacity: 0.05; } 50% { transform: translate(6px, -14px) scale(1.03); opacity: 0.13; } }
 
 /* gear as in the armory: columns at the edges of the hall with names, weapons at the bottom centre */
 .tr-gear-col { position: absolute; top: 2%; display: flex; flex-direction: column; gap: 10px; z-index: 4; }
-.tr-gear-col.left { left: 2%; }
-.tr-gear-col.right { right: 2%; align-items: flex-end; }
+.tr-gear-col.left { right: calc(50% + clamp(190px, 16vw, 320px)); align-items: flex-end; }
+.tr-gear-col.right { left: calc(50% + clamp(190px, 16vw, 320px)); align-items: flex-start; }
 .tr-gear-row { position: absolute; bottom: 1%; left: 50%; translate: -50% 0; display: flex; gap: 14px; z-index: 4; }
 .tr-gear { display: flex; align-items: center; gap: 12px; }
 .tr-gear.right { flex-direction: row-reverse; text-align: right; }
+/* the names go outwards, away from the servant: left of the left column, right of the right one */
+.tr-gear-col.left .tr-gear { flex-direction: row-reverse; text-align: right; }
+.tr-gear-col.right .tr-gear { flex-direction: row; text-align: left; }
 .slot-empty.tr-gear-icon { display: flex; }
 .tr-gear-icon { display: block; outline: none; filter: drop-shadow(0 4px 6px #000); transition: transform 0.2s; }
 .tr-gear-icon:hover, .tr-gear-icon:focus-visible { transform: scale(1.08); }
 .tr-gear-text { display: grid; min-width: 0; max-width: clamp(120px, 14vw, 240px); line-height: 1.25; text-shadow: 0 1px 2px #000, 0 0 6px #000; }
 .tr-gear-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
 .tr-gear-sub { display: flex; gap: 8px; font-size: 12px; color: #e8e8e8; overflow: hidden; white-space: nowrap; }
-.tr-gear.right .tr-gear-sub { justify-content: flex-end; }
+.tr-gear.right .tr-gear-sub, .tr-gear-col.left .tr-gear-sub { justify-content: flex-end; }
+.tr-gear-col.right .tr-gear-sub { justify-content: flex-start; }
 .tr-gear-sub > span:first-child:not(:last-child) { overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 1100px) { .tr-gear-text { display: none; } }
 @media (max-width: 767px) { .tr-gear-col, .tr-gear-row { display: none; } }

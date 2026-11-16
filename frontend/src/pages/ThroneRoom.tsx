@@ -256,8 +256,8 @@ export function ThroneRoom() {
         </div>
         {c && box && (
           <>
-            <div className="tr-gear-col left">{LEFT.map((sl, i) => <Gear key={sl} slot={sl} x={eq.get(sl)} i={i} side="left" size={gi} />)}</div>
-            <div className="tr-gear-col right">{RIGHT.map((sl, i) => <Gear key={sl} slot={sl} x={eq.get(sl)} i={i} side="right" size={gi} />)}</div>
+            <div className="tr-gear-col left">{LEFT.map((sl, i) => <Gear key={sl} slot={sl} x={eq.get(sl)} i={i} side="right" size={gi} />)}</div>
+            <div className="tr-gear-col right">{RIGHT.map((sl, i) => <Gear key={sl} slot={sl} x={eq.get(sl)} i={i} side="left" size={gi} />)}</div>
             <div className="tr-gear-row">
               {BOTTOM.map((sl, i) => <Gear key={sl} slot={sl} x={eq.get(sl)} i={8 + i} side={i === 0 ? "right" : i === 2 ? "left" : "none"} size={gi} />)}
             </div>
