@@ -817,8 +817,9 @@ body {
   height: clamp(320px, 70vh, 600px);
   animation: lament-float 7.5s ease-in-out infinite;
 }
-.lamenter.left { left: 0; }
-.lamenter.right { right: 0; } /* same rhythm as the left one: they float together */
+/* a margin from the screen edge, so neither she nor her rings are cut off */
+.lamenter.left { left: clamp(10px, 2.5vw, 48px); }
+.lamenter.right { right: clamp(10px, 2.5vw, 48px); } /* same rhythm as the left one: they float together */
 .lament-model {
   position: absolute;
   inset: 0;
@@ -830,7 +831,7 @@ body {
   position: absolute;
   left: 50%;
   top: 34%;
-  width: 115%;
+  width: 100%;
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
   mix-blend-mode: screen;
