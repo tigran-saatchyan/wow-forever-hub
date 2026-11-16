@@ -23,6 +23,8 @@ export function Characters() {
   const [region, setRegion] = useState<Region>(() => store.get<Region>("chRegion", "eu"));
   const [sel, setSel] = useState<number | null>(() => store.get<number | null>("chSel", null));
   const [msg, setMsg] = useState<string | null>(null);
+  const [listOpen, setListOpen] = useState(() => store.get<boolean>("chListOpen", true));
+  const toggleList = (v: boolean) => (store.set("chListOpen", v), setListOpen(v));
   const account = useQuery({ queryKey: ["bnet-account"], queryFn: wowApi.account });
   const chars = list.data || [];
   const cur = chars.find((c) => c.id === sel) ?? chars[0];
@@ -69,12 +71,27 @@ export function Characters() {
       {!chars.length ? (
         <p className="text-muted">{list.isLoading ? "…" : t("ch_empty")}</p>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)] 2xl:grid-cols-[320px_minmax(0,1fr)]">
-          <CharacterList
-            chars={chars} cur={cur?.id}
-            onSelect={(id) => (setSel(id), store.set("chSel", id))}
-            icon={(c) => <ClassIcon classId={c.summary?.[lang]?.classId ?? null} />}
-          />
+        <div className={`grid gap-4 ${listOpen ? "lg:grid-cols-[280px_minmax(0,1fr)] 2xl:grid-cols-[320px_minmax(0,1fr)]" : "lg:grid-cols-[44px_minmax(0,1fr)]"}`}>
+          {/* stays in view while the card scrolls; folds to a thin rail on the left */}
+          <aside className="lg:sticky lg:top-[68px] lg:max-h-[calc(100vh-84px)] lg:self-start lg:overflow-y-auto lg:pr-1">
+            {listOpen ? (
+              <div className="space-y-2">
+                <button className="btn w-full justify-between px-2.5 py-1 text-xs" onClick={() => toggleList(false)} title={t("ch_list_hide")}>
+                  <span>{t("ch_list", { n: chars.length })}</span><span aria-hidden>«</span>
+                </button>
+                <CharacterList
+                  chars={chars} cur={cur?.id}
+                  onSelect={(id) => (setSel(id), store.set("chSel", id))}
+                  icon={(c) => <ClassIcon classId={c.summary?.[lang]?.classId ?? null} />}
+                />
+              </div>
+            ) : (
+              <button className="rail flex w-full lg:min-h-[240px]" onClick={() => toggleList(true)} title={t("ch_list_show")} aria-label={t("ch_list_show")}>
+                <span aria-hidden>»</span>
+                <span className="font-display text-sm tracking-wider text-gold lg:[writing-mode:vertical-rl]">{t("ch_list", { n: chars.length })}</span>
+              </button>
+            )}
+          </aside>
           {cur && <CharacterCard id={cur.id} />}
         </div>
       )}
