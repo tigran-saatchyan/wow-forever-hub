@@ -69,7 +69,7 @@ export function Characters() {
       {!chars.length ? (
         <p className="text-muted">{list.isLoading ? "…" : t("ch_empty")}</p>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)] 2xl:grid-cols-[320px_minmax(0,1fr)]">
           <CharacterList
             chars={chars} cur={cur?.id}
             onSelect={(id) => (setSel(id), store.set("chSel", id))}

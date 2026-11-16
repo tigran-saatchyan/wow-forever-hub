@@ -63,10 +63,10 @@ export function ProfessionsTab({ c }: { c: Character }) {
   if (!mine.length)
     return <p className="text-sm text-muted">{c.missing?.includes("professions") ? t("ch_no_prof") : t("ch_prof_none")}</p>;
   return (
-    <div className="grid gap-4 lg:grid-cols-[230px_minmax(0,1fr)]">
-      <div className="space-y-2">
+    <div className="space-y-4">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-2">
         {mine.map((p) => (
-          <button key={p.name} className={`char-stats w-full text-left ${own?.id === p.id ? "!border-gold/70" : ""}`} onClick={() => p.id && setSel(p.id)}>
+          <button key={p.name} className={`char-stats text-left ${own?.id === p.id ? "!border-gold/70" : ""}`} onClick={() => p.id && setSel(p.id)}>
             <div className="flex justify-between text-sm">
               <b className="font-medium">{(p.id && names.get(p.id)) || p.name}</b>
               <span className="font-mono text-xs">{p.skill ?? "?"}{p.max ? ` / ${p.max}` : ""}</span>
