@@ -7,6 +7,7 @@ _tmp = tempfile.mkdtemp()
 os.environ["FH_DATABASE_URL"] = f"sqlite+aiosqlite:///{_tmp}/test.db"
 os.environ["FH_ADMIN_EMAIL"] = "boss@test"
 os.environ["FH_ADMIN_PASSWORD"] = "s3cret"
+os.environ["FH_EVERLOOT_PREFETCH"] = "0"
 
 from fastapi.testclient import TestClient  # noqa: E402
 

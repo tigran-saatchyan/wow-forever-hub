@@ -5,6 +5,7 @@ once the second time and Everloot is asked rarely.
 """
 
 import asyncio
+import logging
 import time
 from typing import Annotated
 
@@ -19,8 +20,9 @@ from ..db import SessionLocal, Setting, get_session, utcnow
 from .items import get_item
 
 router = APIRouter(prefix="/api/sources", tags=["sources"])
+log = logging.getLogger("uvicorn.error")
 Session = Annotated[AsyncSession, Depends(get_session)]
-TTL = 6 * 3600
+TTL = 24 * 3600  # an answer older than this is refreshed in the background
 _cache: dict[tuple[int, str], tuple[float, dict]] = {}
 _http: httpx.AsyncClient | None = None
 
@@ -122,23 +124,103 @@ async def build(item_id: int, lang: str, session: AsyncSession) -> dict:
     }
 
 
+async def refresh(item_id: int, lang: str) -> dict | None:
+    """Ask Everloot again and store the answer; None when Everloot gave nothing usable."""
+    async with SessionLocal() as session:
+        out = await build(item_id, lang, session)
+        if out["errors"] and not (out["sold"] or out["drops"] or out["quests"] or out["wiki"]):
+            return None
+        await session.merge(Setting(key=f"src:{item_id}:{lang}", value={"_t": time.time(), "data": out}))
+        await session.commit()
+    _cache[(item_id, lang)] = (time.time() + TTL, out)
+    return out
+
+
+_refreshing: set[tuple[int, str]] = set()
+
+
+async def _refresh_quietly(item_id: int, lang: str) -> None:
+    try:
+        await refresh(item_id, lang)
+    except Exception:  # noqa: BLE001 - a background refresh must not take anything down
+        log.exception("sources refresh %s", item_id)
+    finally:
+        _refreshing.discard((item_id, lang))
+
+
 @router.get("/item/{item_id}")
 async def item_sources(item_id: int, _: CurrentUser, session: Session, lang: str = "ru"):
+    """Stored answer at once (prefetched in the background), refreshed behind the scenes when old."""
     lang = "ru" if lang == "ru" else "en"
     key = (item_id, lang)
     hit = _cache.get(key)
     if hit and hit[0] > time.time():
         return hit[1]
     row = await session.get(Setting, f"src:{item_id}:{lang}")
-    if row and time.time() - row.value.get("_t", 0) < TTL:
-        _cache[key] = (row.value["_t"] + TTL, row.value["data"])
+    if row:
+        if time.time() - row.value.get("_t", 0) >= TTL and key not in _refreshing:
+            _refreshing.add(key)
+            asyncio.get_running_loop().create_task(_refresh_quietly(item_id, lang))
         return row.value["data"]
-    out = await build(item_id, lang, session)
-    if out["errors"] and not (out["sold"] or out["drops"] or out["quests"] or out["wiki"]):
-        if row:  # Everloot is down: the last good answer is better than nothing
-            return row.value["data"]
-        raise HTTPException(502, "Everloot: " + "; ".join(out["errors"]))
-    await session.merge(Setting(key=f"src:{item_id}:{lang}", value={"_t": time.time(), "data": out}))
-    await session.commit()
-    _cache[key] = (time.time() + TTL, out)
+    out = await refresh(item_id, lang)
+    if out is None:
+        raise HTTPException(502, "Everloot did not answer")
     return out
+
+
+# ---------- prefetch: every recipe-related item, so the panel opens without waiting ----------
+
+PREFETCH_DELAY = 4.0  # seconds between items: Everloot is a free community service, ask gently
+
+
+async def _recipe_items() -> list[int]:
+    """Recipe items first (where to get a recipe is the usual question), then reagents, then products."""
+    from . import professions
+
+    try:
+        ds = await professions._load(professions._build())
+    except HTTPException:
+        return []
+    if not ds:
+        return []
+    first, second, third = [], [], []
+    for p in ds["professions"].values():
+        for r in p["recipes"]:
+            if r.get("recipeItem"):
+                first.append(r["recipeItem"])
+            second += [x[0] for x in r.get("reagents") or []]
+            if r.get("item"):
+                third.append(r["item"])
+    return list(dict.fromkeys(first + second + third))
+
+
+async def prefetcher(lang: str = "ru") -> None:
+    """Walk all recipe items forever: fetch the missing and the stale ones, one every few seconds."""
+    while True:
+        ids = await _recipe_items()
+        if not ids:
+            await asyncio.sleep(300)  # the recipe reference is not built yet
+            continue
+        done = 0
+        for i, item_id in enumerate(ids):
+            async with SessionLocal() as s:
+                row = await s.get(Setting, f"src:{item_id}:{lang}")
+            if not row or time.time() - row.value.get("_t", 0) >= TTL:
+                try:
+                    await refresh(item_id, lang)
+                except Exception:  # noqa: BLE001
+                    log.exception("prefetch %s", item_id)
+                await asyncio.sleep(PREFETCH_DELAY)
+            done += 1
+            if i % 25 == 0 or i == len(ids) - 1:
+                async with SessionLocal() as s:
+                    state = {"done": done, "total": len(ids), "at": utcnow().isoformat()}
+                    await s.merge(Setting(key="prefetch", value=state))
+                    await s.commit()
+        await asyncio.sleep(3600)
+
+
+@router.get("/prefetch")
+async def prefetch_state(_: CurrentUser, session: Session):
+    row = await session.get(Setting, "prefetch")
+    return row.value if row else None

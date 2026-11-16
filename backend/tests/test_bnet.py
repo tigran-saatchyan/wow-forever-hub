@@ -11,6 +11,8 @@ if "FH_DATABASE_URL" not in os.environ:  # run alone or after test_api (which se
     os.environ["FH_DATABASE_URL"] = f"sqlite+aiosqlite:///{_tmp}/test.db"
     os.environ["FH_ADMIN_EMAIL"] = "boss@test"
     os.environ["FH_ADMIN_PASSWORD"] = "s3cret"
+    os.environ["FH_EVERLOOT_PREFETCH"] = "0"
+os.environ["FH_EVERLOOT_PREFETCH"] = "0"
 
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -459,3 +461,31 @@ def test_reimport_keeps_first_name_card(client):
     assert [(c["id"], c["slug"]) for c in vals] == [(old["id"], "valthanis-deadrunner")]
     for c in chars:
         client.delete(f"/api/characters/{c['id']}")
+
+
+
+def test_sources_prefetch_and_stale(client, monkeypatch):
+    import asyncio as aio
+
+    from app.routers import sources
+
+    calls = []
+
+    async def fake_refresh(item_id, lang):
+        calls.append(item_id)
+        return {"sold": [], "drops": [], "quests": [], "wiki": [{"text": "fresh"}]}
+
+    async def fake_items():
+        return [11, 12]
+
+    monkeypatch.setattr(sources, "refresh", fake_refresh)
+    monkeypatch.setattr(sources, "_recipe_items", fake_items)
+    monkeypatch.setattr(sources, "PREFETCH_DELAY", 0)
+
+    async def one_pass():
+        task = aio.create_task(sources.prefetcher())
+        await aio.sleep(0.3)
+        task.cancel()
+
+    aio.run(one_pass())
+    assert calls[:2] == [11, 12]

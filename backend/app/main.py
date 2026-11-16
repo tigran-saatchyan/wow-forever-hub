@@ -20,9 +20,13 @@ async def lifespan(_: FastAPI):
     await init_db()
     await auth.ensure_superadmin()
     s = get_settings()
-    task = asyncio.create_task(market.poller()) if s.ah_poll_minutes > 0 and bnet.client().configured else None
+    tasks = []
+    if s.ah_poll_minutes > 0 and bnet.client().configured:
+        tasks.append(asyncio.create_task(market.poller()))
+    if s.everloot_prefetch:
+        tasks.append(asyncio.create_task(sources.prefetcher()))
     yield
-    if task:
+    for task in tasks:
         task.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await task

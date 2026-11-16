@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     public_url: str = ""
     # Auction house poll interval in minutes; 0 turns the poller off (tests, local runs without keys).
     ah_poll_minutes: int = 60
+    # Fetch Everloot's "how to get it" for every recipe item in the background (off in tests).
+    everloot_prefetch: bool = True
 
     env: str = "development"  # "production" on Railway
     static_dir: Path | None = None  # built frontend (frontend/dist); set in the Docker image
