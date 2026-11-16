@@ -99,6 +99,7 @@ export function Market() {
           )}
           {!sel && <span className="text-muted">{t("mk_pick")}</span>}
           {cfg.data.error && <span className="text-bad">{cfg.data.error}</span>}
+          {ruleset != null && <Compare ruleset={ruleset} region={region} current={house} onPick={setHouse} />}
         </div>
       )}
 
@@ -176,5 +177,64 @@ export function Market() {
         </div>
       )}
     </div>
+  );
+}
+
+/** All houses of a ruleset side by side, to recognise yours by a price you see in game. */
+function Compare({ ruleset, region, current, onPick }: { ruleset: number; region: Region; current: number | null; onPick: (h: number) => void }) {
+  const { t, lang } = useI18n();
+  const [item, setItem] = useState("2589");
+  const [go, setGo] = useState(false);
+  const id = parseInt(item, 10);
+  const q = useQuery({
+    queryKey: ["compare", ruleset, region, id, lang],
+    queryFn: () => wowApi.compare(ruleset, region, id, lang),
+    enabled: go && id > 0,
+    staleTime: 10 * 60e3,
+    retry: false,
+  });
+  const info = useQuery({ queryKey: ["item", id, lang], queryFn: () => wowApi.item(id, lang), enabled: id > 0, retry: false, staleTime: Infinity });
+  return (
+    <details className="w-full" onToggle={(e) => (e.target as HTMLDetailsElement).open && setGo(true)}>
+      <summary className="cursor-pointer text-gold">{t("mk_cmp")}</summary>
+      <p className="mt-1 text-xs text-muted">{t("mk_cmp_t")}</p>
+      <label className="mt-2 flex flex-wrap items-center gap-2">
+        <span className="text-muted">{t("mk_cmp_item")}</span>
+        <input className="input w-24 py-1" inputMode="numeric" value={item} onChange={(e) => setItem(e.target.value.replace(/\D/g, ""))} />
+        {info.data && <span style={{ color: qColor(info.data.quality) }}>{info.data.name}</span>}
+      </label>
+      {q.isFetching && <p className="mt-2 text-muted">{t("mk_cmp_loading")}</p>}
+      {q.isError && <p className="mt-2 text-bad">{String(q.error)}</p>}
+      {q.data && (
+        <div className="mt-2 overflow-x-auto">
+          <table className="w-full min-w-[520px]">
+            <thead className="text-left text-xs text-muted">
+              <tr>
+                <th className="p-1.5 font-normal" />
+                <th className="p-1.5 text-right font-normal">{t("mk_cmp_lots")}</th>
+                <th className="p-1.5 text-right font-normal">{t("mk_cmp_items")}</th>
+                <th className="p-1.5 text-right font-normal">{t("mk_cmp_price")}</th>
+                <th className="p-1.5 text-right font-normal">{t("mk_qty")}</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {[...q.data].sort((a, b) => a.name.localeCompare(b.name) || a.id - b.id).map((h) => (
+                <tr key={h.id} className={`border-t border-edge/40 ${current === h.id ? "bg-accent/15" : ""}`}>
+                  <td className="p-1.5">{h.name} <span className="text-muted">· #{h.id}</span></td>
+                  <td className="p-1.5 text-right font-mono">{h.error ? "—" : h.lots}</td>
+                  <td className="p-1.5 text-right font-mono">{h.error ? "—" : h.items}</td>
+                  <td className="p-1.5 text-right">{h.itemMin != null ? <Money c={h.itemMin} /> : "—"}</td>
+                  <td className="p-1.5 text-right font-mono">{h.itemQty ?? "—"}</td>
+                  <td className="p-1.5 text-right">
+                    <button className="btn px-2 py-0.5 text-xs" disabled={current === h.id} onClick={() => onPick(h.id)}>{t("mk_cmp_pick")}</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </details>
   );
 }

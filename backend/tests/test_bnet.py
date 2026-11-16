@@ -193,6 +193,9 @@ def test_market_poll_and_watch(client):
     assert len(cards[0]["history"]) == 1 and cards[0]["item"]["name"] == "Linen Cloth"
     assert client.get("/api/market/price/4306").json()["min"] == 120
     assert client.delete(f"/api/market/watch/{w['id']}").status_code == 204
+    cmp = {h["id"]: h for h in client.get("/api/market/compare?ruleset=1&item=2589").json()}
+    assert cmp[6]["lots"] == 4 and cmp[6]["itemMin"] == 50 and cmp[6]["itemQty"] == 26
+    assert cmp[2]["error"] and cmp[2]["lots"] == 0
 
 
 def test_talents_classic_shape():

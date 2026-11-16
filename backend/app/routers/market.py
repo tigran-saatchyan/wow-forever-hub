@@ -6,6 +6,7 @@ Forever's auction data sits under rulesets (PvP, Normal, RP, RP-PvP), not realms
 
 import asyncio
 import logging
+import time
 from datetime import timedelta
 from typing import Annotated
 
@@ -129,6 +130,47 @@ async def poller() -> None:
         except Exception:  # noqa: BLE001 - the loop must survive anything
             log.exception("auction poll failed")
         await asyncio.sleep(minutes * 60)
+
+
+_compare_cache: dict[tuple[str, int], tuple[float, list[dict]]] = {}
+
+
+@router.get("/compare")
+async def compare(_: AdminUser, ruleset: int, region: str = "eu", item: int = 2589, lang: str = "ru"):
+    """Every house of a ruleset side by side: lots, items, and one item's price, to tell which is yours.
+
+    Blizzard names Forever's houses only "Alliance / Horde / Blackwater" (several of each) and says
+    nothing else about them, so the only way to recognise your own is by what is on sale there.
+    """
+    bn = client()
+    key = (region, ruleset)
+    hit = _compare_cache.get(key)
+    if hit and hit[0] > time.time():
+        houses_ = hit[1]
+    else:
+        try:
+            idx = await bn.get(f"/data/wow/ruleset/{ruleset}/auctions/", "dynamic", region, lang)
+        except BnetError as e:
+            raise HTTPException(502, f"Blizzard API: {e}") from e
+        sem = asyncio.Semaphore(4)
+
+        async def one(h: dict) -> dict:
+            async with sem:
+                try:
+                    data = await bn.get(f"/data/wow/ruleset/{ruleset}/auctions/{h['id']}", "dynamic", region)
+                except BnetError as e:
+                    return {**h, "error": str(e), "summary": {}}
+            lots = data.get("auctions") or []
+            return {**h, "lots": len(lots), "summary": wow.summarize_auctions(lots)}
+
+        houses_ = await asyncio.gather(*(one(h) for h in wow.houses(idx, lang)))
+        _compare_cache[key] = (time.time() + 1800, houses_)
+    out = []
+    for h in houses_:
+        x = h["summary"].get(item) or {}
+        out.append({"id": h["id"], "name": h["name"], "lots": h.get("lots", 0), "items": len(h["summary"]),
+                    "error": h.get("error"), "itemMin": x.get("min"), "itemQty": x.get("quantity")})
+    return out
 
 
 @router.post("/refresh")

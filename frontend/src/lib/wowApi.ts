@@ -83,6 +83,9 @@ export const wowApi = {
     req<{ id: number; name: string }[]>(`/api/market/houses?ruleset=${ruleset}&region=${region}&lang=${lang}`),
   setMarket: (b: { region: Region; ruleset: number; house: number }) =>
     req<unknown>("/api/market/config", { method: "PUT", body: JSON.stringify(b) }),
+  compare: (ruleset: number, region: Region, item: number, lang: Lang) =>
+    req<{ id: number; name: string; lots: number; items: number; error?: string | null; itemMin?: number | null; itemQty?: number | null }[]>(
+      `/api/market/compare?ruleset=${ruleset}&region=${region}&item=${item}&lang=${lang}`),
   refreshMarket: () => req<MarketConfig["state"]>("/api/market/refresh", { method: "POST" }),
   watch: (lang: Lang) => req<WatchCard[]>(`/api/market/watch?lang=${lang}`),
   addWatch: (b: { item_id: number; below: number | null }, lang: Lang) =>
