@@ -28,6 +28,7 @@ LOCALES = {"en": "enUS", "ru": "ruRU"}
 PROFESSION_CATEGORIES = {9, 11}  # secondary skills (cooking, first aid, fishing), professions
 CREATE_ITEM, LEARN_SPELL = 24, 36  # SpellEffect.Effect
 LOCALIZED = {"SkillLine", "SpellName", "ItemSparse"}
+VERSION = 2  # bump when the dataset shape changes: a stored older one is built again
 TABLES = ["SkillLine", "SkillLineAbility", "SpellName", "SpellEffect", "SpellReagents", "ItemSparse", "ItemEffect"]
 
 
@@ -98,6 +99,8 @@ def build_dataset(t: dict[str, list[dict]], build: str) -> dict:
         xs = [[_i(r, f"Reagent_{k}"), _i(r, f"ReagentCount_{k}")] for k in range(8)]
         reagents[_i(r, "SpellID")] = [x for x in xs if x[0] > 0 and x[1] > 0]
 
+    items = {_i(r, "ID"): r for r in t["ItemSparse"]}
+    items_ru = {_i(r, "ID"): r for r in t.get("ItemSparse@ru", [])}
     # items whose use-effect teaches a recipe spell: the recipe items
     effect_item = {_i(r, "ItemEffectID"): _i(r, "ItemID") for r in t.get("ItemXItemEffect", [])}
     item_spells: dict[int, list[int]] = defaultdict(list)
@@ -113,8 +116,6 @@ def build_dataset(t: dict[str, list[dict]], build: str) -> dict:
             for rec in teaches.get(sp, ()):
                 taught_by.setdefault(rec, item)
 
-    items = {_i(r, "ID"): r for r in t["ItemSparse"]}
-    items_ru = {_i(r, "ID"): r for r in t.get("ItemSparse@ru", [])}
     used: set[int] = set()
     out: dict[int, dict] = {}
     for r in t["SkillLineAbility"]:
@@ -128,11 +129,16 @@ def build_dataset(t: dict[str, list[dict]], build: str) -> dict:
         rec_item = taught_by.get(spell)
         if not made and not rec_item and acq == 0 and not low and not high:
             continue  # the profession itself, its ranks and passives: not recipes
+        if not names.get(spell) and not made:
+            continue  # nameless helper spells that make nothing
         src = "item" if rec_item else "auto" if acq in (1, 2) else "trainer"
+        # The client keeps the skill a trainer recipe needs on the server: MinSkillLineRank is 1 for most
+        # of them. A recipe item carries its own requirement; otherwise only the colour thresholds are known.
+        need = mn if mn > 1 else _i(items.get(rec_item, {}), "RequiredSkillRank") if rec_item else 0
         rec = {
             "id": _i(r, "ID"), "spell": spell,
             "name": {"en": names.get(spell, ""), "ru": names_ru.get(spell) or names.get(spell, "")},
-            "skill": mn, "yellow": low or None, "gray": high or None,
+            "skill": need or None, "yellow": low or None, "gray": high or None,
             "source": src, "item": made[0] if made else None, "count": made[1] if made else None,
             "reagents": reagents.get(spell, []), "recipeItem": rec_item,
         }
@@ -144,8 +150,9 @@ def build_dataset(t: dict[str, list[dict]], build: str) -> dict:
         r, r_ru = sl[line], sl_ru.get(line, {})
         en = r.get("DisplayName_lang", "")
         p["name"] = {"en": en, "ru": r_ru.get("DisplayName_lang") or en}
-        p["recipes"].sort(key=lambda x: (x["skill"], x["name"]["en"]))
+        p["recipes"].sort(key=lambda x: (x["skill"] or x["yellow"] or 0, x["yellow"] or 0, x["name"]["en"]))
     return {
+        "v": VERSION,
         "build": build,
         "professions": {str(k): v for k, v in sorted(out.items())},
         "items": {

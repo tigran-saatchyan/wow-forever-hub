@@ -260,6 +260,33 @@ async def tab(cid: int, name: str, user: CurrentUser, session: Session, lang: st
     return out
 
 
+class KnownIn(BaseModel):
+    line: int  # profession skill line
+    ids: list[int] = Field(max_length=500)  # recipe ids (SkillLineAbility)
+    known: bool
+
+
+@router.get("/{cid}/known")
+async def known_recipes(cid: int, user: CurrentUser, session: Session):
+    """Recipes the user marked as learned: Blizzard does not say which ones a Forever character knows."""
+    await _own(session, user, cid)
+    row = await session.get(Setting, f"known:{cid}")
+    return row.value if row else {}
+
+
+@router.put("/{cid}/known")
+async def mark_known(cid: int, body: KnownIn, user: CurrentUser, session: Session):
+    await _own(session, user, cid)
+    row = await session.get(Setting, f"known:{cid}")
+    value = dict(row.value) if row else {}
+    have = set(value.get(str(body.line), []))
+    have = have | set(body.ids) if body.known else have - set(body.ids)
+    value[str(body.line)] = sorted(have)
+    await session.merge(Setting(key=f"known:{cid}", value=value))
+    await session.commit()
+    return value
+
+
 _roster_cache: dict[str, tuple[float, dict]] = {}
 
 

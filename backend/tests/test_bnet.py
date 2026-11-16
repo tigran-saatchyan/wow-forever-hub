@@ -306,6 +306,8 @@ TABLES = {
         {"ID": "4", "SkillLine": "197", "Spell": "3866", "MinSkillLineRank": "110", "AcquireMethod": "0",
          "TrivialSkillLineRankLow": "135", "TrivialSkillLineRankHigh": "155", "ClassMask": "0"},
         {"ID": "5", "SkillLine": "6", "Spell": "116", "MinSkillLineRank": "1", "ClassMask": "128"},  # a class spell
+        {"ID": "6", "SkillLine": "197", "Spell": "9999", "MinSkillLineRank": "1", "AcquireMethod": "0",
+         "TrivialSkillLineRankLow": "40", "TrivialSkillLineRankHigh": "60", "ClassMask": "0"},  # nameless helper
     ],
     "SpellName": [{"ID": "2387", "Name_lang": "Linen Cloak"}, {"ID": "3914", "Name_lang": "Brown Linen Pants"},
                   {"ID": "3866", "Name_lang": "Stylish Red Shirt"}],
@@ -340,7 +342,8 @@ def test_recipes_dataset():
     assert by[2387]["source"] == "auto" and by[2387]["reagents"] == [[2996, 1], [2320, 1]]
     assert by[2387]["name"]["ru"] == "Льняной плащ" and by[2387]["yellow"] == 35 and by[2387]["gray"] == 60
     assert by[3914]["source"] == "trainer" and by[3914]["skill"] == 30
-    assert by[3866]["source"] == "item" and by[3866]["recipeItem"] == 6272
+    assert by[3866]["source"] == "item" and by[3866]["recipeItem"] == 6272 and by[3866]["skill"] == 110
+    assert by[2387]["skill"] is None  # MinSkillLineRank 1 on a trainer recipe: the real need is unknown
     assert ds["items"]["2570"]["ru"] == "Льняной плащ" and ds["items"]["6272"]["q"] == 2
 
 
@@ -365,6 +368,16 @@ def test_professions_api(client, monkeypatch):
     assert p["name"] == "Портняжное дело" and cloak["item"]["name"] == "Льняной плащ"
     assert cloak["reagents"][0] == {"id": 2996, "name": "Bolt of Linen Cloth", "q": 1, "count": 1}
     assert cloak["reagents"][1]["name"] == "#2320"  # not in the item table: shown by id
+
+
+def test_known_recipes(client):
+    c = client.post("/api/characters", json={"name": "Joe Gun"}).json()
+    url = f"/api/characters/{c['id']}/known"
+    assert client.get(url).json() == {}
+    assert client.put(url, json={"line": 197, "ids": [3, 2], "known": True}).json() == {"197": [2, 3]}
+    assert client.put(url, json={"line": 197, "ids": [3], "known": False}).json() == {"197": [2]}
+    assert client.get(url).json() == {"197": [2]}
+    client.delete(f"/api/characters/{c['id']}")
 
 
 def test_armory_tabs(client):

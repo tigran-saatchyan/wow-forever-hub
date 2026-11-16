@@ -34,7 +34,7 @@ async def _load(build: str) -> dict | None:
         return _data[build]
     async with SessionLocal() as s:
         row = await s.get(Setting, f"recipes:{build}")
-    if row and row.value.get("professions"):
+    if row and row.value.get("professions") and row.value.get("v") == recipes.VERSION:
         _data[build] = row.value
         return row.value
     return None
@@ -102,6 +102,7 @@ async def profession(line: int, _: CurrentUser, lang: str = "ru"):
         "status": "ready", "build": build, "id": line, "name": p["name"][lg],
         "recipes": [
             {**{k: r[k] for k in ("id", "spell", "skill", "yellow", "gray", "source", "count")},
+             "green": (r["yellow"] + r["gray"]) // 2 if r["yellow"] and r["gray"] else None,
              "name": r["name"][lg] or r["name"]["en"], "nameEn": r["name"]["en"],
              "item": item(r["item"]), "recipeItem": item(r["recipeItem"]),
              "reagents": [{**item(i), "count": n} for i, n in r["reagents"]]}

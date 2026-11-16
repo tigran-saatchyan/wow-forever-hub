@@ -82,6 +82,9 @@ export const wowApi = {
   tab: <T,>(cid: number, name: string, lang: Lang) =>
     req<{ available: boolean; status?: number; data: T | null; at?: string | null }>(`/api/characters/${cid}/tab/${name}?lang=${lang}`),
   professions: () => req<ProfIndex>("/api/professions"),
+  known: (cid: number) => req<Record<string, number[]>>(`/api/characters/${cid}/known`),
+  markKnown: (cid: number, b: { line: number; ids: number[]; known: boolean }) =>
+    req<Record<string, number[]>>(`/api/characters/${cid}/known`, { method: "PUT", body: JSON.stringify(b) }),
   profession: (line: number, lang: Lang) => req<ProfDetail>(`/api/professions/${line}?lang=${lang}`),
   rebuildRecipes: () => req<ProfIndex>("/api/professions/rebuild", { method: "POST" }),
   item: (id: number, lang: Lang) => req<ItemInfo>(`/api/items/${id}?lang=${lang}`),
@@ -149,7 +152,8 @@ export interface ProfIndex {
 }
 export interface RefItem { id: number; name: string; q?: number | null }
 export interface Recipe {
-  id: number; spell: number; name: string; nameEn: string; skill: number; yellow: number | null; gray: number | null;
+  id: number; spell: number; name: string; nameEn: string; skill: number | null; yellow: number | null;
+  green: number | null; gray: number | null;
   source: "trainer" | "auto" | "item"; count: number | null; item: RefItem | null; recipeItem: RefItem | null;
   reagents: (RefItem & { count: number })[];
 }
