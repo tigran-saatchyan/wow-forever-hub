@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useI18n } from "../../lib/i18n";
 import { fullName, useCharacters } from "../../lib/wowApi";
 import { sylvanasLine } from "../../theme/music";
+import { Orders } from "./Orders";
 
 const WORDS: { ru: string; en: string }[] = [
   { ru: "Победа Отрёкшимся!", en: "Victory for the Forsaken!" },
@@ -30,7 +31,11 @@ export function Throne() {
       animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
       transition={{ duration: 0.7 }}
     >
-      <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:text-left">
+      {/* the hall: an arch of light behind, plague fire burning in two braziers */}
+      <div className="throne-arch" aria-hidden />
+      <Brazier side="left" />
+      <Brazier side="right" />
+      <div className="relative flex flex-col items-center gap-5 text-center sm:flex-row sm:text-left">
         <img src="/undercity/crest.webp" alt="" className="throne-crest h-24 w-24 flex-none sm:h-36 sm:w-36" />
         <div className="min-w-0 flex-1">
           <div className="brand-sub">{t("uc_sub")}</div>
@@ -54,6 +59,21 @@ export function Throne() {
           ☠ {t("uc_voice")}
         </button>
       </div>
+      <div className="relative"><Orders /></div>
     </motion.section>
+  );
+}
+
+/** A bronze brazier with green plague fire and sparks rising from it. */
+function Brazier({ side }: { side: "left" | "right" }) {
+  return (
+    <div className={`brazier ${side}`} aria-hidden>
+      <div className="fire">
+        <i /><i /><i />
+      </div>
+      {Array.from({ length: 7 }, (_, i) => <b key={i} className="ember" style={{ left: `${30 + ((i * 37) % 40)}%`, animationDelay: `${(i * 0.53) % 3}s` }} />)}
+      <div className="bowl" />
+      <div className="stand" />
+    </div>
   );
 }

@@ -419,3 +419,8 @@ def quests(p: dict, lang: str | None = None) -> dict:
     qs = p.get("quests") or []
     return {"count": len(qs), "recent": [n for q in qs[-15:] if (n := name_of(q, lang))]}
 
+
+
+def quests_active(p: dict, lang: str | None = None) -> list[dict]:
+    """Quests in the character's log (/quests -> in_progress)."""
+    return [{"id": q.get("id"), "name": name_of(q, lang)} for q in p.get("in_progress") or [] if isinstance(q, dict)]

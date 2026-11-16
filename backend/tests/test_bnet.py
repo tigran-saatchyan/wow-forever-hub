@@ -128,6 +128,8 @@ def handler(req: httpx.Request) -> httpx.Response:
     if p == "/profile/wow/character/joe-gun/pvp-summary":
         return httpx.Response(200, json={"honorable_kills": 321, "pvp_map_statistics": [
             {"world_map": {"name": "Warsong Gulch"}, "match_statistics": {"played": 10, "won": 6, "lost": 4}}]})
+    if p == "/profile/wow/character/joe-gun/quests":
+        return httpx.Response(200, json={"in_progress": [{"id": 515, "name": "Elixir of Agony"}], "completed": {}})
     if p == "/profile/wow/character/joe-gun/reputations":
         return httpx.Response(200, json={"reputations": [
             {"faction": {"name": "Undercity"}, "standing": {"raw": 9000, "value": 3000, "max": 6000, "tier": 4,
@@ -398,6 +400,8 @@ def test_armory_tabs(client):
     assert pvp["data"]["maps"] == [{"name": "Warsong Gulch", "played": 10, "won": 6, "lost": 4}]
     rep = client.get(f"/api/characters/{c['id']}/tab/reputations?lang=en").json()["data"]
     assert rep == [{"name": "Undercity", "standing": "Friendly", "tier": 4, "value": 3000, "max": 6000, "raw": 9000}]
+    qa = client.get(f"/api/characters/{c['id']}/tab/quests_active?lang=en").json()
+    assert qa["data"] == [{"id": 515, "name": "Elixir of Agony"}]
     off = client.get(f"/api/characters/{c['id']}/tab/mounts?lang=en").json()
     assert off == {"available": False, "status": 404, "data": None, "at": None}
     assert client.get(f"/api/characters/{c['id']}/tab/nope").status_code == 404

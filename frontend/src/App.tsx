@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { useMe } from "./lib/auth";
+import { useTheme } from "./theme/ThemeProvider";
 import { Characters } from "./pages/Characters";
 import { Dashboard } from "./pages/Dashboard";
 import { Login } from "./pages/Login";
@@ -15,10 +16,24 @@ function Private({ children }: { children: JSX.Element }) {
   return me.data ? children : <Navigate to="/login" replace />;
 }
 
+/** The Undercity's veil between pages: a band of green and violet mist sweeps across once. */
+function Veil({ k }: { k: string }) {
+  const { theme } = useTheme();
+  if (theme.id !== "undercity") return null;
+  return (
+    <motion.div
+      key={k} className="veil" aria-hidden
+      initial={{ x: "-100%", opacity: 0 }} animate={{ x: "100%", opacity: [0, 1, 1, 0] }}
+      transition={{ duration: 0.9, ease: "easeInOut" }}
+    />
+  );
+}
+
 export function App() {
   const loc = useLocation();
   return (
     <Layout>
+      <Veil k={loc.pathname} />
       <AnimatePresence mode="wait">
         <motion.div
           key={loc.pathname}

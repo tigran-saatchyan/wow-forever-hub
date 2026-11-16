@@ -887,3 +887,104 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .lamenter, .lament-aura .ring, .lament-aura .spark { animation: none; }
 }
+
+/* ---- throne room: the arch, the braziers, the orders ---- */
+.throne-arch {
+  position: absolute;
+  left: 50%;
+  top: -40%;
+  width: min(900px, 90%);
+  height: 160%;
+  transform: translateX(-50%);
+  background:
+    radial-gradient(ellipse 50% 60% at 50% 55%, rgb(116 214 84 / 0.09), transparent 70%),
+    radial-gradient(ellipse 35% 45% at 50% 50%, rgb(168 108 232 / 0.08), transparent 70%);
+  border-radius: 50% 50% 0 0;
+  pointer-events: none;
+}
+.brazier {
+  position: absolute;
+  bottom: 0;
+  width: 76px;
+  height: 100%;
+  max-height: 260px;
+  top: 50%;
+  bottom: auto;
+  transform: translateY(-50%);
+  pointer-events: none;
+  opacity: 0.95;
+}
+.brazier.left { left: 22px; }
+.brazier.right { right: 22px; }
+/* the braziers get their own gutters at the sides of the hall */
+@media (min-width: 1024px) { .throne { padding-left: 120px; padding-right: 120px; } }
+@media (max-width: 1023px) { .brazier { display: none; } }
+.brazier .stand {
+  position: absolute; left: 50%; bottom: 0; width: 10px; height: 70px; transform: translateX(-50%);
+  background: linear-gradient(90deg, #3d2f1a, #a8864a 45%, #4a3a20);
+  box-shadow: 0 0 0 1px #000;
+}
+.brazier .bowl {
+  position: absolute; left: 50%; bottom: 66px; width: 62px; height: 22px; transform: translateX(-50%);
+  border-radius: 0 0 50% 50% / 0 0 100% 100%;
+  background: linear-gradient(180deg, #c9a862, #6d532a 60%, #2c2112);
+  box-shadow: 0 0 0 1px #000, 0 -4px 16px rgb(116 214 84 / 0.6);
+}
+.brazier .fire {
+  position: absolute; left: 50%; bottom: 84px; width: 54px; height: 64px; transform: translateX(-50%);
+  filter: blur(1.5px);
+}
+.brazier .fire i {
+  position: absolute; left: 50%; bottom: 0; width: 34px; height: 56px; margin-left: -17px;
+  border-radius: 50% 50% 35% 35% / 65% 65% 35% 35%;
+  background: radial-gradient(ellipse at 50% 85%, #eaffd8 0%, #8cf06a 30%, #3c9a2e 60%, transparent 72%);
+  mix-blend-mode: screen;
+  animation: flame 1.3s ease-in-out infinite;
+  transform-origin: 50% 100%;
+}
+.brazier .fire i:nth-child(2) { width: 26px; margin-left: -20px; animation-duration: 1.7s; animation-delay: -0.4s; opacity: 0.8; }
+.brazier .fire i:nth-child(3) { width: 24px; margin-left: -4px; animation-duration: 1.1s; animation-delay: -0.8s; opacity: 0.75;
+  background: radial-gradient(ellipse at 50% 85%, #f2e6ff 0%, #b88cf0 35%, #6a3bb0 60%, transparent 72%); }
+@keyframes flame {
+  0%, 100% { transform: scale(1, 1) skewX(0deg); opacity: 0.9; }
+  25% { transform: scale(0.92, 1.12) skewX(4deg); }
+  50% { transform: scale(1.05, 0.9) skewX(-3deg); opacity: 1; }
+  75% { transform: scale(0.95, 1.08) skewX(2deg); }
+}
+.brazier .ember {
+  position: absolute; bottom: 120px; width: 3px; height: 3px; border-radius: 50%;
+  background: #b6ff96; box-shadow: 0 0 6px 2px rgb(116 214 84 / 0.8);
+  animation: ember-rise 3s linear infinite;
+}
+@keyframes ember-rise {
+  0% { transform: translate(0, 0); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translate(-10px, -90px); opacity: 0; }
+}
+.order {
+  @apply rounded-lg border p-3;
+  border-color: rgb(var(--gold) / 0.22);
+  background: linear-gradient(180deg, rgb(10 16 15 / 0.75), rgb(5 9 9 / 0.85));
+  box-shadow: inset 0 0 24px rgb(0 0 0 / 0.5);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.order:hover {
+  border-color: rgb(var(--accent) / 0.4);
+  box-shadow: inset 0 0 24px rgb(0 0 0 / 0.5), 0 0 22px -10px rgb(116 214 84 / 0.6);
+}
+.order-line {
+  @apply flex w-full items-center gap-2 text-left;
+}
+button.order-line:hover { @apply text-gold; }
+
+/* veil between pages: a green and violet mist sweeping across */
+.veil {
+  position: fixed; inset: 0; z-index: 40; pointer-events: none;
+  background:
+    linear-gradient(100deg, transparent 0%, rgb(116 214 84 / 0.10) 30%, rgb(168 108 232 / 0.16) 50%, rgb(116 214 84 / 0.10) 70%, transparent 100%);
+  filter: blur(18px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .brazier .fire i, .brazier .ember { animation: none; }
+  .veil { display: none; }
+}
