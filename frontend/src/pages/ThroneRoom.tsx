@@ -116,7 +116,7 @@ function Gear({ x, slot, i }: { x?: EquipItem; slot: string; i: number }) {
   );
 }
 
-function Hero({ c, box, poke }: { c: Character; box: Box; poke: number }) {
+function Hero({ c, box }: { c: Character; box: Box }) {
   const src = media(c.model)!;
   // crop the canvas to the figure; the figure's box is what the stage sizes
   const style = {
@@ -137,7 +137,6 @@ function Hero({ c, box, poke }: { c: Character; box: Box; poke: number }) {
       <div className="tr-hero-float">
         <img src={src} alt="" className="tr-hero-img" style={style} draggable={false} />
         <img src={src} alt="" className="tr-hero-ghost" style={style} draggable={false} aria-hidden />
-        {poke > 0 && <span key={poke} className="tr-poke" aria-hidden />}
       </div>
     </motion.div>
   );
@@ -156,7 +155,6 @@ export function ThroneRoom() {
   const c = q.data;
   const box = useFigure(media(c?.model) ?? null);
   const [w, setW] = useState(() => Math.floor(Math.random() * WORDS.length));
-  const [poke, setPoke] = useState(0);
   // the Dark Lady speaks: her line plays and the model talks until it ends, then stands again
   const queen = useRef<Viewer | null>(null);
   const setQueen = useCallback((v: Viewer | null) => { queen.current = v; }, []);
@@ -215,15 +213,14 @@ export function ThroneRoom() {
         {/* the scene: the dais and the servant fill what the name plate below leaves */}
         <div className="tr-scene">
         <div className="tr-dais" aria-hidden>
-          <div className="tr-sigil"><img src="/undercity/crest.webp" alt="" draggable={false} /></div>
           <div className="tr-pillar" />
         </div>
         <div className="tr-hero-wrap">
-          <button className="tr-hero-btn" onClick={() => setPoke((p) => p + 1)} title={t("tr_poke")} aria-label={t("tr_poke")}>
+          <div className="tr-hero-stand">
             <AnimatePresence mode="wait">
-              {c && box && <Hero key={c.id} c={c} box={box} poke={poke} />}
+              {c && box && <Hero key={c.id} c={c} box={box} />}
             </AnimatePresence>
-          </button>
+          </div>
           {c && box && (
             <>
               <div className="tr-gear-col left">{LEFT.map((sl, i) => <Gear key={sl} slot={sl} x={eq.get(sl)} i={i} />)}</div>
