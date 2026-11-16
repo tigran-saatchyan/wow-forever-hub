@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .. import wow
 from ..auth import CurrentUser
 from ..bnet import REGIONS, BnetError, client, name_of, slug
-from ..db import Character, User, get_session, utcnow
+from ..db import Character, Setting, User, get_session, utcnow
 from .items import get_item
 
 router = APIRouter(prefix="/api/characters", tags=["characters"])
@@ -147,10 +147,40 @@ async def _own(session: AsyncSession, user: User, cid: int) -> Character:
     return c
 
 
+class LayoutIn(BaseModel):
+    order: list[int] = Field(default_factory=list, max_length=500)
+    favorites: list[int] = Field(default_factory=list, max_length=500)
+
+
+async def _layout(session: AsyncSession, user: User) -> dict:
+    row = await session.get(Setting, f"chars:{user.id}")
+    return dict(row.value) if row else {}
+
+
 @router.get("")
 async def list_characters(user: CurrentUser, session: Session):
-    rows = await session.execute(select(Character).where(Character.user_id == user.id).order_by(Character.created))
-    return [_out(c) for c in rows.scalars()]
+    """The user's order (drag or arrows on the page), new characters last; favorites flagged."""
+    rows = (await session.execute(
+        select(Character).where(Character.user_id == user.id).order_by(Character.created)
+    )).scalars().all()
+    lay = await _layout(session, user)
+    pos = {cid: i for i, cid in enumerate(lay.get("order") or [])}
+    fav = set(lay.get("favorites") or [])
+    rows = sorted(rows, key=lambda c: pos.get(c.id, len(pos) + c.id))
+    return [_out(c) | {"favorite": c.id in fav} for c in rows]
+
+
+@router.put("/layout")
+async def set_layout(body: LayoutIn, user: CurrentUser, session: Session):
+    """Order and favorites of the list. Ids of other users' characters are dropped."""
+    mine = set((await session.execute(select(Character.id).where(Character.user_id == user.id))).scalars())
+    value = {
+        "order": [i for i in dict.fromkeys(body.order) if i in mine],
+        "favorites": [i for i in dict.fromkeys(body.favorites) if i in mine],
+    }
+    await session.merge(Setting(key=f"chars:{user.id}", value=value))
+    await session.commit()
+    return value
 
 
 @router.post("")

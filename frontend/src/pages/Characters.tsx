@@ -6,6 +6,7 @@ import { characterLink, mapTalents } from "../lib/charTalents";
 import { iconStyle, useIcons, useIndex, useTalents } from "../lib/gameData";
 import { fmtDate, useI18n, type Key } from "../lib/i18n";
 import { store } from "../lib/store";
+import { CharacterList } from "./characters/CharacterList";
 import { CharacterSheet } from "./characters/CharacterSheet";
 import {
   media, useCharacter, useCharacterActions, useCharacters, wowApi, type Character, type Region,
@@ -67,28 +68,11 @@ export function Characters() {
         <p className="text-muted">{list.isLoading ? "…" : t("ch_empty")}</p>
       ) : (
         <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
-          <ul className="space-y-2">
-            {chars.map((c) => {
-              const s = c.summary?.[lang];
-              return (
-                <li key={c.id}>
-                  <button
-                    className={`panel flex w-full items-center gap-3 p-3 text-left transition ${cur?.id === c.id ? "!border-gold/70" : "hover:border-gold/40"}`}
-                    onClick={() => (setSel(c.id), store.set("chSel", c.id))}
-                  >
-                    <ClassIcon classId={s?.classId ?? null} />
-                    <span className="grid min-w-0">
-                      <b className="truncate">{s?.name || c.name}</b>
-                      <span className="truncate text-xs text-muted">
-                        {s ? `${t("ch_level", { l: s.level ?? "?" })} · ${s.className}` : c.error ? "!" : "…"} · {c.region.toUpperCase()}
-                        {c.source === "bnet" ? ` · ${t("ch_from_bnet")}` : ""}
-                      </span>
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+          <CharacterList
+            chars={chars} cur={cur?.id}
+            onSelect={(id) => (setSel(id), store.set("chSel", id))}
+            icon={(c) => <ClassIcon classId={c.summary?.[lang]?.classId ?? null} />}
+          />
           {cur && <CharacterCard id={cur.id} />}
         </div>
       )}

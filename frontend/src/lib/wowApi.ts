@@ -46,6 +46,7 @@ export interface Character {
   missing?: string[];
   account?: Record<string, unknown> | null; tried?: string[] | null;
   model?: string | null;
+  favorite?: boolean;
   stats?: Record<Lang, Record<string, number | string>> | null;
   professions?: Record<Lang, { name: string; id?: number; kind: "primary" | "secondary"; skill: number | null; max: number | null }[]> | null;
 }

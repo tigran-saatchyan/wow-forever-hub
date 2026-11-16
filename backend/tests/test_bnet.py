@@ -205,6 +205,18 @@ def test_media_proxy(client):
     assert client.get("/api/media?u=https://evil.example/x.jpg").status_code == 422
 
 
+def test_character_order_and_favorites(client):
+    a = client.post("/api/characters", json={"name": "Joe Gun"}).json()["id"]
+    b = client.post("/api/characters", json={"name": "Nobody Here"}).json()["id"]
+    assert [c["id"] for c in client.get("/api/characters").json()][-2:] == [a, b]
+    r = client.put("/api/characters/layout", json={"order": [b, a, 99999], "favorites": [a, 99999]}).json()
+    assert r == {"order": [b, a], "favorites": [a]}
+    rows = client.get("/api/characters").json()
+    assert [c["id"] for c in rows][:2] == [b, a] and [c["favorite"] for c in rows][:2] == [False, True]
+    for cid in (a, b):
+        client.delete(f"/api/characters/{cid}")
+
+
 def test_unknown_character(client):
     c = client.post("/api/characters", json={"name": "Nobody Here", "region": "eu"}).json()
     assert c["error"] == "not_found"
