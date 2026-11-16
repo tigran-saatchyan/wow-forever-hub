@@ -1,5 +1,6 @@
 """Items from static-forever, cached in the database (both languages from one request)."""
 
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -13,27 +14,40 @@ from ..db import Item, get_session
 router = APIRouter(prefix="/api/items", tags=["items"])
 Session = Annotated[AsyncSession, Depends(get_session)]
 LANGS = ("ru", "en")
+log = logging.getLogger("uvicorn.error")
+
+
+ITEM_V = 2  # bump when wow.item() changes shape: older cached rows are fetched again
 
 
 async def get_item(session: AsyncSession, item_id: int, lang: str) -> dict | None:
-    """Cached item, or fetched once from Blizzard (None if Blizzard does not know it)."""
+    """Cached item, or fetched once from Blizzard (None if Blizzard knows neither the item nor its icon).
+
+    The icon is asked separately: when the item itself is refused, its icon may still come, and the
+    card shows that (not cached, so a later call tries the item again).
+    """
     lang = lang if lang in LANGS else "en"
     row = await session.get(Item, (item_id, lang))
-    if row:
+    if row and row.data.get("v") == ITEM_V:
         return row.data
     try:
         raw = await client().get(f"/data/wow/item/{item_id}", "static")
     except BnetError as e:
-        if e.status == 404:
-            return None
-        raise
+        raw, err = None, e
     try:
         media = await client().get(f"/data/wow/media/item/{item_id}", "static")
     except BnetError:
         media = None
+    if raw is None:
+        log.warning("item %s: %s", item_id, err)
+        if media is None:
+            if err.status == 404:
+                return None
+            raise err
+        return {**wow.item({"id": item_id}, media, lang), "partial": True}
     out = None
     for lg in LANGS:
-        data = wow.item(raw, media, lg)
+        data = {**wow.item(raw, media, lg), "v": ITEM_V}
         await session.merge(Item(id=item_id, lang=lg, data=data))
         if lg == lang:
             out = data

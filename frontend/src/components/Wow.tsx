@@ -1,5 +1,5 @@
 /** Small WoW pieces shared by the character and auction pages: money, item icon, item tooltip. */
-import { useState, type ReactNode } from "react";
+import { Component, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useI18n } from "../lib/i18n";
 import { qColor, useItem, type ItemInfo } from "../lib/wowApi";
@@ -48,8 +48,31 @@ export function ItemIcon({ src, quality, size = 36 }: { src?: string | null; qua
   );
 }
 
+/** A tooltip that fails renders nothing instead of taking the whole page down with it. */
+class TipBoundary extends Component<{ children: ReactNode }, { bad: boolean }> {
+  state = { bad: false };
+  static getDerivedStateFromError() {
+    return { bad: true };
+  }
+  render() {
+    return this.state.bad ? null : this.props.children;
+  }
+}
+
+/** Only strings and numbers reach the page: Blizzard sometimes sends a text as {en_US, ru_RU}. */
+const str = (v: unknown): string | null => (typeof v === "string" || typeof v === "number" ? String(v) : null);
+const strs = (v: unknown): string[] => (Array.isArray(v) ? v.map(str).filter((x): x is string => !!x) : []);
+
 export function ItemTip({ it, extra }: { it: ItemInfo; extra?: ReactNode }) {
   const { t } = useI18n();
+  it = {
+    ...it, name: str(it.name) ?? "", binding: str(it.binding), slot: str(it.slot) ?? undefined,
+    subclass: str(it.subclass) ?? undefined, damage: str(it.damage) ?? undefined, speed: str(it.speed) ?? undefined,
+    armor: str(it.armor) ?? undefined, description: str(it.description) ?? undefined,
+    stats: strs(it.stats), spells: strs(it.spells),
+    level: typeof it.level === "number" ? it.level : undefined, required: typeof it.required === "number" ? it.required : undefined,
+    sell: typeof it.sell === "number" ? it.sell : undefined,
+  };
   return (
     <>
       <h4 style={{ color: qColor(it.quality) }}>{it.name}</h4>
@@ -70,11 +93,17 @@ export function ItemTip({ it, extra }: { it: ItemInfo; extra?: ReactNode }) {
   );
 }
 
-/** Hover (or focus) target that shows an item tooltip, loading the item on first hover. */
-export function ItemHover({ id, children, extra }: { id: number; children: ReactNode; extra?: ReactNode }) {
+/**
+ * Hover (or focus) target that shows an item tooltip, loading the item on first hover.
+ * `fallback` (what we already know, e.g. from a character's equipment) is shown while the item
+ * loads, when Blizzard refuses it, or when only its icon came back.
+ */
+export function ItemHover({ id, children, extra, fallback }: { id: number; children: ReactNode; extra?: ReactNode; fallback?: ItemInfo }) {
   const { lang } = useI18n();
   const [el, setEl] = useState<HTMLElement | null>(null);
   const q = useItem(el ? id : null, lang);
+  const full = q.data && !(q.data as ItemInfo & { partial?: boolean }).partial ? q.data : undefined;
+  const shown = full ?? fallback;
   return (
     <span
       className="contents"
@@ -84,7 +113,7 @@ export function ItemHover({ id, children, extra }: { id: number; children: React
       onBlur={() => setEl(null)}
     >
       {children}
-      {el && q.data && createPortal(<TipBox el={el}><ItemTip it={q.data} extra={extra} /></TipBox>, document.body)}
+      {el && shown && createPortal(<TipBoundary><TipBox el={el}><ItemTip it={shown} extra={extra} /></TipBox></TipBoundary>, document.body)}
     </span>
   );
 }

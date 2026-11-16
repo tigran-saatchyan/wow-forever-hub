@@ -39,12 +39,31 @@ def character_summary(p: dict, lang: str | None = None) -> dict:
     }
 
 
-def _lines(xs: Iterable[Any]) -> list[str]:
+def txt(v: Any, lang: str | None = None) -> str | None:
+    """A text field as a string. Asked without a locale, Blizzard sends {"en_US": …, "ru_RU": …}."""
+    if v is None or isinstance(v, bool):
+        return None
+    if isinstance(v, str | int | float):
+        return str(v)
+    if isinstance(v, dict):
+        if "display_string" in v:
+            return txt(v["display_string"], lang)
+        return name_of(v, lang) or None
+    return None
+
+
+def _num(v: Any) -> int | None:
+    return v if isinstance(v, int) and not isinstance(v, bool) else None
+
+
+def _lines(xs: Iterable[Any], lang: str | None = None) -> list[str]:
     out = []
     for x in xs or []:
-        s = _get(x, "display", "display_string") or _get(x, "display_string") or (x if isinstance(x, str) else None)
+        s = txt(_get(x, "display", "display_string"), lang) or txt(_get(x, "display_string"), lang)
+        if s is None and isinstance(x, str):
+            s = x
         if s:
-            out.append(str(s))
+            out.append(s)
     return out
 
 
@@ -59,8 +78,8 @@ def equipment(eq: dict, lang: str | None = None) -> list[dict]:
             "name": name_of(it.get("name"), lang) or name_of(it.get("item"), lang),
             "quality": _get(it, "quality", "type"),
             "ilvl": _get(it, "level", "value"),
-            "stats": _lines(it.get("stats")),
-            "enchants": _lines(it.get("enchantments")),
+            "stats": _lines(it.get("stats"), lang),
+            "enchants": _lines(it.get("enchantments"), lang),
             "set": name_of(_get(it, "set", "item_set"), lang) or None,
         })
     return out
@@ -132,19 +151,19 @@ def item(it: dict, media: dict | None, lang: str | None = None) -> dict:
         "id": it.get("id"),
         "name": name_of(it.get("name"), lang),
         "quality": _get(it, "quality", "type"),
-        "level": it.get("level"),
-        "required": it.get("required_level"),
+        "level": _num(it.get("level")),
+        "required": _num(it.get("required_level")),
         "class": name_of(it.get("item_class"), lang),
         "subclass": name_of(it.get("item_subclass"), lang),
         "slot": name_of(it.get("inventory_type"), lang),
         "binding": name_of(preview.get("binding"), lang) or None,
-        "stats": _lines(preview.get("stats")),
-        "spells": [s.get("description") for s in preview.get("spells") or [] if s.get("description")],
-        "armor": _get(preview, "armor", "display", "display_string"),
-        "damage": _get(preview, "weapon", "damage", "display_string"),
-        "speed": _get(preview, "weapon", "attack_speed", "display_string"),
-        "sell": _get(preview, "sell_price", "value", default=it.get("sell_price")),
-        "description": preview.get("description") or it.get("description"),
+        "stats": _lines(preview.get("stats"), lang),
+        "spells": [d for x in preview.get("spells") or [] if (d := txt(x.get("description"), lang))],
+        "armor": txt(_get(preview, "armor", "display"), lang),
+        "damage": txt(_get(preview, "weapon", "damage"), lang),
+        "speed": txt(_get(preview, "weapon", "attack_speed"), lang),
+        "sell": _num(_get(preview, "sell_price", "value", default=it.get("sell_price"))),
+        "description": txt(preview.get("description") or it.get("description"), lang),
         "icon": media_url(media or {}, "icon"),
     }
 

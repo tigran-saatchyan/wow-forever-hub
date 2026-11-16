@@ -83,6 +83,18 @@ def handler(req: httpx.Request) -> httpx.Response:
             return httpx.Response(403, text="forbidden")  # plain static refused: versioned one works
         assert ns == "static-1.60.1_70755-forever-eu", ns
         iid = int(p.rsplit("/", 1)[1])
+        if iid == 777 and "media" not in p:
+            return httpx.Response(404, json={"code": 404})  # item refused, icon still there
+        if iid == 19019 and "media" not in p:  # asked without a locale: every text is a dict of translations
+            loc = lambda en, ru: {"en_US": en, "ru_RU": ru}  # noqa: E731
+            return httpx.Response(200, json={"id": iid, "name": loc("Thunderfury", "Громовая ярость"), "level": 80,
+                "quality": {"type": "LEGENDARY"}, "preview_item": {
+                    "stats": [{"display": {"display_string": loc("+5 Agility", "+5 к ловкости")}}],
+                    "spells": [{"description": loc("Chance on hit", "Шанс при попадании")}],
+                    "weapon": {"damage": {"display_string": loc("44 - 115 Damage", "Урон: 44 - 115")},
+                               "attack_speed": {"display_string": loc("Speed 1.90", "Скорость 1.90")}},
+                    "sell_price": {"value": 161025, "display_strings": {"header": loc("Sell Price:", "Цена:")}},
+                    "binding": {"name": loc("Binds when picked up", "Персональный при поднятии")}}})
         if "media" in p:
             return httpx.Response(200, json={"assets": [{"key": "icon", "value": f"https://render/{iid}.jpg"}]})
         return httpx.Response(200, json={"id": iid, "name": {"en_US": "Linen Cloth", "ru_RU": "Льняная ткань"},
@@ -179,6 +191,16 @@ def test_item_cache_and_versioned_static(client):
     assert client.get("/api/items/2589?lang=en").json()["name"] == "Linen Cloth"
     # the second language came from the cache; the client now goes straight to the versioned namespace
     assert len(CALLS) - n <= 4
+
+
+def test_item_texts_are_strings(client):
+    it = client.get("/api/items/19019?lang=ru").json()
+    assert it["name"] == "Громовая ярость" and it["stats"] == ["+5 к ловкости"]
+    assert it["spells"] == ["Шанс при попадании"] and it["damage"] == "Урон: 44 - 115"
+    assert it["speed"] == "Скорость 1.90" and it["sell"] == 161025 and it["binding"] == "Персональный при поднятии"
+    part = client.get("/api/items/777?lang=ru").json()
+    assert part["partial"] and part["icon"] == "https://render/777.jpg"
+    assert wow._lines([{"display_string": {"en_US": "Crusader", "ru_RU": "Рыцарь"}}], "ru") == ["Рыцарь"]
 
 
 def test_market_poll_and_watch(client):

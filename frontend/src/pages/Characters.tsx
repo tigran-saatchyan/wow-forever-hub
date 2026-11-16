@@ -170,7 +170,11 @@ function CharacterCard({ id }: { id: number }) {
               <ul className="grid gap-1.5 sm:grid-cols-2">
                 {eq.map((x) => (
                   <li key={x.slot}>
-                    <ItemHover id={x.id} extra={x.enchants.map((e) => <div key={e} className="text-[#1eff00]">{e}</div>)}>
+                    <ItemHover
+                      id={x.id}
+                      extra={(x.enchants || []).filter((e) => typeof e === "string").map((e) => <div key={e} className="text-[#1eff00]">{e}</div>)}
+                      fallback={{ id: x.id, name: x.name, quality: x.quality, level: x.ilvl, slot: x.slotName, stats: x.stats || [], spells: [] }}
+                    >
                       <span tabIndex={0} className="flex items-center gap-2 rounded-md border border-edge/50 bg-bg/40 p-1.5">
                         <ItemIcon src={x.icon} quality={x.quality} size={32} />
                         <span className="grid min-w-0 leading-tight">
