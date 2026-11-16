@@ -65,6 +65,7 @@ def handler(req: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json={"wow_accounts": [{"characters": [
             {"name": "Joe Gun", "key": {"href": href.format("joe-gun")}},
             {"name": "Ann Bell", "key": {"href": href.format("ann-bell")}},
+            {"name": "Joe", "surname": "Gun", "level": 42},  # no link: the surname makes the lookup work
         ]}]})
     if p == "/data/wow/guild/deathwish/roster":
         return httpx.Response(200, json={"guild": {"name": "Deathwish"}, "members": [
@@ -156,7 +157,10 @@ def test_battlenet_sign_in_imports_characters(client):
     r = client.get(f"/api/bnet/callback?code=good&state={loc.params['state']}", follow_redirects=False)
     assert r.headers["location"] == "/characters?bnet=ok"
     chars = {c["slug"]: c for c in client.get("/api/characters").json()}
-    assert set(chars) == {"joe-gun", "ann-bell"} and chars["joe-gun"]["source"] == "bnet"
+    assert set(chars) == {"joe-gun", "ann-bell", "joe"} and chars["joe-gun"]["source"] == "bnet"
+    assert chars["joe"]["summary"]["en"]["level"] == 42 and chars["joe"]["error"] is None
+    bad = client.get(f"/api/characters/{chars['ann-bell']['id']}").json()
+    assert bad["account"]["name"] == "Ann Bell" and bad["tried"] == ["/profile/wow/character/ann-bell"]
     assert chars["joe-gun"]["summary"]["en"]["level"] == 42 and chars["ann-bell"]["error"] == "not_found"
     assert client.get("/api/bnet/account").json()["battletag"] == "Joe#1234"
     for c in chars.values():

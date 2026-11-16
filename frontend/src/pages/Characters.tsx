@@ -152,6 +152,13 @@ function CharacterCard({ id }: { id: number }) {
         </div>
       </header>
       {err && <p className="rounded-md border border-bad/50 bg-bad/10 p-2.5 text-sm">{err}</p>}
+      {c.error && (c.account || c.tried) && (
+        <details className="text-xs">
+          <summary className="cursor-pointer text-gold">{t("ch_raw")}</summary>
+          {c.tried && <p className="mt-1 text-muted">{t("ch_tried")}: <span className="font-mono">{c.tried.join(", ")}</span></p>}
+          {c.account && <pre className="mt-1 max-h-80 overflow-auto rounded-md border border-edge/50 bg-bg/60 p-2 font-mono">{JSON.stringify(c.account, null, 2)}</pre>}
+        </details>
+      )}
 
       {s?.guild?.href && <GuildRoster cid={c.id} name={s.guild.name} />}
 

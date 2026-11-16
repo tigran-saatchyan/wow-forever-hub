@@ -44,6 +44,7 @@ export interface Character {
   summary: Record<Lang, CharSummary> | null; error: string | null; fetched: string | null;
   equipment?: Record<Lang, EquipItem[]> | null; talents?: CharTalent[] | null; avatar?: string | null;
   missing?: string[];
+  account?: Record<string, unknown> | null; tried?: string[] | null;
 }
 export interface ItemInfo {
   id: number; name: string; quality?: string; level?: number; required?: number; class?: string; subclass?: string;

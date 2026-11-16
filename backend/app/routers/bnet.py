@@ -154,6 +154,8 @@ async def callback(request: Request, session: Session, code: str = "", state: st
             if c is None:
                 c = Character(user_id=uid, region=region, slug=sl, name=name_of(ch.get("name")) or sl, source="bnet")
                 session.add(c)
+            # what Battle.net said about the character: its link, and maybe a surname the lookup needs
+            c.profile = {**(c.profile or {}), "account": ch}
             found.append(c)
     await session.merge(Setting(key=f"bnet:{uid}", value={
         "battletag": battletag, "region": region, "characters": len(found), "linked": datetime.now(UTC).isoformat(),

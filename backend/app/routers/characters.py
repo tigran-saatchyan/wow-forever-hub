@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import wow
 from ..auth import CurrentUser
-from ..bnet import REGIONS, BnetError, client, slug
+from ..bnet import REGIONS, BnetError, client, name_of, slug
 from ..db import Character, User, get_session, utcnow
 from .items import get_item
 
@@ -40,18 +40,46 @@ def _out(c: Character, full: bool = False) -> dict:
     }
     if full:
         d |= {"equipment": p.get("equipment"), "talents": p.get("talents"), "avatar": p.get("avatar"),
-              "missing": p.get("missing", [])}
+              "missing": p.get("missing", []), "account": p.get("account"), "tried": p.get("tried")}
     return d
+
+
+def candidate_paths(c: Character) -> list[str]:
+    """Where the profile may live. Battle.net's account list is the best guide: its link to the character,
+    a surname if it sends one, a realm if Forever has them after all; then the slug we have."""
+    acc = (c.profile or {}).get("account") or {}
+    name = name_of(acc.get("name")) or c.name
+    out = []
+    href = (acc.get("key") or {}).get("href")
+    if href:
+        out.append(urlparse(href).path)
+    for k in ("surname", "last_name", "family_name", "lastname"):
+        if isinstance(acc.get(k), str) and acc[k].strip():
+            out.append(f"/profile/wow/character/{quote(slug(name + ' ' + acc[k]))}")
+    realm = (acc.get("realm") or {}).get("slug")
+    if realm:
+        out.append(f"/profile/wow/character/{quote(realm)}/{quote(slug(name))}")
+    out.append(f"/profile/wow/character/{quote(c.slug)}")
+    return list(dict.fromkeys(p.rstrip("/") for p in out if p))
 
 
 async def refresh(session: AsyncSession, c: Character) -> Character:
     """Fetch the profile and its parts. Missing parts are listed instead of failing the whole card."""
     bn = client()
-    base = f"/profile/wow/character/{quote(c.slug)}"
-    try:
-        prof = await bn.get(base, "profile", c.region)
-    except BnetError as e:
-        c.error = "not_found" if e.status == 404 else f"{e.status}"
+    account = (c.profile or {}).get("account")
+    prof, base, last = None, "", None
+    tried = candidate_paths(c)
+    for path in tried:
+        try:
+            prof, base = await bn.get(path, "profile", c.region), path
+            break
+        except BnetError as e:
+            last = e
+            if e.status != 404:
+                break
+    if prof is None:
+        c.error = "not_found" if last is None or last.status == 404 else f"{last.status}"
+        c.profile = {"account": account, "tried": tried} if account else {"tried": tried}
         c.fetched = utcnow()
         await session.commit()
         return c
@@ -64,7 +92,10 @@ async def refresh(session: AsyncSession, c: Character) -> Character:
 
     eq, specs, media = await asyncio.gather(part("/equipment"), part("/specializations"), part("/character-media"))
     missing = [n for n, x in (("equipment", eq), ("talents", specs), ("media", media)) if isinstance(x, BnetError)]
-    profile: dict = {"summary": {lg: wow.character_summary(prof, lg) for lg in LANGS}, "missing": missing}
+    profile: dict = {"summary": {lg: wow.character_summary(prof, lg) for lg in LANGS}, "missing": missing,
+                     "path": base}
+    if account:
+        profile["account"] = account
     if not isinstance(eq, BnetError):
         profile["equipment"] = {lg: wow.equipment(eq, lg) for lg in LANGS}
         # icons for the equipped items, cached in the items table
