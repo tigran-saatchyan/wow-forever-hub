@@ -9,6 +9,8 @@ import { store } from "../lib/store";
 
 const GAME = (id: number) => `/api/media/game/${id}`;
 const SYLVANAS = [561230, 561256, 561225, 561242, 561241, 561268, 561231]; // quest turn-in lines
+// her champion Nathanos Blightcaller: short spoken lines from the client (battle cries and death left out)
+const NATHANOS = [1239071, 1239113, 1239115, 1239117, 1239131, 1239135, 1355059, 1355061];
 
 export interface Track { id: number; ru: string; en: string; group: "forever" | "classic" | "sylvanas" }
 export const PLAYLIST: Track[] = [
@@ -176,11 +178,12 @@ export function usePlayer(): PlayerState {
 }
 
 /**
- * One of Sylvanas' lines, at random, in the page's language (the Russian client has its own voice).
+ * One of Sylvanas' (or Nathanos') lines, at random, in the page's language (the Russian client has its own voices).
  * It is asked for by a click, so it plays whatever the sound switch says, and leaves the switch and the music alone.
  */
-export function sylvanasLine(lang: "ru" | "en" = "ru", volume = 0.85): HTMLAudioElement {
-  const a = new Audio(`${GAME(SYLVANAS[Math.floor(Math.random() * SYLVANAS.length)])}?lang=${lang}`);
+export function sylvanasLine(lang: "ru" | "en" = "ru", volume = 0.85, who: "sylvanas" | "nathanos" = "sylvanas"): HTMLAudioElement {
+  const xs = who === "nathanos" ? NATHANOS : SYLVANAS;
+  const a = new Audio(`${GAME(xs[Math.floor(Math.random() * xs.length)])}?lang=${lang}`);
   a.volume = volume;
   void a.play().catch(() => {});
   return a; // the throne room follows it to make her speak for as long as the line lasts

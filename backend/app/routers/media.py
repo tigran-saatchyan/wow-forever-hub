@@ -63,6 +63,9 @@ GAME_FILES: dict[int, str] = {
     544832: "audio/ogg", 544831: "audio/ogg",  # banshee wail, banshee death
     567431: "audio/ogg", 567439: "audio/ogg",  # level up, quest complete
     537908: "audio/ogg",  # ethereal window opening: passing through the veil, between pages
+    # Nathanos Blightcaller, her champion: short spoken lines (no battle cries), in both client languages
+    1239071: "audio/ogg", 1239113: "audio/ogg", 1239115: "audio/ogg", 1239117: "audio/ogg",
+    1239131: "audio/ogg", 1239135: "audio/ogg", 1355059: "audio/ogg", 1355061: "audio/ogg",
 }
 GAME_BUILD = "1.60.1.70938"
 CACHE_DIR = Path(tempfile.gettempdir()) / "fh-game-media"

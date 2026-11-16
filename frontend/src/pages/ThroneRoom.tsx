@@ -190,17 +190,21 @@ export function ThroneRoom() {
   const c = q.data;
   const box = useFigure(media(c?.model) ?? null);
   const [w, setW] = useState(() => Math.floor(Math.random() * WORDS.length));
-  // the Dark Lady speaks: her line plays and the model talks until it ends, then stands again
+  // a click on Sylvanas or Nathanos: their line plays and the model talks until it ends, then stands again
   const queen = useRef<Viewer | null>(null);
+  const champion = useRef<Viewer | null>(null);
   const setQueen = useCallback((v: Viewer | null) => { queen.current = v; }, []);
-  const [talking, setTalking] = useState(false);
-  const speak = () => {
-    const a = sylvanasLine(lang);
-    const anim = (name: string) => { try { queen.current?.method?.("setAnimation", [name]); } catch { /* model not ready */ } };
+  const setChampion = useCallback((v: Viewer | null) => { champion.current = v; }, []);
+  const [talking, setTalking] = useState<"sylvanas" | "nathanos" | null>(null);
+  const speak = (who: "sylvanas" | "nathanos") => {
+    if (talking) return; // one voice at a time
+    const v = who === "sylvanas" ? queen : champion;
+    const a = sylvanasLine(lang, 0.85, who);
+    const anim = (name: string) => { try { v.current?.method?.("setAnimation", [name]); } catch { /* model not ready */ } };
     anim(TALK[Math.floor(Math.random() * TALK.length)]);
-    setTalking(true);
+    setTalking(who);
     let done = false;
-    const stop = () => { if (done) return; done = true; anim("Stand"); setTalking(false); };
+    const stop = () => { if (done) return; done = true; anim("Stand"); setTalking(null); };
     a.addEventListener("ended", stop);
     a.addEventListener("error", stop);
     a.addEventListener("pause", stop);
@@ -238,8 +242,14 @@ export function ThroneRoom() {
           <img src="/undercity/banner.webp" alt="" className="tr-banner left" draggable={false} />
           <img src="/undercity/banner.webp" alt="" className="tr-banner right" draggable={false} />
         </Layer>
-        <Layer mx={mx} my={my} depth={18} className={`tr-queen-wrap ${talking ? "talking" : ""}`}><Figure display={SYLVANAS} onReady={setQueen} /></Layer>
-        <Layer mx={mx} my={my} depth={18} className="tr-queen-wrap tr-champion"><Figure display={NATHANOS} /></Layer>
+        <Layer mx={mx} my={my} depth={18} className={`tr-queen-wrap ${talking === "sylvanas" ? "talking" : ""}`}>
+          <Figure display={SYLVANAS} onReady={setQueen} />
+          <button className="tr-figure-hit" onClick={() => speak("sylvanas")} title={t("tr_hear_s")} aria-label={t("tr_hear_s")} />
+        </Layer>
+        <Layer mx={mx} my={my} depth={18} className={`tr-queen-wrap tr-champion ${talking === "nathanos" ? "talking" : ""}`}>
+          <Figure display={NATHANOS} onReady={setChampion} />
+          <button className="tr-figure-hit" onClick={() => speak("nathanos")} title={t("tr_hear_n")} aria-label={t("tr_hear_n")} />
+        </Layer>
 
         {/* the dais: the crest as a sigil in the floor, a pillar of plague light, the servant on it */}
         {/* the dais and the servant stay put: only the hall behind them drifts with the mouse */}
@@ -310,7 +320,6 @@ export function ThroneRoom() {
                 «{WORDS[w][lang]}» <span className="not-italic text-muted">— {t("uc_sylvanas")}</span>
               </motion.p>
             </AnimatePresence>
-            <button className="btn-primary text-sm" onClick={speak} disabled={talking}>☠ {t("uc_voice")}</button>
           </div>
           {c && <Progress c={c} />}
         </div>
