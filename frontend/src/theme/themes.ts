@@ -2,7 +2,7 @@
  * Themes by faction and race. Colors are "R G B" triplets so Tailwind can add alpha.
  * To add a race: copy an entry, change palette, ambient effect and sound voice.
  */
-export type Ambient = "embers" | "mist";
+export type Ambient = "embers" | "mist" | "plague";
 export type Voice = "drums" | "ghost";
 
 export interface Theme {
@@ -12,11 +12,30 @@ export interface Theme {
   colors: Record<"bg" | "panel" | "edge" | "ink" | "muted" | "accent" | "accent2" | "gold" | "good" | "bad", string>;
   glow: string; // css color for glows
   backdrop: string; // css background for the page
+  /** full-screen art behind everything (with parallax), when the theme has one */
+  art?: string;
   ambient: Ambient;
   voice: Voice;
 }
 
 export const THEMES: Theme[] = [
+  {
+    // The Undercity: bronze and black stone, the green light of the plague, the violet haze of the banshees.
+    id: "undercity",
+    faction: "horde",
+    name: { ru: "Подгород", en: "Undercity" },
+    colors: {
+      bg: "5 9 9", panel: "12 18 18", edge: "62 84 72", ink: "222 234 222", muted: "134 156 144",
+      accent: "116 214 84", accent2: "168 108 232", gold: "205 176 112", good: "126 226 96", bad: "232 84 120",
+    },
+    glow: "rgba(116, 214, 84, .5)",
+    backdrop:
+      "radial-gradient(1200px 700px at 50% 120%, rgba(90,190,70,.16), transparent 60%)," +
+      "radial-gradient(900px 600px at 0% 0%, rgba(140,90,210,.14), transparent 60%), #050909",
+    art: "/undercity/lordaeron.webp",
+    ambient: "plague",
+    voice: "ghost",
+  },
   {
     id: "horde",
     faction: "horde",
@@ -32,21 +51,7 @@ export const THEMES: Theme[] = [
     ambient: "embers",
     voice: "drums",
   },
-  {
-    id: "undead",
-    faction: "horde",
-    name: { ru: "Нежить", en: "Undead" },
-    colors: {
-      bg: "8 10 12", panel: "18 22 24", edge: "58 72 66", ink: "222 230 220", muted: "136 152 142",
-      accent: "122 196 96", accent2: "150 110 200", gold: "200 190 140", good: "140 220 110", bad: "220 80 110",
-    },
-    glow: "rgba(130, 210, 100, .45)",
-    backdrop:
-      "radial-gradient(1000px 600px at 20% -10%, rgba(80,140,70,.22), transparent 60%)," +
-      "radial-gradient(900px 600px at 90% 110%, rgba(100,60,150,.25), transparent 60%), #080a0c",
-    ambient: "mist",
-    voice: "ghost",
-  },
 ];
 
-export const themeById = (id: string) => THEMES.find((t) => t.id === id) ?? THEMES[0];
+/** "undead" was the old name of the Forsaken theme: it opens the Undercity now. */
+export const themeById = (id: string) => THEMES.find((t) => t.id === (id === "undead" ? "undercity" : id)) ?? THEMES[0];

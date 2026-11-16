@@ -5,10 +5,13 @@ and character renders are served from our own origin. Only Blizzard and Wowhead 
 allowed: this is not an open proxy.
 """
 
+import tempfile
 from collections import OrderedDict
+from pathlib import Path
 from urllib.parse import urlparse
 
 from fastapi import APIRouter, HTTPException, Response
+from fastapi.responses import FileResponse
 
 from ..auth import CurrentUser
 from ..bnet import client
@@ -44,3 +47,38 @@ async def media(u: str, _: CurrentUser):
     else:
         _cache.move_to_end(u)
     return Response(hit[0], media_type=hit[1], headers={"Cache-Control": "private, max-age=604800"})
+
+
+# ---------- game sounds from the client files (wago.tools), by an allow-list ----------
+# Only these files can be asked for, so this is not a way to pull anything from the client.
+GAME_FILES: dict[int, str] = {
+    8181003: "audio/mpeg", 8181005: "audio/mpeg", 8181007: "audio/mpeg",  # Forever: Undercity music
+    8181009: "audio/mpeg",  # Forever: Undercity intro moment
+    537437: "audio/ogg", 537439: "audio/ogg",  # Undercity ambience, the throne room
+    561230: "audio/ogg", 561256: "audio/ogg", 561225: "audio/ogg", 561242: "audio/ogg",  # Sylvanas, quest turn-in
+    561241: "audio/ogg", 561268: "audio/ogg", 561231: "audio/ogg",
+    544832: "audio/ogg", 544831: "audio/ogg",  # banshee wail, banshee death
+    567431: "audio/ogg", 567439: "audio/ogg",  # level up, quest complete
+}
+GAME_BUILD = "1.60.1.70938"
+CACHE_DIR = Path(tempfile.gettempdir()) / "fh-game-media"
+
+
+@router.get("/game/{fdid}")
+async def game_file(fdid: int, _: CurrentUser):
+    mime = GAME_FILES.get(fdid)
+    if not mime:
+        raise HTTPException(404, "not an allowed file")
+    path = CACHE_DIR / f"{fdid}"
+    if not path.is_file():
+        try:
+            r = await client().http.get(f"https://wago.tools/api/casc/{fdid}?version={GAME_BUILD}", timeout=60)
+        except Exception as e:  # noqa: BLE001
+            raise HTTPException(502, "file unavailable") from e
+        if r.status_code != 200 or len(r.content) < 64:
+            raise HTTPException(502, "file unavailable")
+        CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix(".part")
+        tmp.write_bytes(r.content)
+        tmp.replace(path)
+    return FileResponse(path, media_type=mime, headers={"Cache-Control": "private, max-age=2592000"})

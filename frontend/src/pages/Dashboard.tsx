@@ -3,7 +3,9 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useIndex, useLive } from "../lib/gameData";
 import { fmtDate, useI18n, type Key } from "../lib/i18n";
 import { computeState, launchMs, nextReset, type ServerState } from "../lib/status";
+import { useTheme } from "../theme/ThemeProvider";
 import { ApiPanel, MyCharacters } from "./dashboard/ApiPanel";
+import { Throne } from "./dashboard/Throne";
 
 function useNow(ms = 30e3) {
   const [now, setNow] = useState(Date.now());
@@ -34,6 +36,7 @@ const DOT: Record<ServerState["k"], string> = {
 
 export function Dashboard() {
   const { t, lang } = useI18n();
+  const { theme } = useTheme();
   const { status: st, news, connected } = useLive();
   const idx = useIndex();
   const now = useNow();
@@ -59,6 +62,7 @@ export function Dashboard() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-3">
+      {theme.id === "undercity" && <Throne />}
       <Panel title={t("st_" + s.k as Key)} className="lg:col-span-2">
         <div className="flex items-start gap-3">
           <span className={`dot mt-1.5 ${DOT[s.k]}`} />

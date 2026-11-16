@@ -142,7 +142,7 @@ function bank(theme: string): Promise<Bank> {
       const out: Bank = {};
       await Promise.all(Object.entries(files).map(async ([cue, f]) => {
         try {
-          const buf = await (await fetch(base + f)).arrayBuffer();
+          const buf = await (await fetch(f.startsWith("/") ? f : base + f)).arrayBuffer();
           out[cue as Cue] = await ac().decodeAudioData(buf);
         } catch { /* keep the synthesized one */ }
       }));

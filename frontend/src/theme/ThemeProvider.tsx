@@ -13,7 +13,7 @@ interface Ctx {
 const ThemeCtx = createContext<Ctx>(null!);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [id, setId] = useState(() => store.get("theme", "undead"));
+  const [id, setId] = useState(() => store.get("theme", "undercity"));
   const [sound, setSoundState] = useState(() => store.get("sound", false)); // off until the user turns it on
   const theme = themeById(id);
 

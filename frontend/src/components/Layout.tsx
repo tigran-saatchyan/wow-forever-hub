@@ -1,9 +1,10 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import { useLogout, useMe } from "../lib/auth";
 import { useIndex } from "../lib/gameData";
 import { LANGS, useI18n } from "../lib/i18n";
 import { Ambient } from "../theme/Ambient";
+import { musicPlaying, startMusic, stopMusic } from "../theme/music";
 import { THEMES } from "../theme/themes";
 import { useTheme } from "../theme/ThemeProvider";
 
@@ -22,11 +23,16 @@ export function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen">
       <Ambient />
-      <header className="sticky top-0 z-30 border-b border-edge/60 bg-bg/80 backdrop-blur">
+      <header className="site-header sticky top-0 z-30 border-b border-edge/60 bg-bg/80 backdrop-blur">
         <div className="flex w-full flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2 lg:px-6">
-          <NavLink to="/" className="flex items-center gap-2" onClick={() => sfx("click")}>
-            <img src="/favicon.svg" alt="" className="h-7 w-7 drop-shadow-[0_0_8px_var(--glow)]" />
-            <span className="font-display text-lg font-bold tracking-widest text-gold">FOREVER HUB</span>
+          <NavLink to="/" className="flex items-center gap-2.5" onClick={() => sfx("click")}>
+            {theme.id === "undercity"
+              ? <img src="/undercity/crest-96.webp" alt="" className="brand-crest h-10 w-10" />
+              : <img src="/favicon.svg" alt="" className="h-7 w-7 drop-shadow-[0_0_8px_var(--glow)]" />}
+            <span className="grid leading-none">
+              <span className="font-display text-lg font-bold tracking-widest text-gold">FOREVER HUB</span>
+              {theme.id === "undercity" && <span className="brand-sub mt-1">{t("uc_sub")}</span>}
+            </span>
           </NavLink>
           {me.data && (
             <nav className="flex flex-wrap gap-1 text-sm">
@@ -51,6 +57,7 @@ export function Layout({ children }: { children: ReactNode }) {
             <button className="btn px-2" onClick={() => setSound(!sound)} title={sound ? t("sound_on") : t("sound_off")}>
               {sound ? "🔊" : "🔇"}
             </button>
+            {theme.id === "undercity" && <MusicButton />}
             <div className="flex overflow-hidden rounded-md border border-edge">
               {LANGS.map((l) => (
                 <button
@@ -72,5 +79,21 @@ export function Layout({ children }: { children: ReactNode }) {
       </header>
       <main className="w-full px-4 py-6 lg:px-6">{children}</main>
     </div>
+  );
+}
+
+/** Forever's Undercity music: starts only on a click (browsers block sound before one), remembered as a wish. */
+function MusicButton() {
+  const { t } = useI18n();
+  const [on, setOn] = useState(musicPlaying());
+  const toggle = () => {
+    if (on) stopMusic();
+    else startMusic();
+    setOn(!on);
+  };
+  return (
+    <button className="btn px-2" aria-pressed={on} onClick={toggle} title={t(on ? "uc_music_off" : "uc_music_on")}>
+      {on ? "♫" : "♪"}
+    </button>
   );
 }
