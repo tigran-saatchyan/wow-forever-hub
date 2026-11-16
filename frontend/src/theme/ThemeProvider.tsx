@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { store } from "../lib/store";
+import { muteMusic } from "./music";
 import { play, type Cue } from "./sound";
 import { themeById, type Theme } from "./themes";
 
@@ -33,7 +34,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       sound,
       sfx,
       setTheme: (t) => (store.set("theme", t), setId(t)),
-      setSound: (on) => (store.set("sound", on), setSoundState(on)),
+      setSound: (on) => (store.set("sound", on), setSoundState(on), muteMusic(!on)),
     }),
     [theme, sound, sfx],
   );

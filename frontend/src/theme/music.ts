@@ -85,6 +85,19 @@ function load(index: number, autoplay: boolean) {
   }
 }
 
+let resumeOnUnmute = false;
+
+/** The sound switch in the header: off pauses the music (and remembers it was playing), on resumes it. */
+export function muteMusic(muted: boolean) {
+  if (muted) {
+    resumeOnUnmute = state.playing;
+    if (state.playing) player.pause();
+  } else if (resumeOnUnmute) {
+    resumeOnUnmute = false;
+    player.play();
+  }
+}
+
 export const player = {
   play() {
     const a = el();
@@ -144,3 +157,4 @@ export function sylvanasLine(lang: "ru" | "en" = "ru", volume = 0.85) {
   a.volume = volume;
   void a.play().catch(() => {});
 }
+

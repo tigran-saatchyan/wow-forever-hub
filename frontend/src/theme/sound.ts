@@ -12,7 +12,7 @@
  */
 import type { Voice } from "./themes";
 
-export type Cue = "click" | "add" | "remove" | "max" | "error" | "open";
+export type Cue = "click" | "add" | "remove" | "max" | "error" | "open" | "nav";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -112,6 +112,7 @@ function bell(freq: number, when = 0, gain = 0.12, dur = 1.4) {
 const VOICES: Record<Voice, Record<Cue, () => void>> = {
   drums: {
     click: () => (hiss(0.05, 0.25, "bandpass", 2200, 2), tone(180, 0.06, "triangle", 0.12, 0, 0.6)),
+    nav: () => drum(0, 0.9, 0.35),
     add: () => drum(0, 1, 0.55),
     remove: () => (drum(0, 0.75, 0.4), hiss(0.18, 0.12, "lowpass", 600, 0.7, 0.02, 0.5)),
     max: () => (drum(0, 1, 0.6), drum(0.14, 1.12, 0.5), horn([98, 147], 0.9, 0.16)),
@@ -120,6 +121,7 @@ const VOICES: Record<Voice, Record<Cue, () => void>> = {
   },
   ghost: {
     click: () => (hiss(0.12, 0.08, "bandpass", 3200, 6, 0, 0.6), tone(880, 0.08, "sine", 0.04, 0, 0.9)),
+    nav: () => hiss(0.5, 0.07, "bandpass", 900, 3, 0, 2.2),
     add: () => (bell(392, 0, 0.09, 1.1), hiss(0.35, 0.05, "bandpass", 1800, 4, 0.02, 0.5)),
     remove: () => (tone(330, 0.5, "sine", 0.07, 0, 0.6), hiss(0.4, 0.06, "bandpass", 1200, 3, 0, 0.4)),
     max: () => (bell(262, 0, 0.12, 2), bell(311, 0.18, 0.08, 1.8), tone(131, 1.4, "triangle", 0.05, 0.05, 0.98)),

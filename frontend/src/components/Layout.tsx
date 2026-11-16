@@ -25,7 +25,7 @@ export function Layout({ children }: { children: ReactNode }) {
       <Ambient />
       <header className="site-header sticky top-0 z-30 border-b border-edge/60 bg-bg/80 backdrop-blur">
         <div className="flex w-full flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2 lg:px-6">
-          <NavLink to="/" className="flex items-center gap-2.5" onClick={() => sfx("click")}>
+          <NavLink to="/" className="flex items-center gap-2.5" onClick={() => sfx("nav")}>
             {theme.id === "undercity"
               ? <img src="/undercity/crest-96.webp" alt="" className="brand-crest h-10 w-10" />
               : <img src="/favicon.svg" alt="" className="h-7 w-7 drop-shadow-[0_0_8px_var(--glow)]" />}
@@ -36,10 +36,10 @@ export function Layout({ children }: { children: ReactNode }) {
           </NavLink>
           {me.data && (
             <nav className="flex flex-wrap gap-1 text-sm">
-              <NavLink to="/" end className={link} onClick={() => sfx("click")}>{t("nav_dashboard")}</NavLink>
-              <NavLink to="/talents" className={link} onClick={() => sfx("click")}>{t("nav_talents")}</NavLink>
-              <NavLink to="/characters" className={link} onClick={() => sfx("click")}>{t("nav_chars")}</NavLink>
-              <NavLink to="/market" className={link} onClick={() => sfx("click")}>{t("nav_market")}</NavLink>
+              <NavLink to="/" end className={link} onClick={() => sfx("nav")}>{t("nav_dashboard")}</NavLink>
+              <NavLink to="/talents" className={link} onClick={() => sfx("nav")}>{t("nav_talents")}</NavLink>
+              <NavLink to="/characters" className={link} onClick={() => sfx("nav")}>{t("nav_chars")}</NavLink>
+              <NavLink to="/market" className={link} onClick={() => sfx("nav")}>{t("nav_market")}</NavLink>
             </nav>
           )}
           <div className="ml-auto flex flex-wrap items-center gap-2 text-sm">

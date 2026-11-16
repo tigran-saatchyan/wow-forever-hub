@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "../lib/i18n";
 import { PLAYLIST, player, usePlayer, type Repeat } from "../theme/music";
+import { useTheme } from "../theme/ThemeProvider";
 
 const fmt = (s: number) => (isFinite(s) && s > 0 ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}` : "0:00");
 const REPEAT_NEXT: Record<Repeat, Repeat> = { all: "one", one: "shuffle", shuffle: "all" };
@@ -11,6 +12,12 @@ const REPEAT_ICON: Record<Repeat, string> = { all: "🔁", one: "🔂", shuffle:
 export function MusicPlayer() {
   const { t, lang } = useI18n();
   const st = usePlayer();
+  const { sound, setSound } = useTheme();
+  // pressing play while all sound is off turns the sound on: the click is the wish to hear
+  const play = (f: () => void) => () => {
+    if (!sound) setSound(true);
+    f();
+  };
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   const cur = PLAYLIST[st.index];
@@ -47,11 +54,11 @@ export function MusicPlayer() {
               />
               <div className="flex justify-between font-mono text-[11px] text-muted"><span>{fmt(st.time)}</span><span>{fmt(st.duration)}</span></div>
               <div className="mt-2 flex items-center gap-1.5">
-                <button className="btn px-2.5" onClick={player.prev} aria-label={t("mp_prev")} title={t("mp_prev")}>⏮</button>
-                <button className="btn-primary px-3.5" onClick={player.toggle} aria-label={st.playing ? t("mp_pause") : t("mp_play")}>
+                <button className="btn px-2.5" onClick={play(player.prev)} aria-label={t("mp_prev")} title={t("mp_prev")}>⏮</button>
+                <button className="btn-primary px-3.5" onClick={st.playing ? player.toggle : play(player.toggle)} aria-label={st.playing ? t("mp_pause") : t("mp_play")}>
                   {st.playing ? "⏸" : "▶"}
                 </button>
-                <button className="btn px-2.5" onClick={player.next} aria-label={t("mp_next")} title={t("mp_next")}>⏭</button>
+                <button className="btn px-2.5" onClick={play(player.next)} aria-label={t("mp_next")} title={t("mp_next")}>⏭</button>
                 <button className="btn px-2.5" onClick={() => player.setRepeat(REPEAT_NEXT[st.repeat])} title={t(`mp_r_${st.repeat}`)} aria-label={t(`mp_r_${st.repeat}`)}>
                   {REPEAT_ICON[st.repeat]}
                 </button>
@@ -66,7 +73,7 @@ export function MusicPlayer() {
                 <li key={tr.id}>
                   <button
                     className={`flex w-full items-center gap-2 px-3 py-1.5 text-left transition hover:bg-accent/10 ${i === st.index ? "text-gold" : ""}`}
-                    onClick={() => player.pick(i)}
+                    onClick={play(() => player.pick(i))}
                   >
                     <span className="w-4 text-center text-xs">{i === st.index && st.playing ? "♪" : i + 1}</span>
                     <span className="flex-1 truncate">{tr[lang]}</span>

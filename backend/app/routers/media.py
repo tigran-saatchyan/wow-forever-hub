@@ -61,6 +61,7 @@ GAME_FILES: dict[int, str] = {
     561241: "audio/ogg", 561268: "audio/ogg", 561231: "audio/ogg",
     544832: "audio/ogg", 544831: "audio/ogg",  # banshee wail, banshee death
     567431: "audio/ogg", 567439: "audio/ogg",  # level up, quest complete
+    537908: "audio/ogg",  # ethereal window opening: passing through the veil, between pages
 }
 GAME_BUILD = "1.60.1.70938"
 CACHE_DIR = Path(tempfile.gettempdir()) / "fh-game-media"
