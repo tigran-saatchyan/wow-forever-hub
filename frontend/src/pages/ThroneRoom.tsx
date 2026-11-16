@@ -229,7 +229,6 @@ export function ThroneRoom() {
         <Layer mx={mx} my={my} depth={12} className="tr-clouds"><i /><i /></Layer>
         <div className="tr-shafts" aria-hidden><i /><i /><i /></div>
         <Layer mx={mx} my={my} depth={16} className="tr-throne-glow" />
-        <Layer mx={mx} my={my} depth={18} className={`tr-queen-wrap ${talking ? "talking" : ""}`}><Sylvanas onReady={setQueen} /></Layer>
         <Layer mx={mx} my={my} depth={22} className="tr-banners">
           <img src="/undercity/banner.webp" alt="" className="tr-banner left" draggable={false} />
           <img src="/undercity/banner.webp" alt="" className="tr-banner right" draggable={false} />
@@ -238,6 +237,7 @@ export function ThroneRoom() {
           <Brazier side="left" />
           <Brazier side="right" />
         </Layer>
+        <Layer mx={mx} my={my} depth={18} className={`tr-queen-wrap ${talking ? "talking" : ""}`}><Sylvanas onReady={setQueen} /></Layer>
 
         {/* the dais: the crest as a sigil in the floor, a pillar of plague light, the servant on it */}
         {/* the dais and the servant stay put: only the hall behind them drifts with the mouse */}
