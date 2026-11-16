@@ -1081,6 +1081,20 @@ button.order-line:hover { @apply text-gold; }
 
 /* the dais */
 .tr-dais { position: absolute; left: 50%; bottom: 4%; width: 0; height: 0; }
+.tr-sigil {
+  position: absolute; left: -210px; top: -232px; width: 420px; height: 420px;
+  transform: perspective(700px) rotateX(74deg);
+  filter: drop-shadow(0 0 26px rgb(116 214 84 / 0.8));
+}
+.tr-sigil img { width: 100%; height: 100%; opacity: 0.55; animation: tr-spin 60s linear infinite; mix-blend-mode: screen; }
+.tr-sigil::before {
+  content: ""; position: absolute; inset: -6%; border-radius: 50%;
+  border: 2px solid rgb(140 240 106 / 0.5);
+  box-shadow: 0 0 30px rgb(116 214 84 / 0.6), inset 0 0 40px rgb(116 214 84 / 0.4);
+  animation: tr-pulse 4s ease-in-out infinite;
+}
+@keyframes tr-spin { to { transform: rotate(360deg); } }
+@keyframes tr-pulse { 0%, 100% { opacity: 0.5; transform: scale(0.98); } 50% { opacity: 1; transform: scale(1.03); } }
 .tr-pillar {
   position: absolute; left: -110px; bottom: 30px; width: 220px; height: 70vh; max-height: 640px;
   background: linear-gradient(0deg, rgb(140 240 106 / 0.28), rgb(140 240 106 / 0.06) 55%, transparent);
@@ -1197,6 +1211,6 @@ button.order-line:hover { @apply text-gold; }
 @media (prefers-reduced-motion: reduce) { .tr-bar .fill::after { animation: none; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .tr-clouds i, .tr-shafts i, .tr-throne-glow, .tr-banner, .tr-pillar,
+  .tr-clouds i, .tr-shafts i, .tr-throne-glow, .tr-banner, .tr-sigil img, .tr-sigil::before, .tr-pillar,
   .tr-hero-float, .tr-hero-ghost, .tr-wisps i, .tr-mist i { animation: none; }
 }

@@ -213,6 +213,7 @@ export function ThroneRoom() {
         {/* the scene: the dais and the servant fill what the name plate below leaves */}
         <div className="tr-scene">
         <div className="tr-dais" aria-hidden>
+          <div className="tr-sigil"><img src="/undercity/crest.webp" alt="" draggable={false} /></div>
           <div className="tr-pillar" />
         </div>
         <div className="tr-hero-wrap">
