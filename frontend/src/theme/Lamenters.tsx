@@ -10,9 +10,9 @@ import { PLAYLIST, usePlayer } from "./music";
 
 const LAMENT = 53221;
 const DISPLAY = 915; // the pale banshee: as the music box shows her, see-through in a blue light
-const CONTENT = "/api/media/zam/live/";
+export const CONTENT = "/api/media/zam/live/";
 
-type Viewer = { destroy?: () => void };
+export type Viewer = { destroy?: () => void };
 declare global {
   interface Window {
     ZamModelViewer?: new (o: unknown) => Viewer;
@@ -34,7 +34,7 @@ function script(src: string) {
   });
 }
 /** jQuery (the viewer needs it) and the viewer itself, once. */
-function loadViewer() {
+export function loadViewer() {
   if (!loading) {
     window.CONTENT_PATH = CONTENT;
     window.WH = window.WH || { debug: () => {}, defaultAnimation: "Stand", WebP: { getImageExtension: () => ".webp" } };

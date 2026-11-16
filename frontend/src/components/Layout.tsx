@@ -38,7 +38,8 @@ export function Layout({ children }: { children: ReactNode }) {
           </NavLink>
           {me.data && (
             <nav className="flex flex-wrap gap-1 text-sm">
-              <NavLink to="/" end className={link} onClick={() => sfx("nav")}>{t("nav_dashboard")}</NavLink>
+              <NavLink to="/" end className={link} onClick={() => sfx("nav")}>{t("nav_throne")}</NavLink>
+              <NavLink to="/news" className={link} onClick={() => sfx("nav")}>{t("nav_news")}</NavLink>
               <NavLink to="/talents" className={link} onClick={() => sfx("nav")}>{t("nav_talents")}</NavLink>
               <NavLink to="/characters" className={link} onClick={() => sfx("nav")}>{t("nav_chars")}</NavLink>
               <NavLink to="/market" className={link} onClick={() => sfx("nav")}>{t("nav_market")}</NavLink>

@@ -8,6 +8,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { Login } from "./pages/Login";
 import { Market } from "./pages/Market";
 import { Talents } from "./pages/Talents";
+import { ThroneRoom } from "./pages/ThroneRoom";
 
 /** The whole hub is private for now: only the superadmin (and later guild members) can open it. */
 function Private({ children }: { children: JSX.Element }) {
@@ -44,7 +45,8 @@ export function App() {
         >
           <Routes location={loc}>
             <Route path="/login" element={<Login />} />
-            <Route path="/" element={<Private><Dashboard /></Private>} />
+            <Route path="/" element={<Private><ThroneRoom /></Private>} />
+            <Route path="/news" element={<Private><Dashboard /></Private>} />
             <Route path="/talents" element={<Private><Talents /></Private>} />
             <Route path="/characters" element={<Private><Characters /></Private>} />
             <Route path="/market" element={<Private><Market /></Private>} />
