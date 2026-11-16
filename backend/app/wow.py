@@ -20,6 +20,30 @@ def _get(d: Any, *keys: str, default: Any = None) -> Any:
     return d
 
 
+SURNAME_KEYS = ("surname", "last_name", "lastname", "family_name", "familyname", "second_name", "character_surname")
+
+
+def surname(p: Any, lang: str | None = None, depth: int = 0) -> str | None:
+    """Forever's character surname, wherever Blizzard puts it: a top-level field (plain or localized),
+    or one level down (e.g. inside "name" or "character"). Not documented yet, so several names are tried."""
+    if not isinstance(p, dict) or depth > 2:
+        return None
+    for k in SURNAME_KEYS:
+        v = p.get(k)
+        s = v if isinstance(v, str) else name_of(v, lang) if isinstance(v, dict) else None
+        if s and s.strip():
+            return s.strip()
+    for k, v in p.items():
+        if k in ("_links", "guild", "realm", "race", "character_class", "playable_class", "playable_race",
+                 "faction", "gender", "active_spec", "covenant_progress"):
+            continue
+        if isinstance(v, dict):
+            s = surname(v, lang, depth + 1)
+            if s:
+                return s
+    return None
+
+
 def character_summary(p: dict, lang: str | None = None) -> dict:
     """Profile summary: name, level, class, race, guild (with its API link for the roster)."""
     guild = p.get("guild") or {}
@@ -243,6 +267,7 @@ def roster(r: dict, lang: str | None = None) -> list[dict]:
         ch = m.get("character") or {}
         out.append({
             "name": name_of(ch.get("name"), lang),
+            "surname": surname(ch, lang),
             "level": ch.get("level"),
             "classId": _get(ch, "playable_class", "id"),
             "raceId": _get(ch, "playable_race", "id"),
