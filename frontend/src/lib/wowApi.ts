@@ -81,6 +81,7 @@ export const wowApi = {
   account: () => req<{ battletag?: string; characters?: number; linked?: string; error?: string } | null>("/api/bnet/account"),
   characters: () => req<Character[]>("/api/characters"),
   collection: <T,>(kind: string, lang: Lang) => req<T[]>(`/api/collections/${kind}?lang=${lang}`),
+  profCategories: (line: number, lang: Lang) => req<{ order: string[]; of: Record<string, number> }>(`/api/professions/${line}/categories?lang=${lang}`),
   quest: (id: number, lang: Lang) => req<QuestInfo>(`/api/quests/${id}?lang=${lang}`),
   character: (id: number) => req<Character>(`/api/characters/${id}`),
   addCharacter: (b: { name: string; region: Region }) => req<Character>("/api/characters", { method: "POST", body: JSON.stringify(b) }),

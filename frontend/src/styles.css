@@ -1242,3 +1242,9 @@ button.order-line:hover { @apply text-gold; }
 .model3d { position: relative; opacity: 0; transition: opacity 0.8s; }
 .model3d.on { opacity: 1; }
 .model3d canvas { background: transparent !important; }
+
+/* a section of a profession, as Blizzard names it (Elixirs, Potions, Transmutes…) */
+.pf-section {
+  padding: 14px 6px 4px; font-family: var(--font-display, inherit); font-size: 13px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: rgb(var(--gold)); border-bottom: 1px solid rgb(var(--gold) / 0.25);
+}

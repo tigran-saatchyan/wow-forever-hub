@@ -6,7 +6,7 @@
  * (stored on the server per character); when the API ever lists them, those count too.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { SourcePanel } from "../../components/SourcePanel";
 import { ItemHover } from "../../components/Wow";
 import { useMe } from "../../lib/auth";
@@ -110,6 +110,8 @@ type Range = "mine" | "all";
 function Recipes({ line, own }: { line: number; own: CharProfession }) {
   const { t, lang } = useI18n();
   const q = useQuery({ queryKey: ["profession", line, lang], queryFn: () => wowApi.profession(line, lang), staleTime: Infinity });
+  // Blizzard's own sections of the profession; without them the list stays one table
+  const cats = useQuery({ queryKey: ["prof-cats", line, lang], queryFn: () => wowApi.profCategories(line, lang), staleTime: 3600e3, retry: false });
   const [showKnown, setShowKnown] = useState(() => store.get<boolean>("pfKnown", true));
   const [showNew, setShowNew] = useState(() => store.get<boolean>("pfNew", true));
   const [range, setRange] = useState<Range>(() => store.get<Range>("pfRange", "mine"));
@@ -124,11 +126,13 @@ function Recipes({ line, own }: { line: number; own: CharProfession }) {
   if (!q.data?.recipes) return <p className="text-sm text-muted">{q.data?.status === "building" ? t("pf_building") : "…"}</p>;
   const all = q.data.recipes;
   const inRange = (r: Recipe) => range === "all" || skill == null || need(r).v <= skill;
+  const catOf = (r: Recipe) => cats.data?.of[String(r.id)] ?? 999;
   const rows = all.filter((r) => {
     if (search && !(r.name + " " + (r.item?.name || "")).toLowerCase().includes(search.toLowerCase())) return false;
     if (!inRange(r)) return false;
     return isKnown(r) ? showKnown : showNew;
   });
+  if (cats.data?.order.length) rows.sort((a, b) => catOf(a) - catOf(b)); // stable: skill order within a section
   const learnable = all.filter((r) => inRange(r) && !isKnown(r));
   const toggle = (k: "pfKnown" | "pfNew", v: boolean, set: (v: boolean) => void) => (store.set(k, v), set(v));
   const nKnown = all.filter(isKnown).length;
@@ -175,12 +179,16 @@ function Recipes({ line, own }: { line: number; own: CharProfession }) {
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => {
+            {rows.map((r, i) => {
               const d = difficulty(r, skill);
               const known = isKnown(r);
               const n = need(r);
+              const sec = cats.data?.order.length && (i === 0 || catOf(rows[i - 1]) !== catOf(r))
+                ? (cats.data.order[catOf(r)] ?? t("pf_other")) : null;
               return (
-                <tr key={r.id} className={`border-t border-edge/40 align-top ${known ? "bg-good/[0.06]" : ""}`}>
+                <Fragment key={r.id}>
+                {sec && <tr><td colSpan={4} className="pf-section">{sec}</td></tr>}
+                <tr className={`border-t border-edge/40 align-top ${known ? "bg-good/[0.06]" : ""}`}>
                   <td className="whitespace-nowrap p-1.5 font-mono text-xs" title={t(d.key)}>
                     <span style={{ color: "#ff8040" }} title={n.exact ? t("pf_need") : t("pf_need_est")}>{n.exact ? n.v : `≈${n.v}`}</span>{" "}
                     <span style={{ color: "#ffff00" }}>{r.yellow ?? "—"}</span>{" "}
@@ -202,6 +210,7 @@ function Recipes({ line, own }: { line: number; own: CharProfession }) {
                   </td>
                   <td className="p-1.5 text-xs">{source(r)}</td>
                 </tr>
+                </Fragment>
               );
             })}
           </tbody>

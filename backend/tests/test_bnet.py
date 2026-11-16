@@ -146,6 +146,12 @@ def handler(req: httpx.Request) -> httpx.Response:
             "creature_displays": [{"id": 10670 + mid}], "source": {"type": "VENDOR", "name": "Vendor"},
             "requirements": {"faction": {"type": "HORDE"}} if mid == 1 else {},
             "should_exclude_if_uncollected": mid == 2})
+    if p == "/data/wow/profession/171":
+        return httpx.Response(200, json={"id": 171, "skill_tiers": [{"id": 2937, "name": "Alchemy"}]})
+    if p == "/data/wow/profession/171/skill-tier/2937":
+        return httpx.Response(200, json={"categories": [
+            {"name": "Elixirs", "recipes": [{"id": 1378, "name": "Elixir of Lion's Strength"}]},
+            {"name": "Potions", "recipes": [{"id": 2329, "name": "Minor Healing Potion"}, {"id": 1378}]}]})
     if p == "/data/wow/quest/783":
         return httpx.Response(200, json={"id": 783, "title": "A Threat Within", "area": {"name": "Northshire", "id": 9},
             "description": "Speak to Marshal McBride.", "requirements": {"min_character_level": 1},
@@ -583,3 +589,10 @@ def test_collection_index(client):
     assert len(client.get("/api/collections/mounts?lang=en").json()) == 3
     assert len(CALLS) == n  # kept for a week
     assert client.get("/api/collections/nope").status_code == 404
+
+
+
+def test_profession_sections(client):
+    d = client.get("/api/professions/171/categories?lang=en").json()
+    assert d == {"order": ["Elixirs", "Potions"], "of": {"1378": 0, "2329": 1}}  # a recipe keeps its first section
+    assert client.get("/api/professions/182/categories?lang=en").json() == {"order": [], "of": {}}  # none: gathering

@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import time
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -9,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import recipes
 from ..auth import AdminUser, CurrentUser
-from ..bnet import current_version
+from ..bnet import BnetError, client, current_version, name_of
 from ..config import get_settings
 from ..db import SessionLocal, Setting, get_session, utcnow
 
@@ -77,6 +78,44 @@ async def index(_: CurrentUser):
     if not st:
         _start(build)
     return {"status": "building", "build": build}
+
+
+CAT_TTL = 7 * 24 * 3600
+
+
+@router.get("/{line}/categories")
+async def categories(line: int, _: CurrentUser, session: Session, lang: str = "ru"):
+    """Blizzard's own sections of a profession ("Elixirs", "Potions", "Transmutes", …): which recipe sits where.
+
+    Recipe ids are the same ones the character profile's known_recipes uses, so they match the reference.
+    """
+    lang = "ru" if lang == "ru" else "en"
+    key = f"pcat:{line}:{lang}"
+    row = await session.get(Setting, key)
+    if row and time.time() - row.value.get("t", 0) < CAT_TTL:
+        return row.value["data"]
+    try:
+        prof = await client().get(f"/data/wow/profession/{line}", "static", lang=lang)
+        order: list[str] = []
+        of: dict[str, int] = {}
+        for tier in prof.get("skill_tiers") or []:
+            st = await client().get(f"/data/wow/profession/{line}/skill-tier/{tier.get('id')}", "static", lang=lang)
+            for c in st.get("categories") or []:
+                name = name_of(c, lang)
+                if name not in order:
+                    order.append(name)
+                for r in c.get("recipes") or []:
+                    of.setdefault(str(r.get("id")), order.index(name))
+    except BnetError as e:
+        if row:
+            return row.value["data"]
+        if e.status == 404:
+            return {"order": [], "of": {}}  # gathering skills have no sections
+        raise HTTPException(502, f"Blizzard API: {e}") from e
+    data = {"order": order, "of": of}
+    await session.merge(Setting(key=key, value={"t": time.time(), "data": data}))
+    await session.commit()
+    return data
 
 
 @router.get("/{line}")
