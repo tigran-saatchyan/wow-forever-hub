@@ -18,7 +18,7 @@ import { REP_COLORS, type Rep } from "./characters/ArmoryTabs";
 import { CONTENT, loadViewer, type Viewer } from "../theme/Lamenters";
 import { sylvanasLine } from "../theme/music";
 import { Professions } from "./characters/CharacterSheet";
-import { Brazier, WORDS } from "./dashboard/Throne";
+import { WORDS } from "./dashboard/Throne";
 import { Orders } from "./dashboard/Orders";
 
 // the armory's order: the left and right columns of the character window, weapons below
@@ -59,11 +59,16 @@ function useFigure(src: string | null): Box | null {
   return box;
 }
 
-/** The Banshee Queen herself at the throne: the game's model (creature 10181's line, display 28213), by Wowhead's viewer. */
+/**
+ * Figures of the hall in the game's own models, drawn by Wowhead's viewer: the Banshee Queen (display 28213)
+ * at the left and her champion Nathanos Blightcaller (display 66644) at the right.
+ */
 const SYLVANAS = 28213;
+const NATHANOS = 66644;
+const noop = () => {};
 // her talk animations in the game's model; one of them each time she speaks
 const TALK = ["EmoteTalk", "EmoteTalkExclamation", "EmoteTalk"];
-function Sylvanas({ onReady }: { onReady: (v: Viewer | null) => void }) {
+function Figure({ display, onReady = noop }: { display: number; onReady?: (v: Viewer | null) => void }) {
   const box = useRef<HTMLDivElement>(null);
   const [shown, setShown] = useState(false);
   useEffect(() => {
@@ -75,7 +80,7 @@ function Sylvanas({ onReady }: { onReady: (v: Viewer | null) => void }) {
       const $ = window.jQuery as (e: Element) => unknown;
       viewer = new window.ZamModelViewer({
         type: 2, contentPath: CONTENT, container: $(el), aspect: el.clientWidth / el.clientHeight, hd: true,
-        models: { type: 8, id: SYLVANAS },
+        models: { type: 8, id: display },
       });
       onReady(viewer);
       setTimeout(() => !gone && setShown(true), 900); // let the model load before she fades in
@@ -85,7 +90,7 @@ function Sylvanas({ onReady }: { onReady: (v: Viewer | null) => void }) {
       onReady(null);
       try { viewer?.destroy?.(); } catch { /* not built yet */ }
     };
-  }, [onReady]);
+  }, [display, onReady]);
   return <div ref={box} className={`tr-queen ${shown ? "on" : ""}`} aria-hidden />;
 }
 
@@ -233,11 +238,8 @@ export function ThroneRoom() {
           <img src="/undercity/banner.webp" alt="" className="tr-banner left" draggable={false} />
           <img src="/undercity/banner.webp" alt="" className="tr-banner right" draggable={false} />
         </Layer>
-        <Layer mx={mx} my={my} depth={28} className="tr-braziers">
-          <Brazier side="left" />
-          <Brazier side="right" />
-        </Layer>
-        <Layer mx={mx} my={my} depth={18} className={`tr-queen-wrap ${talking ? "talking" : ""}`}><Sylvanas onReady={setQueen} /></Layer>
+        <Layer mx={mx} my={my} depth={18} className={`tr-queen-wrap ${talking ? "talking" : ""}`}><Figure display={SYLVANAS} onReady={setQueen} /></Layer>
+        <Layer mx={mx} my={my} depth={18} className="tr-queen-wrap tr-champion"><Figure display={NATHANOS} /></Layer>
 
         {/* the dais: the crest as a sigil in the floor, a pillar of plague light, the servant on it */}
         {/* the dais and the servant stay put: only the hall behind them drifts with the mouse */}
