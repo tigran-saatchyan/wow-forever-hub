@@ -609,3 +609,37 @@ def test_xp_log_points():
     assert len(xp_log(log, {"level": 32, "xp": 100}, 1000 + 7 * 3600)) == 2  # still a point every 6 hours
     assert xp_log(log, {"level": 33, "xp": 5}, 3000)[-1] == {"t": 3000, "l": 33, "x": 5}
     assert xp_log(log, {"level": None}, 4000) == log
+
+
+def test_craft_overview_and_plan(client, monkeypatch):
+    import time as _t
+
+    from app import recipes
+    from app.routers import craft as craft_routes
+
+    async def fake_fetch(build, http=None):
+        return TABLES
+
+    async def fake_prices(session):
+        return ({2996: {"ah": 100, "qty": 40}, 2320: {"ah": 50, "qty": 9}, 2570: {"ah": 400, "qty": 3}},
+                {"configured": True, "items": 3})
+
+    monkeypatch.setattr(recipes, "fetch_tables", fake_fetch)
+    monkeypatch.setattr(craft_routes, "_prices", fake_prices)
+    for _ in range(50):
+        if client.get("/api/professions").json()["status"] == "ready":
+            break
+        _t.sleep(0.05)
+    c = client.post("/api/characters", json={"name": "Joe Gun", "region": "eu"}).json()
+    d = client.get("/api/craft?lang=en").json()
+    assert d["status"] == "ready" and d["market"]["configured"]
+    cloak = next(r for r in d["rows"] if r["name"] == "Linen Cloak" and r["cid"] == c["id"])
+    # bolt 100 + thread 50 = 150; the cloak sells for 400 less 5% = 380
+    assert cloak["cost"] == 150 and cloak["value"] == 380 and cloak["profit"] == 230 and cloak["sale"]["where"] == "ah"
+    assert not cloak["known"] and cloak["color"] == "gray"  # skill 150 is far past the cloak
+    assert {a["id"] for a in d["advice"]} >= {2996, 2570}
+    p = client.get(f"/api/craft/plan?cid={c['id']}&prof=197&target=155&lang=en").json()
+    assert p["skill"] == 150 and p["status"] == "ready"
+    # only the shirt reaches 150..155, and the reference lists no reagents for it: its cost is not known
+    assert p["gaps"] == [150, 151, 152, 153, 154] and not p["steps"]
+    assert client.get(f"/api/craft/plan?cid={c['id']}&prof=171&target=10").status_code == 404

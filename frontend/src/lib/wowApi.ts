@@ -83,6 +83,9 @@ export const wowApi = {
   characters: () => req<Character[]>("/api/characters"),
   collection: <T,>(kind: string, lang: Lang) => req<T[]>(`/api/collections/${kind}?lang=${lang}`),
   profCategories: (line: number, lang: Lang) => req<{ order: string[]; of: Record<string, number> }>(`/api/professions/${line}/categories?lang=${lang}`),
+  craft: <T,>(lang: Lang) => req<T>(`/api/craft?lang=${lang}`),
+  craftPlan: <T,>(cid: number, prof: number, target: number, resale: boolean, lang: Lang) =>
+    req<T>(`/api/craft/plan?cid=${cid}&prof=${prof}&target=${target}&resale=${resale}&lang=${lang}`),
   quest: (id: number, lang: Lang) => req<QuestInfo>(`/api/quests/${id}?lang=${lang}`),
   character: (id: number) => req<Character>(`/api/characters/${id}`),
   addCharacter: (b: { name: string; region: Region }) => req<Character>("/api/characters", { method: "POST", body: JSON.stringify(b) }),

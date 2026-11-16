@@ -35,7 +35,7 @@ export function difficulty(r: Recipe, skill: number | null): { color: string; ke
 }
 
 /** An item by name; names the client tables lack ("#13480") are asked from Blizzard when shown. */
-function Item({ x, count, onOpen }: { x: RefItem; count?: number | null; onOpen?: (x: RefItem) => void }) {
+export function Item({ x, count, onOpen }: { x: RefItem; count?: number | null; onOpen?: (x: RefItem) => void }) {
   const { t, lang } = useI18n();
   const missing = x.name.startsWith("#");
   const q = useItem(missing ? x.id : null, lang);

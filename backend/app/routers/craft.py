@@ -1,0 +1,139 @@
+"""Crafting: what pays across all of a user's characters, where to sell, and how to level a profession.
+
+Prices come from the auction house chosen on the Auction page (its latest snapshot of every item), vendor
+prices from the client (the recipe reference). The arithmetic lives in app/craft.py.
+"""
+
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from .. import craft
+from ..auth import CurrentUser
+from ..db import AhLatest, Character, get_session
+from . import professions as prof_routes
+from .market import _setting
+
+router = APIRouter(prefix="/api/craft", tags=["craft"])
+Session = Annotated[AsyncSession, Depends(get_session)]
+
+
+async def _prices(session: AsyncSession) -> tuple[dict, dict]:
+    """The chosen house's latest prices: item id -> {ah, qty}; and what the page should say about them."""
+    cfg = await _setting(session, "market")
+    state = await _setting(session, "market_state")
+    if not cfg:
+        return {}, {"configured": False}
+    rows = (await session.execute(
+        select(AhLatest.item_id, AhLatest.min_price, AhLatest.quantity)
+        .where(AhLatest.ruleset == cfg["ruleset"], AhLatest.house == cfg["house"])
+    )).all()
+    return ({i: {"ah": p, "qty": q} for i, p, q in rows},
+            {"configured": True, "at": state.get("at"), "items": len(rows), "ok": state.get("ok")})
+
+
+async def _reference() -> dict | None:
+    return await prof_routes._load(prof_routes._build())
+
+
+def _namer(ds: dict, lang: str):
+    items = ds["items"]
+
+    def item(i: int | None) -> dict | None:
+        if not i:
+            return None
+        x = items.get(str(i)) or {}
+        return {"id": i, "name": x.get(lang) or x.get("en") or f"#{i}", "q": x.get("q")}
+
+    return item
+
+
+@router.get("")
+async def overview(user: CurrentUser, session: Session, lang: str = "ru"):
+    """Every recipe each character knows (or can learn at their skill): cost, worth, profit, where to sell;
+    and for every material and product of those professions, auction house or vendor."""
+    lang = "ru" if lang == "ru" else "en"
+    ds = await _reference()
+    if not ds:
+        prof_routes._start(prof_routes._build())
+        return {"status": "building"}
+    prices, market = await _prices(session)
+    item = _namer(ds, lang)
+    chars = (await session.execute(select(Character).where(Character.user_id == user.id))).scalars().all()
+    rows, used = [], set()
+    for c in chars:
+        p = c.profile or {}
+        cname = ((p.get("summary") or {}).get(lang) or {}).get("name") or c.name
+        for pr in (p.get("professions") or {}).get(lang) or []:
+            ref = ds["professions"].get(str(pr.get("id")))
+            if not ref:
+                continue
+            known, skill = set(pr.get("known") or []), pr.get("skill")
+            for r in ref["recipes"]:
+                is_known = r["id"] in known or r["spell"] in known
+                if not is_known and (skill is None or craft.need(r)[0] > skill):
+                    continue
+                if not r.get("item"):
+                    continue  # enchantments and the like make nothing to sell
+                e = craft.economics(r, ds["items"], prices)
+                used.update(x for x, _ in r["reagents"])
+                used.add(r["item"])
+                rows.append({
+                    "cid": c.id, "char": cname, "prof": pr.get("id"), "profName": pr.get("name"), "skill": skill,
+                    "recipe": r["id"], "name": r["name"][lang] or r["name"]["en"], "item": item(r["item"]),
+                    "made": e["made"], "known": is_known, "color": _color(r, skill),
+                    "cost": e["cost"], "value": e["value"], "profit": e["profit"], "margin": e["margin"],
+                    "sale": e["sale"],
+                    "parts": [{**item(x["id"]), "count": x["count"], "unit": x["unit"], "src": x["src"]} for x in e["parts"]],
+                })
+    advice = [{**item(a["id"]), **a} for a in craft.advice(ds["items"], prices, used)]
+    return {"status": "ready", "market": market, "rows": rows, "advice": advice}
+
+
+def _color(r: dict, skill: int | None) -> str | None:
+    """The recipe's colour at the character's skill: orange, yellow, green or gray."""
+    if skill is None:
+        return None
+    y, g = r.get("yellow"), r.get("gray")
+    if not y or skill < y:
+        return "orange"
+    if g and skill >= g:
+        return "gray"
+    return "yellow" if not g or skill < (y + g) // 2 else "green"
+
+
+@router.get("/plan")
+async def leveling_plan(user: CurrentUser, session: Session, cid: int, prof: int,
+                        target: Annotated[int, Query(ge=1, le=450)], resale: bool = True, lang: str = "ru"):
+    """The cheapest way to raise one character's profession to `target`, with the shopping list."""
+    lang = "ru" if lang == "ru" else "en"
+    c = await session.get(Character, cid)
+    if not c or c.user_id != user.id:
+        raise HTTPException(404, "no such character")
+    ds = await _reference()
+    if not ds:
+        prof_routes._start(prof_routes._build())
+        return {"status": "building"}
+    ref = ds["professions"].get(str(prof))
+    pr = next((x for x in ((c.profile or {}).get("professions") or {}).get(lang) or [] if x.get("id") == prof), None)
+    if not ref or not pr:
+        raise HTTPException(404, "the character has no such profession")
+    prices, market = await _prices(session)
+    skill = pr.get("skill") or 1
+    known = set(pr.get("known") or [])
+    known |= {r["id"] for r in ref["recipes"] if r["spell"] in known}
+    out = craft.plan(ref["recipes"], known, skill, max(skill, target), ds["items"], prices, resale=resale)
+    item = _namer(ds, lang)
+    by_id = {r["id"]: r for r in ref["recipes"]}
+    steps = []
+    for st in out["steps"]:
+        r = by_id[st["id"]]
+        learn = st["learn"]
+        if learn and learn.get("item"):
+            learn = {**learn, "item": item(learn["item"])}
+        steps.append({**st, "name": r["name"][lang] or r["name"]["en"], "item": item(r.get("item")),
+                      "made": r.get("count") or 1, "learn": learn})
+    return {"status": "ready", "market": market, "skill": skill, "target": target, "steps": steps,
+            "reagents": [{**item(x["id"]), **x} for x in out["reagents"]], "total": out["total"], "gaps": out["gaps"]}

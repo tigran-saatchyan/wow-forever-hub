@@ -28,7 +28,7 @@ LOCALES = {"en": "enUS", "ru": "ruRU"}
 PROFESSION_CATEGORIES = {9, 11}  # secondary skills (cooking, first aid, fishing), professions
 CREATE_ITEM, LEARN_SPELL = 24, 36  # SpellEffect.Effect
 LOCALIZED = {"SkillLine", "SpellName", "ItemSparse"}
-VERSION = 2  # bump when the dataset shape changes: a stored older one is built again
+VERSION = 3  # bump when the dataset shape changes: a stored older one is built again (3: vendor prices)
 TABLES = ["SkillLine", "SkillLineAbility", "SpellName", "SpellEffect", "SpellReagents", "ItemSparse", "ItemEffect"]
 
 
@@ -158,7 +158,11 @@ def build_dataset(t: dict[str, list[dict]], build: str) -> dict:
         "items": {
             str(i): {"en": items[i].get("Display_lang", ""),
                      "ru": items_ru.get(i, {}).get("Display_lang") or items[i].get("Display_lang", ""),
-                     "q": _i(items[i], "OverallQualityID")}
+                     "q": _i(items[i], "OverallQualityID"),
+                     # what a vendor pays for one, and what one costs at a vendor (BuyPrice is for a stack of
+                     # VendorStackCount), in copper: the crafting page weighs the auction house against them
+                     "sell": _i(items[i], "SellPrice"), "buy": _i(items[i], "BuyPrice"),
+                     "vstack": _i(items[i], "VendorStackCount") or 1}
             for i in sorted(used) if i in items
         },
     }
