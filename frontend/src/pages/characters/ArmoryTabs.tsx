@@ -2,8 +2,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import { fmtDate, useI18n } from "../../lib/i18n";
-import { Money } from "../../components/Wow";
-import { useCharacter, wowApi, type StatGroup } from "../../lib/wowApi";
+import { Model3D } from "../../components/Model3D";
+import { ItemIcon, Money } from "../../components/Wow";
+import { media, useCharacter, wowApi, type StatGroup } from "../../lib/wowApi";
 
 export function useTab<T>(cid: number, name: string) {
   const { lang } = useI18n();
@@ -159,20 +160,74 @@ export function AchievementsTab({ cid }: { cid: number }) {
 }
 
 interface Coll { name: string; id: number; favorite: boolean; level: number | null }
+interface CollEntry {
+  id: number; name: string; source: string | null; description: string | null; faction: "ALLIANCE" | "HORDE" | null;
+  display: number | null; icon: string | null; item: number | null; hidden: boolean;
+}
+const KINDS = [["mounts", "co_mounts"], ["pets", "co_pets"], ["toys", "co_toys"]] as const;
+
+/** Mounts, pets and toys: what the character has against everything that can be had by their faction. */
 export function CollectionsTab({ cid }: { cid: number }) {
-  const { t } = useI18n();
-  const mounts = useTab<Coll[]>(cid, "mounts");
-  const pets = useTab<Coll[]>(cid, "pets");
-  const list = (xs: Coll[]) => (
-    <ul className="grid gap-1 text-sm sm:grid-cols-2 lg:grid-cols-3">
-      {xs.map((x) => <li key={x.id + x.name} className="truncate rounded border border-edge/40 bg-bg/40 px-2 py-1">{x.favorite ? "★ " : ""}{x.name}{x.level ? ` · ${x.level}` : ""}</li>)}
-    </ul>
-  );
+  const { lang } = useI18n();
+  const faction = useCharacter(cid).data?.summary?.[lang]?.faction ?? null;
+  return <div className="space-y-6">{KINDS.map(([k, title]) => <CollectionBlock key={k} cid={cid} kind={k} title={title} faction={faction} />)}</div>;
+}
+
+function CollectionBlock({ cid, kind, title, faction }: { cid: number; kind: string; title: "co_mounts" | "co_pets" | "co_toys"; faction: string | null }) {
+  const { t, lang } = useI18n();
+  const own = useTab<Coll[]>(cid, kind);
+  const all = useQuery({ queryKey: ["coll", kind, lang], queryFn: () => wowApi.collection<CollEntry>(kind, lang), staleTime: 3600e3, retry: false });
+  const [view, setView] = useState<"have" | "missing">("have");
+  const [q, setQ] = useState("");
+  const [pick, setPick] = useState<CollEntry | null>(null);
+  const ownIds = new Set((own.data?.data || []).map((x) => x.id));
+  // what can be had: this faction's and both factions', without promotions nobody can get any more
+  const reachable = (all.data || []).filter((x) => ownIds.has(x.id) || (!x.hidden && (!x.faction || !faction || x.faction === faction)));
+  const have = reachable.filter((x) => ownIds.has(x.id));
+  const missing = reachable.filter((x) => !ownIds.has(x.id));
+  const shown = (view === "have" ? have : missing).filter((x) => !q || x.name.toLowerCase().includes(q.toLowerCase()));
+  const pct = reachable.length ? (have.length / reachable.length) * 100 : 0;
   return (
-    <div className="space-y-4">
-      <div><h3 className="panel-title mb-2">{t("co_mounts")} {mounts.data?.data ? `(${mounts.data.data.length})` : ""}</h3><Frame q={mounts} empty={(d) => !d.length}>{list}</Frame></div>
-      <div><h3 className="panel-title mb-2">{t("co_pets")} {pets.data?.data ? `(${pets.data.data.length})` : ""}</h3><Frame q={pets} empty={(d) => !d.length}>{list}</Frame></div>
-    </div>
+    <section>
+      <div className="flex flex-wrap items-center gap-3">
+        <h3 className="panel-title">{t(title)}</h3>
+        {all.data && <span className="font-display text-gold">{have.length} / {reachable.length}</span>}
+        <div className="prof-bar w-40"><span style={{ width: `${pct}%` }} /></div>
+        <div className="ml-auto flex gap-1">
+          {(["have", "missing"] as const).map((v) => (
+            <button key={v} className={`chip ${view === v ? "border-gold/60 text-gold" : ""}`} onClick={() => setView(v)}>
+              {t(v === "have" ? "co_have" : "co_missing")} {v === "have" ? have.length : missing.length}
+            </button>
+          ))}
+          <input className="input w-44 py-1 text-sm" placeholder={t("co_find")} value={q} onChange={(e) => setQ(e.target.value)} />
+        </div>
+      </div>
+      {all.isLoading && <p className="mt-2 text-sm text-muted">{t("co_loading")}</p>}
+      {all.isError && <p className="mt-2 text-sm text-muted">{t("co_no_index")}</p>}
+      <div className="mt-2 grid gap-3 lg:grid-cols-[1fr_320px]">
+        <ul className="grid content-start gap-1 text-sm sm:grid-cols-2 xl:grid-cols-3">
+          {shown.map((x) => (
+            <li key={x.id}>
+              <button onClick={() => setPick(x)}
+                className={`flex w-full items-center gap-2 truncate rounded border px-2 py-1 text-left ${pick?.id === x.id ? "border-gold/60 bg-gold/10" : "border-edge/40 bg-bg/40 hover:border-gold/40"}`}>
+                {x.icon ? <img src={media(x.icon)!} alt="" className="h-5 w-5 rounded-sm" /> : x.item ? <ItemIcon itemId={x.item} size={20} /> : null}
+                <span className={`truncate ${ownIds.has(x.id) ? "" : "text-muted"}`}>{x.name}</span>
+              </button>
+            </li>
+          ))}
+          {all.data && !shown.length && <li className="text-muted">{t("ar_empty")}</li>}
+        </ul>
+        {pick && (
+          <aside className="char-stats self-start">
+            {pick.display ? <Model3D key={pick.display} display={pick.display} className="h-64 w-full" /> : null}
+            <div className="font-display text-lg text-gold">{pick.name}</div>
+            <div className="text-xs text-muted">{ownIds.has(pick.id) ? t("co_have") : t("co_missing")}{pick.faction ? ` · ${pick.faction === "HORDE" ? t("co_horde") : t("co_alliance")}` : ""}</div>
+            {pick.source && <p className="mt-2 text-sm"><span className="text-muted">{t("co_source")}:</span> {pick.source}</p>}
+            {pick.description && <p className="mt-1 text-sm text-[#e8dcc0]">{pick.description}</p>}
+          </aside>
+        )}
+      </div>
+    </section>
   );
 }
 

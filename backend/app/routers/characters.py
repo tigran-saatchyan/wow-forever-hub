@@ -223,6 +223,7 @@ TABS = {
     "achievements": ("/achievements", wow.achievements),
     "mounts": ("/collections/mounts", lambda p, lg: wow.collection(p, "mounts", lg)),
     "pets": ("/collections/pets", lambda p, lg: wow.collection(p, "pets", lg)),
+    "toys": ("/collections/toys", lambda p, lg: wow.collection(p, "toys", lg)),
     "dungeons": ("/encounters/dungeons", wow.encounters),
     "raids": ("/encounters/raids", wow.encounters),
     "titles": ("/titles", wow.titles),

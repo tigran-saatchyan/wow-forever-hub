@@ -1237,3 +1237,8 @@ button.order-line:hover { @apply text-gold; }
   .tr-clouds i, .tr-shafts i, .tr-throne-glow, .tr-banner, .tr-sigil img, .tr-sigil::before, .tr-pillar,
   .tr-hero-float, .tr-hero-ghost, .tr-wisps i, .tr-mist i { animation: none; }
 }
+
+/* a model from the game in a page: fades in once the viewer has drawn it */
+.model3d { position: relative; opacity: 0; transition: opacity 0.8s; }
+.model3d.on { opacity: 1; }
+.model3d canvas { background: transparent !important; }

@@ -135,6 +135,17 @@ def handler(req: httpx.Request) -> httpx.Response:
             {"world_map": {"name": "Warsong Gulch"}, "match_statistics": {"played": 10, "won": 6, "lost": 4}}]})
     if p == "/profile/wow/character/joe-gun/quests":
         return httpx.Response(200, json={"in_progress": [{"id": 515, "name": "Elixir of Agony"}], "completed": {}})
+    if p == "/data/wow/mount/index":
+        return httpx.Response(200, json={"mounts": [{"name": "Skeletal Horse", "id": 1}, {"name": "Promo Cat", "id": 2},
+                                                    {"name": "Bay Horse", "id": 3}]})
+    if p.startswith("/data/wow/mount/"):
+        mid = int(p.rsplit("/", 1)[1])
+        if mid == 3:
+            return httpx.Response(404, json={"code": 404})
+        return httpx.Response(200, json={"id": mid, "name": {1: "Skeletal Horse", 2: "Promo Cat"}[mid],
+            "creature_displays": [{"id": 10670 + mid}], "source": {"type": "VENDOR", "name": "Vendor"},
+            "requirements": {"faction": {"type": "HORDE"}} if mid == 1 else {},
+            "should_exclude_if_uncollected": mid == 2})
     if p == "/data/wow/quest/783":
         return httpx.Response(200, json={"id": 783, "title": "A Threat Within", "area": {"name": "Northshire", "id": 9},
             "description": "Speak to Marshal McBride.", "requirements": {"min_character_level": 1},
@@ -558,3 +569,17 @@ def test_quest_details_and_statistics(client):
     st = client.get(f"/api/characters/{c['id']}/tab/statistics?lang=en").json()["data"]
     assert st == [{"group": "Deaths", "rows": [{"id": 60, "name": "Total deaths", "value": 28.0}]},
                   {"group": "Deaths / World", "rows": [{"id": 112, "name": "Deaths from drowning", "value": 1.0}]}]
+
+
+
+def test_collection_index(client):
+    xs = client.get("/api/collections/mounts?lang=en").json()
+    by = {x["name"]: x for x in xs}
+    assert by["Skeletal Horse"] == {"id": 1, "name": "Skeletal Horse", "source": "Vendor", "description": None,
+                                    "faction": "HORDE", "display": 10671, "icon": None, "item": None, "hidden": False}
+    assert by["Promo Cat"]["hidden"] and by["Promo Cat"]["faction"] is None
+    assert by["Bay Horse"]["id"] == 3  # its details refused: still listed by the index name
+    n = len(CALLS)
+    assert len(client.get("/api/collections/mounts?lang=en").json()) == 3
+    assert len(CALLS) == n  # kept for a week
+    assert client.get("/api/collections/nope").status_code == 404

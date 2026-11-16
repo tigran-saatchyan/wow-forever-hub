@@ -80,6 +80,7 @@ export const wowApi = {
   probe: (character?: string) => req<ProbeRow[]>(`/api/bnet/probe${character ? `?character=${encodeURIComponent(character)}` : ""}`),
   account: () => req<{ battletag?: string; characters?: number; linked?: string; error?: string } | null>("/api/bnet/account"),
   characters: () => req<Character[]>("/api/characters"),
+  collection: <T,>(kind: string, lang: Lang) => req<T[]>(`/api/collections/${kind}?lang=${lang}`),
   quest: (id: number, lang: Lang) => req<QuestInfo>(`/api/quests/${id}?lang=${lang}`),
   character: (id: number) => req<Character>(`/api/characters/${id}`),
   addCharacter: (b: { name: string; region: Region }) => req<Character>("/api/characters", { method: "POST", body: JSON.stringify(b) }),
