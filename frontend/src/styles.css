@@ -796,3 +796,26 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .eq i { animation: none; height: 70%; }
 }
+
+/* Sylvanas' Lamenters: the game's banshee model, see-through, drifting at the sides while the Lament plays */
+.lamenter {
+  position: absolute;
+  top: 12vh;
+  width: clamp(160px, 18vw, 300px);
+  height: clamp(300px, 66vh, 560px);
+  opacity: 0.55;
+  animation: lament-float 7.5s ease-in-out infinite;
+}
+.lamenter.left { left: 0; }
+.lamenter.right { right: 0; animation-duration: 8.6s; animation-delay: -3s; }
+.lamenter canvas { background: transparent !important; }
+@keyframes lament-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6vh); }
+}
+@media (max-width: 640px) {
+  .lamenter { opacity: 0.35; width: 120px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lamenter { animation: none; }
+}

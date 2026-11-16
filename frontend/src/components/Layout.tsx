@@ -4,6 +4,7 @@ import { useLogout, useMe } from "../lib/auth";
 import { useIndex } from "../lib/gameData";
 import { LANGS, useI18n } from "../lib/i18n";
 import { Ambient } from "../theme/Ambient";
+import { Lamenters } from "../theme/Lamenters";
 import { MusicPlayer } from "./MusicPlayer";
 import { THEMES } from "../theme/themes";
 import { useTheme } from "../theme/ThemeProvider";
@@ -23,6 +24,7 @@ export function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen">
       <Ambient />
+      {theme.id === "undercity" && <Lamenters />}
       <header className="site-header sticky top-0 z-30 border-b border-edge/60 bg-bg/80 backdrop-blur">
         <div className="flex w-full flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2 lg:px-6">
           <NavLink to="/" className="flex items-center gap-2.5" onClick={() => sfx("nav")}>

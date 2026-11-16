@@ -5,6 +5,7 @@ and character renders are served from our own origin. Only Blizzard and Wowhead 
 allowed: this is not an open proxy.
 """
 
+import re
 import tempfile
 from collections import OrderedDict
 from pathlib import Path
@@ -92,3 +93,33 @@ async def game_file(fdid: int, _: CurrentUser, lang: str = "en"):
         tmp.write_bytes(r.content)
         tmp.replace(path)
     return FileResponse(path, media_type=mime, headers={"Cache-Control": "private, max-age=2592000"})
+
+
+# ---------- Wowhead's 3D model viewer, through the hub ----------
+# wow.zamimg.com refuses requests that carry another site's Origin (the browser's XHR does), so the viewer's
+# files (its script, model meta, models, textures, animations) are fetched here without one and cached.
+ZAM = "https://wow.zamimg.com/modelviewer/"
+ZAM_PATH = re.compile(r"^(live|classic)/[a-z0-9]{2,16}/[A-Za-z0-9_./-]{1,160}$")  # retail or classic viewer
+ZAM_DIR = Path(tempfile.gettempdir()) / "fh-zam"
+ZAM_TYPES = {".js": "application/javascript", ".json": "application/json", ".webp": "image/webp", ".png": "image/png",
+             ".jpg": "image/jpeg", ".css": "text/css"}
+
+
+@router.get("/zam/{path:path}")
+async def zam(path: str, _: CurrentUser):
+    if ".." in path or not ZAM_PATH.match(path):
+        raise HTTPException(404, "not a model viewer file")
+    file = ZAM_DIR / path
+    if not file.is_file():
+        try:
+            r = await client().http.get(ZAM + path, timeout=60)
+        except Exception as e:  # noqa: BLE001
+            raise HTTPException(502, "viewer file unavailable") from e
+        if r.status_code != 200:
+            raise HTTPException(404 if r.status_code in (403, 404) else 502, "viewer file unavailable")
+        file.parent.mkdir(parents=True, exist_ok=True)
+        tmp = file.with_suffix(file.suffix + ".part")
+        tmp.write_bytes(r.content)
+        tmp.replace(file)
+    ctype = ZAM_TYPES.get(file.suffix, "application/octet-stream")
+    return FileResponse(file, media_type=ctype, headers={"Cache-Control": "private, max-age=2592000"})
