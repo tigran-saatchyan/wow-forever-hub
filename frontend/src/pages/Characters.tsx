@@ -1,15 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { ApiError } from "../lib/api";
-import { characterLink, mapTalents } from "../lib/charTalents";
-import { iconStyle, useIcons, useIndex, useTalents } from "../lib/gameData";
+import { iconStyle, useIcons, useTalents } from "../lib/gameData";
 import { fmtDate, useI18n, type Key } from "../lib/i18n";
 import { store } from "../lib/store";
 import { CharacterList } from "./characters/CharacterList";
 import { AchievementsTab, CollectionsTab, InstancesTab, PvpTab, ReputationTab } from "./characters/ArmoryTabs";
 import { CharacterSheet } from "./characters/CharacterSheet";
 import { ProfessionsTab } from "./characters/ProfessionsTab";
+import { TalentsTab } from "./characters/TalentsTab";
 import {
   media, useCharacter, useCharacterActions, useCharacters, wowApi, type Character, type Region,
 } from "../lib/wowApi";
@@ -104,14 +104,10 @@ function CharacterCard({ id }: { id: number }) {
   const q = useCharacter(id);
   const acts = useCharacterActions();
   const D = useTalents(lang);
-  const idx = useIndex();
-  const nav = useNavigate();
   const c: Character | undefined = q.data;
   if (!c) return <div className="panel p-4 text-muted">…</div>;
   const s = c.summary?.[lang];
   const k = D.data?.classes.find((x) => x.id === s?.classId);
-  const m = k && c.talents ? mapTalents(k, c.talents) : null;
-  const link = k && c.talents && idx.data ? characterLink(k, c.talents, s?.level ?? null, +idx.data.latest.split(".").pop()!) : null;
   const known = ["not_found", "not_configured", "low_level"];
   const err = c.error ? t(known.includes(c.error) ? (`ch_err_${c.error}` as Key) : "ch_err", { e: c.error }) : null;
 
@@ -156,17 +152,7 @@ function CharacterCard({ id }: { id: number }) {
             ))}
           </nav>
           {tab === "overview" && <CharacterSheet c={c} k={k} />}
-          {tab === "talents" && (
-            c.missing?.includes("talents") || !c.talents ? <p className="text-sm text-muted">{t("ch_no_part")}</p> : (
-              <div>
-                {m && <p className="mb-2 text-sm text-muted">{t("ch_talents_matched", { n: m.matched, m: m.total })}</p>}
-                {link && <button className="btn-primary mb-3" onClick={() => nav(`/talents#${link.replace(/^#/, "")}`)}>{t("ch_open_calc")}</button>}
-                <ul className="flex flex-wrap gap-1.5 text-xs">
-                  {c.talents.map((x, i) => <li key={i} className="chip">{x.name || x.node || x.spell} {x.rank}</li>)}
-                </ul>
-              </div>
-            )
-          )}
+          {tab === "talents" && <TalentsTab c={c} k={k} />}
           {tab === "professions" && <ProfessionsTab c={c} />}
           {tab === "pvp" && <PvpTab cid={c.id} />}
           {tab === "reputation" && <ReputationTab cid={c.id} />}

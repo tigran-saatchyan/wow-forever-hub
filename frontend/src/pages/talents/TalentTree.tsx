@@ -41,9 +41,11 @@ interface Props {
   onReset: () => void;
   onHover: (x: PlacedTalent | null, el?: HTMLElement) => void;
   onTap: (x: PlacedTalent) => void;
+  /** a build to look at (a character's talents): no reset, no "can take" glow */
+  readOnly?: boolean;
 }
 
-export function TalentTree({ c, ti, M, ranks, full, preview, total, icons, marks, touch, onAdd, onRemove, onReset, onHover, onTap }: Props) {
+export function TalentTree({ c, ti, M, ranks, full, preview, total, icons, marks, touch, onAdd, onRemove, onReset, onHover, onTap, readOnly }: Props) {
   const { t } = useI18n();
   const tb = c.tabs[ti];
   const xs = tb.talents.map((x) => M[x.id]);
@@ -62,7 +64,7 @@ export function TalentTree({ c, ti, M, ranks, full, preview, total, icons, marks
       <header>
         <span className="tico" style={iconStyle(icons, tb.icon)} />
         <h3>{tb.name}</h3>
-        <button className="reset" onClick={onReset}>{t("reset_tab")}</button>
+        {!readOnly && <button className="reset" onClick={onReset}>{t("reset_tab")}</button>}
         <span className="sp">{spentTab}</span>
       </header>
       <div className="body">
@@ -96,7 +98,7 @@ export function TalentTree({ c, ti, M, ranks, full, preview, total, icons, marks
             const r = ranks[x.id] || 0;
             const all = full[x.id] || 0;
             const ghost = preview && all > r;
-            const st = r >= x.max ? "max" : r > 0 ? "some" : ghost ? "" : canAdd(x, c, M, ranks, total) ? "avail" : "";
+            const st = r >= x.max ? "max" : r > 0 ? "some" : ghost || readOnly ? "" : canAdd(x, c, M, ranks, total) ? "avail" : "";
             const fl = !r ? marks.flags?.items.get(x.id) : undefined;
             const lv = marks.levels.get(x.id);
             const cls = [
