@@ -797,25 +797,81 @@ body {
   .eq i { animation: none; height: 70%; }
 }
 
-/* Sylvanas' Lamenters: the game's banshee model, see-through, drifting at the sides while the Lament plays */
+/* Sylvanas' Lamenters: the game's banshee, see-through in a blue light, rings of sound and sparks around her,
+   drifting at the sides of the screen while the Lament plays */
 .lamenter {
   position: absolute;
-  top: 12vh;
-  width: clamp(160px, 18vw, 300px);
-  height: clamp(300px, 66vh, 560px);
-  opacity: 0.55;
+  top: 10vh;
+  width: clamp(180px, 20vw, 330px);
+  height: clamp(320px, 70vh, 600px);
   animation: lament-float 7.5s ease-in-out infinite;
 }
-.lamenter.left { left: 0; }
-.lamenter.right { right: 0; animation-duration: 8.6s; animation-delay: -3s; }
-.lamenter canvas { background: transparent !important; }
+.lamenter.left { left: max(-90px, -6vw); }
+.lamenter.right { right: max(-90px, -6vw); animation-duration: 8.6s; animation-delay: -3s; }
+.lament-model {
+  position: absolute;
+  inset: 0;
+  opacity: 0.78;
+  filter: drop-shadow(0 0 18px rgb(150 180 255 / 0.65)) drop-shadow(0 0 40px rgb(120 140 255 / 0.35)) saturate(0.8) hue-rotate(-12deg);
+}
+.lament-model canvas { background: transparent !important; }
+.lament-aura {
+  position: absolute;
+  left: 50%;
+  top: 34%;
+  width: 115%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: screen;
+}
+.lament-aura .ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgb(170 190 255 / 0.35);
+  box-shadow: 0 0 22px rgb(140 170 255 / 0.4), inset 0 0 22px rgb(140 170 255 / 0.3);
+  animation: lament-ring 4.8s ease-out infinite;
+}
+.lament-aura .r1 { transform: scale(0.55) rotateX(62deg); }
+.lament-aura .r2 { animation-delay: -1.6s; transform: scale(0.75) rotateY(62deg); }
+.lament-aura .r3 { animation-delay: -3.2s; }
+@keyframes lament-ring {
+  0% { opacity: 0; scale: 0.6; rotate: 0deg; }
+  25% { opacity: 1; }
+  100% { opacity: 0; scale: 1.15; rotate: 40deg; }
+}
+.lament-aura .spark {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 8px 2px rgb(190 210 255 / 0.95), 0 0 18px 4px rgb(140 170 255 / 0.6);
+  animation: lament-spark 2.8s ease-in-out infinite;
+}
+.lament-aura .spark::before,
+.lament-aura .spark::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 18px;
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent, #fff, transparent);
+  transform: translate(-50%, -50%);
+}
+.lament-aura .spark::after { transform: translate(-50%, -50%) rotate(90deg); }
+@keyframes lament-spark {
+  0%, 100% { opacity: 0; scale: 0.4; }
+  50% { opacity: 1; scale: 1; }
+}
 @keyframes lament-float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-6vh); }
 }
 @media (max-width: 640px) {
-  .lamenter { opacity: 0.35; width: 120px; }
+  .lamenter { width: 130px; height: 300px; opacity: 0.7; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .lamenter { animation: none; }
+  .lamenter, .lament-aura .ring, .lament-aura .spark { animation: none; }
 }

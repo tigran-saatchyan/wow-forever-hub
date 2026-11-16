@@ -1,6 +1,6 @@
 /**
  * Sylvanas' Lamenters: the two banshees her music box summons in the game ("Lament of the Highborne",
- * spell 73331, creature 39048). They are the game's own banshee model (display 10702, magenta), drawn by
+ * spell 73331, creature 39048). They are the game's own banshee model (display 915, the pale one), drawn by
  * Wowhead's 3D model viewer, see-through as in the game, at the sides of the screen while the Lament plays.
  * The viewer's files come through the hub (/api/media/zam), since wow.zamimg.com refuses other sites.
  */
@@ -9,7 +9,7 @@ import { useEffect, useRef } from "react";
 import { PLAYLIST, usePlayer } from "./music";
 
 const LAMENT = 53221;
-const DISPLAY = 10702;
+const DISPLAY = 915; // the pale banshee: as the music box shows her, see-through in a blue light
 const CONTENT = "/api/media/zam/live/";
 
 type Viewer = { destroy?: () => void };
@@ -48,6 +48,12 @@ function loadViewer() {
   return loading;
 }
 
+// spark positions (% of the box) and twinkle delays, fixed so they do not jump between renders
+const SPARKS: [number, number, number][] = [
+  [22, 24, 0], [74, 20, 0.7], [36, 40, 1.4], [64, 36, 0.3], [18, 52, 1.1], [82, 50, 1.8],
+  [44, 18, 2.2], [56, 58, 0.9], [30, 66, 1.6], [70, 70, 2.6], [50, 30, 1.2], [12, 34, 2.0],
+];
+
 function Lamenter({ side }: { side: "left" | "right" }) {
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -71,7 +77,18 @@ function Lamenter({ side }: { side: "left" | "right" }) {
       }
     };
   }, []);
-  return <div ref={box} className={`lamenter ${side}`} />;
+  return (
+    <div className={`lamenter ${side}`}>
+      {/* the song around her: rings of sound and sparks, as the music box shows them */}
+      <div className="lament-aura">
+        <i className="ring r1" /><i className="ring r2" /><i className="ring r3" />
+        {SPARKS.map((p, i) => (
+          <b key={i} className="spark" style={{ left: `${p[0]}%`, top: `${p[1]}%`, animationDelay: `${p[2]}s` }} />
+        ))}
+      </div>
+      <div ref={box} className="lament-model" />
+    </div>
+  );
 }
 
 export function Lamenters() {
