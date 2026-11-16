@@ -1,1 +1,4 @@
-{ "max": "/api/media/game/567439", "nav": "/api/media/game/537908" }
+{
+  "max": "/api/media/game/567439",
+  "nav": { "file": "/api/media/game/537908", "gain": 0.2, "lowpass": 1400, "attack": 0.18, "rate": 0.8 }
+}

@@ -121,7 +121,7 @@ const VOICES: Record<Voice, Record<Cue, () => void>> = {
   },
   ghost: {
     click: () => (hiss(0.12, 0.08, "bandpass", 3200, 6, 0, 0.6), tone(880, 0.08, "sine", 0.04, 0, 0.9)),
-    nav: () => hiss(0.5, 0.07, "bandpass", 900, 3, 0, 2.2),
+    nav: () => hiss(0.7, 0.03, "bandpass", 700, 2, 0, 1.6),
     add: () => (bell(392, 0, 0.09, 1.1), hiss(0.35, 0.05, "bandpass", 1800, 4, 0.02, 0.5)),
     remove: () => (tone(330, 0.5, "sine", 0.07, 0, 0.6), hiss(0.4, 0.06, "bandpass", 1200, 3, 0, 0.4)),
     max: () => (bell(262, 0, 0.12, 2), bell(311, 0.18, 0.08, 1.8), tone(131, 1.4, "triangle", 0.05, 0.05, 0.98)),
@@ -131,7 +131,13 @@ const VOICES: Record<Voice, Record<Cue, () => void>> = {
 };
 
 // ----- optional recorded sounds -----
-type Bank = Partial<Record<Cue, AudioBuffer>>;
+/**
+ * A manifest entry is a file, or a file with how to play it: quieter (gain), softer (lowpass: cut the
+ * high end, Hz), easing in (attack, seconds), slower and deeper (rate).
+ */
+type Entry = string | { file: string; gain?: number; lowpass?: number; attack?: number; rate?: number };
+type Sample = { buf: AudioBuffer; gain: number; lowpass?: number; attack: number; rate: number };
+type Bank = Partial<Record<Cue, Sample>>;
 const banks = new Map<string, Promise<Bank>>();
 function bank(theme: string): Promise<Bank> {
   let p = banks.get(theme);
@@ -140,12 +146,16 @@ function bank(theme: string): Promise<Bank> {
       const base = `/sounds/${theme}/`;
       const r = await fetch(base + "manifest.json");
       if (!r.ok || !(r.headers.get("content-type") || "").includes("json")) return {};
-      const files: Partial<Record<Cue, string>> = await r.json();
+      const files: Partial<Record<Cue, Entry>> = await r.json();
       const out: Bank = {};
-      await Promise.all(Object.entries(files).map(async ([cue, f]) => {
+      await Promise.all(Object.entries(files).map(async ([cue, e]) => {
+        const o = typeof e === "string" ? { file: e } : e;
         try {
-          const buf = await (await fetch(f.startsWith("/") ? f : base + f)).arrayBuffer();
-          out[cue as Cue] = await ac().decodeAudioData(buf);
+          const data = await (await fetch(o.file.startsWith("/") ? o.file : base + o.file)).arrayBuffer();
+          out[cue as Cue] = {
+            buf: await ac().decodeAudioData(data), gain: o.gain ?? 1, lowpass: o.lowpass,
+            attack: o.attack ?? 0, rate: o.rate ?? 1,
+          };
         } catch { /* keep the synthesized one */ }
       }));
       return out;
@@ -165,12 +175,27 @@ export function play(theme: string, voice: Voice, cue: Cue, enabled: boolean) {
       return;
     }
     void p.then((b) => {
-      const buf = b[cue];
-      if (!buf) return VOICES[voice][cue]();
-      const s = ac().createBufferSource();
-      s.buffer = buf;
-      s.connect(out());
-      s.start();
+      const smp = b[cue];
+      if (!smp) return VOICES[voice][cue]();
+      const a = ac();
+      const src = a.createBufferSource();
+      src.buffer = smp.buf;
+      src.playbackRate.value = smp.rate;
+      const g = a.createGain();
+      const t0 = a.currentTime;
+      if (smp.attack > 0) {
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(smp.gain, t0 + smp.attack);
+      } else g.gain.value = smp.gain;
+      let node: AudioNode = src;
+      if (smp.lowpass) {
+        const f = a.createBiquadFilter();
+        f.type = "lowpass";
+        f.frequency.value = smp.lowpass;
+        node = node.connect(f);
+      }
+      node.connect(g).connect(out());
+      src.start();
     });
   } catch {
     /* audio not available */
