@@ -35,7 +35,11 @@ export function parseMoney(text: string): number | null {
   return Math.round(c);
 }
 
-export function ItemIcon({ src, quality, size = 36 }: { src?: string | null; quality?: string | null; size?: number }) {
+/** An item's icon; when the saved one is missing and the item is known, it is asked for once more. */
+export function ItemIcon({ src, quality, size = 36, itemId }: { src?: string | null; quality?: string | null; size?: number; itemId?: number }) {
+  const { lang } = useI18n();
+  const q = useItem(!src && itemId ? itemId : null, lang);
+  src = src || q.data?.icon;
   return (
     <span
       className="inline-block flex-none rounded-[4px] bg-black/60 bg-cover bg-center"

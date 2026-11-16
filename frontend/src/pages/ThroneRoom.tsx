@@ -109,7 +109,7 @@ function Gear({ x, slot, i }: { x?: EquipItem; slot: string; i: number }) {
         fallback={{ id: x.id, name: x.name, quality: x.quality, level: x.ilvl, slot: x.slotName, stats: x.stats || [], spells: [] }}
       >
         <span tabIndex={0} className="block outline-none" aria-label={`${t(`slot_${slot}` as Key)}: ${x.name}`}>
-          <ItemIcon src={x.icon} quality={x.quality} size={40} />
+          <ItemIcon src={x.icon} itemId={x.id} quality={x.quality} size={40} />
         </span>
       </ItemHover>
     </motion.span>
@@ -212,6 +212,8 @@ export function ThroneRoom() {
 
         {/* the dais: the crest as a sigil in the floor, a pillar of plague light, the servant on it */}
         {/* the dais and the servant stay put: only the hall behind them drifts with the mouse */}
+        {/* the scene: the dais and the servant fill what the name plate below leaves */}
+        <div className="tr-scene">
         <div className="tr-dais" aria-hidden>
           <div className="tr-sigil"><img src="/undercity/crest.webp" alt="" draggable={false} /></div>
           <div className="tr-pillar" />
@@ -229,10 +231,9 @@ export function ThroneRoom() {
             </>
           )}
         </div>
+        </div>
         <div className="tr-wisps" aria-hidden>{Array.from({ length: 14 }, (_, i) => <i key={i} style={{ left: `${(i * 53) % 100}%`, animationDelay: `${(i * 1.7) % 11}s`, animationDuration: `${9 + (i % 5) * 2}s` }} />)}</div>
         <div className="tr-mist" aria-hidden><i /><i /></div>
-
-        <button className="tr-voice btn-primary text-sm" onClick={speak} disabled={talking}>☠ {t("uc_voice")}</button>
 
         {/* who stands before the throne */}
         {list.length > 1 && (
@@ -268,13 +269,14 @@ export function ThroneRoom() {
             )
           )}
           <div className="tr-words">
-            <AnimatePresence mode="wait">
+            <AnimatePresence mode="wait" initial={false}>
               <motion.p key={w} className="throne-quote text-base sm:text-lg"
                 initial={{ opacity: 0, y: 6, filter: "blur(4px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 exit={{ opacity: 0, y: -6, filter: "blur(4px)" }} transition={{ duration: 0.6 }}>
                 «{WORDS[w][lang]}» <span className="not-italic text-muted">— {t("uc_sylvanas")}</span>
               </motion.p>
             </AnimatePresence>
+            <button className="btn-primary text-sm" onClick={speak} disabled={talking}>☠ {t("uc_voice")}</button>
           </div>
           {c && <Progress c={c} />}
         </div>

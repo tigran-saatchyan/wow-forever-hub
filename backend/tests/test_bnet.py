@@ -92,6 +92,9 @@ def handler(req: httpx.Request) -> httpx.Response:
             return httpx.Response(403, text="forbidden")  # plain static refused: versioned one works
         assert ns == "static-1.60.1_70755-forever-eu", ns
         iid = int(p.rsplit("/", 1)[1])
+        if iid == 778 and "media" in p and FLAKY_ICON:
+            FLAKY_ICON.pop()
+            return httpx.Response(503, text="busy")  # the icon did not answer this once
         if iid == 777 and "media" not in p:
             return httpx.Response(404, json={"code": 404})  # item refused, icon still there
         if iid == 19019 and "media" not in p:  # asked without a locale: every text is a dict of translations
@@ -250,6 +253,18 @@ def test_item_cache_and_versioned_static(client):
     assert client.get("/api/items/2589?lang=en").json()["name"] == "Linen Cloth"
     # the second language came from the cache; the client now goes straight to the versioned namespace
     assert len(CALLS) - n <= 4
+
+
+FLAKY_ICON: list[int] = []
+
+
+def test_item_icon_retried_after_a_miss(client):
+    FLAKY_ICON.append(1)
+    first = client.get("/api/items/778?lang=ru").json()
+    assert first["icon"] is None  # cached without its icon
+    again = client.get("/api/items/778?lang=en").json()
+    assert again["icon"] == "https://render/778.jpg"  # asked once more, now there, and kept
+    assert client.get("/api/items/778?lang=ru").json()["icon"] == "https://render/778.jpg"
 
 
 def test_item_texts_are_strings(client):

@@ -24,7 +24,7 @@ function Slot({ slot, x }: { slot: string; x?: EquipItem }) {
       fallback={{ id: x.id, name: x.name, quality: x.quality, level: x.ilvl, slot: x.slotName, stats: x.stats || [], spells: [] }}
     >
       <span tabIndex={0} className="relative block outline-none" aria-label={`${name}: ${x.name}`}>
-        <ItemIcon src={x.icon} quality={x.quality} size={44} />
+        <ItemIcon src={x.icon} itemId={x.id} quality={x.quality} size={44} />
         {x.ilvl ? <span className="slot-ilvl" style={{ color: qColor(x.quality) }}>{x.ilvl}</span> : null}
       </span>
     </ItemHover>

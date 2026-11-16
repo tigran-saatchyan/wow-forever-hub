@@ -29,7 +29,21 @@ async def get_item(session: AsyncSession, item_id: int, lang: str) -> dict | Non
     lang = lang if lang in LANGS else "en"
     row = await session.get(Item, (item_id, lang))
     if row and row.data.get("v") == ITEM_V:
-        return row.data
+        if row.data.get("icon"):
+            return row.data
+        # cached while its icon was not answering: ask for the icon again, keep the rest
+        try:
+            icon = wow.media_url(await client().get(f"/data/wow/media/item/{item_id}", "static"), "icon")
+        except BnetError:
+            return row.data
+        if not icon:
+            return row.data
+        for lg in LANGS:
+            r = await session.get(Item, (item_id, lg))
+            if r:
+                r.data = {**r.data, "icon": icon}
+        await session.commit()
+        return {**row.data, "icon": icon}
     try:
         raw = await client().get(f"/data/wow/item/{item_id}", "static")
     except BnetError as e:
