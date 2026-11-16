@@ -6,7 +6,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform, type MotionValue } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ItemHover, ItemIcon } from "../components/Wow";
 import { iconStyle, useIcons, useTalents } from "../lib/gameData";
@@ -59,7 +59,9 @@ function useFigure(src: string | null): Box | null {
 
 /** The Banshee Queen herself at the throne: the game's model (creature 10181's line, display 28213), by Wowhead's viewer. */
 const SYLVANAS = 28213;
-function Sylvanas() {
+// her talk animations in the game's model; one of them each time she speaks
+const TALK = ["EmoteTalk", "EmoteTalkExclamation", "EmoteTalk"];
+function Sylvanas({ onReady }: { onReady: (v: Viewer | null) => void }) {
   const box = useRef<HTMLDivElement>(null);
   const [shown, setShown] = useState(false);
   useEffect(() => {
@@ -73,13 +75,15 @@ function Sylvanas() {
         type: 2, contentPath: CONTENT, container: $(el), aspect: el.clientWidth / el.clientHeight, hd: true,
         models: { type: 8, id: SYLVANAS },
       });
+      onReady(viewer);
       setTimeout(() => !gone && setShown(true), 900); // let the model load before she fades in
     }).catch(() => {});
     return () => {
       gone = true;
+      onReady(null);
       try { viewer?.destroy?.(); } catch { /* not built yet */ }
     };
-  }, []);
+  }, [onReady]);
   return <div ref={box} className={`tr-queen ${shown ? "on" : ""}`} aria-hidden />;
 }
 
@@ -153,6 +157,22 @@ export function ThroneRoom() {
   const box = useFigure(media(c?.model) ?? null);
   const [w, setW] = useState(() => Math.floor(Math.random() * WORDS.length));
   const [poke, setPoke] = useState(0);
+  // the Dark Lady speaks: her line plays and the model talks until it ends, then stands again
+  const queen = useRef<Viewer | null>(null);
+  const setQueen = useCallback((v: Viewer | null) => { queen.current = v; }, []);
+  const [talking, setTalking] = useState(false);
+  const speak = () => {
+    const a = sylvanasLine(lang);
+    const anim = (name: string) => { try { queen.current?.method?.("setAnimation", [name]); } catch { /* model not ready */ } };
+    anim(TALK[Math.floor(Math.random() * TALK.length)]);
+    setTalking(true);
+    let done = false;
+    const stop = () => { if (done) return; done = true; anim("Stand"); setTalking(false); };
+    a.addEventListener("ended", stop);
+    a.addEventListener("error", stop);
+    a.addEventListener("pause", stop);
+    setTimeout(stop, 12000); // in case the sound never starts
+  };
   useEffect(() => {
     const id = setInterval(() => setW((x) => (x + 1) % WORDS.length), 9000);
     return () => clearInterval(id);
@@ -180,7 +200,7 @@ export function ThroneRoom() {
         <Layer mx={mx} my={my} depth={12} className="tr-clouds"><i /><i /></Layer>
         <div className="tr-shafts" aria-hidden><i /><i /><i /></div>
         <Layer mx={mx} my={my} depth={16} className="tr-throne-glow" />
-        <Layer mx={mx} my={my} depth={18} className="tr-queen-wrap"><Sylvanas /></Layer>
+        <Layer mx={mx} my={my} depth={18} className={`tr-queen-wrap ${talking ? "talking" : ""}`}><Sylvanas onReady={setQueen} /></Layer>
         <Layer mx={mx} my={my} depth={22} className="tr-banners">
           <img src="/undercity/banner.webp" alt="" className="tr-banner left" draggable={false} />
           <img src="/undercity/banner.webp" alt="" className="tr-banner right" draggable={false} />
@@ -212,7 +232,7 @@ export function ThroneRoom() {
         <div className="tr-wisps" aria-hidden>{Array.from({ length: 14 }, (_, i) => <i key={i} style={{ left: `${(i * 53) % 100}%`, animationDelay: `${(i * 1.7) % 11}s`, animationDuration: `${9 + (i % 5) * 2}s` }} />)}</div>
         <div className="tr-mist" aria-hidden><i /><i /></div>
 
-        <button className="tr-voice btn-primary text-sm" onClick={() => sylvanasLine(lang)}>☠ {t("uc_voice")}</button>
+        <button className="tr-voice btn-primary text-sm" onClick={speak} disabled={talking}>☠ {t("uc_voice")}</button>
 
         {/* who stands before the throne */}
         {list.length > 1 && (

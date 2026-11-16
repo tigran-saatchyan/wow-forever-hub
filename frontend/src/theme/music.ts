@@ -179,9 +179,10 @@ export function usePlayer(): PlayerState {
  * One of Sylvanas' lines, at random, in the page's language (the Russian client has its own voice).
  * It is asked for by a click, so it plays whatever the sound switch says, and leaves the switch and the music alone.
  */
-export function sylvanasLine(lang: "ru" | "en" = "ru", volume = 0.85) {
+export function sylvanasLine(lang: "ru" | "en" = "ru", volume = 0.85): HTMLAudioElement {
   const a = new Audio(`${GAME(SYLVANAS[Math.floor(Math.random() * SYLVANAS.length)])}?lang=${lang}`);
   a.volume = volume;
   void a.play().catch(() => {});
+  return a; // the throne room follows it to make her speak for as long as the line lasts
 }
 

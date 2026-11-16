@@ -12,7 +12,7 @@ const LAMENT = 53221;
 const DISPLAY = 915; // the pale banshee: as the music box shows her, see-through in a blue light
 export const CONTENT = "/api/media/zam/live/";
 
-export type Viewer = { destroy?: () => void };
+export type Viewer = { destroy?: () => void; method?: (name: string, args?: unknown[]) => unknown };
 declare global {
   interface Window {
     ZamModelViewer?: new (o: unknown) => Viewer;
