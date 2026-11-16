@@ -1045,8 +1045,8 @@ button.order-line:hover { @apply text-gold; }
 @keyframes tr-breathe { 0%, 100% { opacity: 0.75; transform: scale(1); } 50% { opacity: 1; transform: scale(1.04); } }
 
 /* the Banshee Queen at her throne, behind the servant */
-/* she stands at the right of the hall, beside her banner, watching her servant */
-.tr-queen-wrap { right: 0; top: 9%; width: clamp(240px, 24vw, 460px); height: 84%; pointer-events: none; }
+/* she stands at the left of the hall, in front of her banner, watching her servant */
+.tr-queen-wrap { left: 0; top: 9%; width: clamp(240px, 24vw, 460px); height: 84%; pointer-events: none; }
 @media (max-width: 767px) { .tr-queen-wrap { display: none; } }
 .tr-queen {
   position: absolute; inset: 0; opacity: 0; transition: opacity 2.5s ease;
