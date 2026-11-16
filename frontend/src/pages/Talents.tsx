@@ -155,16 +155,13 @@ export function Talents() {
 
       {/* counters + controls */}
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-        <div>
-          <span className={`font-display text-4xl ${left < 0 ? "text-bad" : "text-ink"}`}>{left}</span>{" "}
-          <span className="font-mono text-sm text-muted">{t("points_left")}</span>{" "}
-          <span className="ml-2 font-mono text-sm text-muted">{split.join(" / ")}</span>
+        {/* fixed widths: "-4" and "1", "31 / 20 / 0" and "0 / 0 / 0" must not move the level slider */}
+        <div className="flex shrink-0 items-baseline whitespace-nowrap">
+          <span className={`inline-block w-[2.6ch] text-right font-display text-4xl tabular-nums ${left < 0 ? "text-bad" : "text-ink"}`}>{left}</span>
+          <span className="ml-2 font-mono text-sm text-muted">{t("points_left")}</span>
+          <span className="ml-3 inline-block w-[11ch] font-mono text-sm text-muted">{split.join(" / ")}</span>
         </div>
-        <label className="flex flex-1 items-center gap-3 text-sm sm:min-w-[260px] sm:max-w-[360px]">
-          <span className="text-muted">{t("level")}</span>
-          <input type="range" min={start} max={60} value={s.level} onChange={(e) => calc.setLevel(+e.target.value)} className="flex-1 accent-[#ffd100]" />
-          <span className="w-6 font-mono text-gold">{s.level}</span>
-        </label>
+        <LevelControl min={start} level={s.level} onChange={calc.setLevel} />
         <div className="ml-auto flex flex-wrap gap-2">
           {!planner && <button className="btn xl:hidden" onClick={() => setPlanner(true)}>{t("pl_title")}</button>}
           {!skillsOpen && <button className="btn xl:hidden" onClick={() => setSkills(true)}>{t("sk_title")}</button>}
@@ -373,6 +370,46 @@ export function Talents() {
         </>,
         document.body,
       )}
+    </div>
+  );
+}
+
+/**
+ * Level: slider, a number field (typed values apply as soon as they are a valid level, and are
+ * clamped when the field loses focus) and MAX. Fixed widths, so nothing moves while dragging.
+ */
+function LevelControl({ min, level, onChange }: { min: number; level: number; onChange: (l: number) => void }) {
+  const { t } = useI18n();
+  const [text, setText] = useState(String(level));
+  useEffect(() => setText(String(level)), [level]);
+  const clamp = (n: number) => Math.min(60, Math.max(min, Math.round(n)));
+  const commit = () => {
+    const n = parseInt(text, 10);
+    const l = Number.isFinite(n) ? clamp(n) : level;
+    setText(String(l));
+    if (l !== level) onChange(l);
+  };
+  return (
+    <div className="flex w-full items-center gap-2.5 text-sm sm:w-[400px]">
+      <label htmlFor="lvlNum" className="text-muted">{t("level")}</label>
+      <input
+        type="range" min={min} max={60} value={level} aria-label={t("level")}
+        onChange={(e) => onChange(+e.target.value)} className="min-w-0 flex-1 accent-[#ffd100]"
+      />
+      <input
+        id="lvlNum" type="number" inputMode="numeric" min={min} max={60} value={text}
+        className="input w-[4.2rem] px-2 py-1 text-center font-mono tabular-nums text-gold"
+        onChange={(e) => {
+          setText(e.target.value);
+          const n = parseInt(e.target.value, 10);
+          if (n >= min && n <= 60 && n !== level) onChange(n);
+        }}
+        onBlur={commit}
+        onKeyDown={(e) => e.key === "Enter" && commit()}
+      />
+      <button type="button" className="btn px-2 py-1 text-xs" disabled={level === 60} title={t("lvl_max_t")} onClick={() => onChange(60)}>
+        {t("lvl_max")}
+      </button>
     </div>
   );
 }

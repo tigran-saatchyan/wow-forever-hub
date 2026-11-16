@@ -48,6 +48,8 @@ const en = {
   // talents
   points_left: "points left",
   level: "Level",
+  lvl_max: "MAX",
+  lvl_max_t: "Set level 60",
   reset_all: "Reset all",
   reset_tab: "reset",
   copy_link: "Link to build",
@@ -259,6 +261,8 @@ const ru: typeof en = {
   minutes: "м",
   points_left: "очков осталось",
   level: "Уровень",
+  lvl_max: "MAX",
+  lvl_max_t: "Поставить 60 уровень",
   reset_all: "Сбросить всё",
   reset_tab: "сброс",
   copy_link: "Ссылка на билд",
