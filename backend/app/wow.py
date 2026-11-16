@@ -206,7 +206,8 @@ def rulesets(index: dict, lang: str | None = None) -> list[dict]:
     out = []
     for r in index.get("rulesets") or []:
         if isinstance(r, dict) and "id" in r:
-            out.append({"id": r["id"], "name": name_of(r, lang) or str(r["id"]), "type": _get(r, "type", "type")})
+            # Forever's index gives bare ids (1, 2, 3, 15); the UI names them when no name comes
+            out.append({"id": r["id"], "name": name_of(r, lang) or "", "type": _get(r, "type", "type")})
     return out
 
 

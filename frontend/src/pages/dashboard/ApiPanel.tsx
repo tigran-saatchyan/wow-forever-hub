@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useMe } from "../../lib/auth";
 import { useI18n } from "../../lib/i18n";
-import { useApiStatus, useCharacters, wowApi } from "../../lib/wowApi";
+import { rulesetName, useApiStatus, useCharacters, wowApi } from "../../lib/wowApi";
 
 /** Is the Blizzard API configured and answering, and (superadmin) which endpoints answer. */
 export function ApiPanel() {
@@ -27,7 +27,7 @@ export function ApiPanel() {
           {!!s.rulesets?.length && (
             <p className="flex flex-wrap items-center gap-1.5">
               <span className="eyebrow">{t("api_rulesets")}</span>
-              {s.rulesets.map((r) => <span key={r.id} className="chip">{r.name}</span>)}
+              {s.rulesets.map((r) => <span key={r.id} className="chip">{rulesetName(r, t)}</span>)}
             </p>
           )}
         </>

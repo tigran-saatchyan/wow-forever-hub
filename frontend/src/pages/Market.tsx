@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { ItemHover, ItemIcon, Money, parseMoney, Sparkline } from "../components/Wow";
 import { useMe } from "../lib/auth";
 import { fmtDate, useI18n } from "../lib/i18n";
-import { qColor, wowApi, type Region } from "../lib/wowApi";
+import { qColor, rulesetName, wowApi, type Region } from "../lib/wowApi";
 
 export function Market() {
   const { t, lang } = useI18n();
@@ -72,13 +72,15 @@ export function Market() {
           </label>
           <label className="grid gap-1"><span className="eyebrow">{t("mk_ruleset")}</span>
             <select className="input py-1.5" value={ruleset ?? ""} onChange={(e) => (setRuleset(+e.target.value), setHouse(null))}>
-              {cfg.data.rulesets.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+              {cfg.data.rulesets.map((r) => <option key={r.id} value={r.id}>{rulesetName(r, t)}</option>)}
             </select>
           </label>
           <label className="grid gap-1"><span className="eyebrow">{t("mk_house")}</span>
             <select className="input py-1.5" value={house ?? ""} onChange={(e) => setHouse(+e.target.value)}>
               <option value="" disabled>—</option>
-              {(houses.data || []).map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
+              {[...(houses.data || [])].sort((a, b) => a.name.localeCompare(b.name) || a.id - b.id).map((h) => (
+                <option key={h.id} value={h.id}>{h.name} · #{h.id}</option>
+              ))}
             </select>
           </label>
           <button
@@ -89,6 +91,12 @@ export function Market() {
             {t("mk_save")}
           </button>
           {sel && <button className="btn" disabled={poll.isPending} onClick={() => poll.mutate()}>{t("mk_refresh")}</button>}
+          {ruleset != null && (
+            <a className="text-xs text-gold underline-offset-2 hover:underline" target="_blank" rel="noopener noreferrer" title={t("mk_raw_t")}
+              href={`/api/bnet/raw?kind=dynamic&region=${region}&path=${encodeURIComponent(`/data/wow/ruleset/${ruleset}/auctions/`)}`}>
+              {t("mk_raw")}
+            </a>
+          )}
           {!sel && <span className="text-muted">{t("mk_pick")}</span>}
           {cfg.data.error && <span className="text-bad">{cfg.data.error}</span>}
         </div>

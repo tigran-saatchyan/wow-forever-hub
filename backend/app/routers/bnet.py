@@ -57,6 +57,17 @@ async def probe(_: AdminUser, region: str | None = None, character: str | None =
     return [p.__dict__ for p in await client().probe(region, character)]
 
 
+@router.get("/raw")
+async def raw(_: AdminUser, path: str, kind: str = "dynamic", region: str | None = None, lang: str | None = None):
+    """Blizzard's answer as is (superadmin), to see the shape of an undocumented Forever endpoint."""
+    if kind not in ("static", "dynamic", "profile") or not path.startswith(("/data/wow/", "/profile/wow/")):
+        raise HTTPException(422, "path must start with /data/wow/ or /profile/wow/, kind static|dynamic|profile")
+    try:
+        return await client().get(path, kind, region, lang)
+    except BnetError as e:
+        raise HTTPException(502, f"Blizzard API: {e}") from e
+
+
 # ---------- Battle.net sign-in ----------
 
 def _redirect_uri(request: Request) -> str:

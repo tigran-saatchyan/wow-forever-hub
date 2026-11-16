@@ -112,6 +112,13 @@ def test_status_lists_rulesets(client):
     assert st["configured"] and st["ok"] and [r["name"] for r in st["rulesets"]] == ["PvP", "Normal"]
 
 
+def test_raw_answer(client):
+    r = client.get("/api/bnet/raw?kind=dynamic&path=/data/wow/ruleset/1/auctions/")
+    assert r.status_code == 200 and r.json()["auctions"][0]["name"] == "Horde"
+    assert client.get("/api/bnet/raw?kind=dynamic&path=https://evil/").status_code == 422
+    assert client.get("/api/bnet/raw?kind=dynamic&path=/data/wow/nope").status_code == 502
+
+
 def test_probe_reports_codes(client):
     rows = {p["name"]: p for p in client.get("/api/bnet/probe?character=Joe Gun").json()}
     assert rows["rulesets"]["status"] == 200 and rows["realms"]["status"] == 404

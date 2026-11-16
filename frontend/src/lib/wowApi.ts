@@ -1,7 +1,7 @@
 /** Blizzard-backed features: API status, characters, items, auction house. */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "./api";
-import type { Lang } from "./i18n";
+import type { Key, Lang } from "./i18n";
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const r = await fetch(path, {
@@ -116,3 +116,9 @@ export const QUALITY: Record<string, string> = {
   LEGENDARY: "#ff8000", ARTIFACT: "#e6cc80", HEIRLOOM: "#00ccff",
 };
 export const qColor = (q?: string | null) => (q && QUALITY[q]) || undefined;
+
+/** Forever's ruleset index has bare ids; known ones: 1 PvP, 2 Normal, 3 RP, 15 RP-PvP (community probes). */
+export function rulesetName(r: Ruleset, t: (k: Key, v?: Record<string, string | number>) => string): string {
+  if (r.name && r.name !== String(r.id)) return r.name;
+  return [1, 2, 3, 15].includes(r.id) ? t(`rs_${r.id}` as Key) : t("rs_n", { n: r.id });
+}
