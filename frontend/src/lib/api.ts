@@ -43,5 +43,7 @@ export const api = {
   builds: () => req<SavedBuild[]>("/api/builds"),
   saveBuild: (b: Omit<SavedBuild, "id" | "created" | "updated"> & { id?: string }) =>
     req<SavedBuild>("/api/builds", { method: "PUT", body: JSON.stringify(b) }),
+  renameBuild: ({ id, name }: { id: string; name: string }) =>
+    req<SavedBuild>(`/api/builds/${id}`, { method: "PATCH", body: JSON.stringify({ name }) }),
   deleteBuild: (id: string) => req<void>(`/api/builds/${id}`, { method: "DELETE" }),
 };

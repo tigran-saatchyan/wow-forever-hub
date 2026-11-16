@@ -33,7 +33,11 @@ class BuildIn(BaseModel):
     order: list[int] = Field(default_factory=list, max_length=60)
     talents: dict[str, SavedTalent] = Field(default_factory=dict)
     tags: list[str] = Field(default_factory=list, max_length=12)
-    id: str | None = None  # when set, overwrite this build
+    id: str | None = None  # ignored: a build is identified by class + name (see save_build)
+
+
+class RenameIn(BaseModel):
+    name: str = Field(min_length=1, max_length=40)
 
 
 class BuildOut(BuildIn):
@@ -66,22 +70,36 @@ async def list_builds(user: CurrentUser, session: Session):
 
 @router.put("", response_model=BuildOut)
 async def save_build(body: BuildIn, user: CurrentUser, session: Session):
-    """Create or overwrite. Same name (case-insensitive) within a class overwrites, like the prototype."""
+    """Create or overwrite. A build is its class + name (case-insensitive): the same name overwrites,
+    another name is another build, even when it was opened from an existing one. Renaming is PATCH."""
     key = body.name.strip().lower()
-    b = None
-    if body.id:
-        b = await session.get(Build, body.id)
-        if b and b.user_id != user.id:
-            raise HTTPException(404, "no such build")
-    if b is None:
-        q = select(Build).where(Build.user_id == user.id, Build.cls == body.cls, Build.name_key == key)
-        b = (await session.execute(q)).scalar_one_or_none()
+    q = select(Build).where(Build.user_id == user.id, Build.cls == body.cls, Build.name_key == key)
+    b = (await session.execute(q)).scalar_one_or_none()
     if b is None:
         b = Build(id="b" + format(int(time.time() * 1000), "x") + secrets.token_hex(2), user_id=user.id)
         session.add(b)
     b.name, b.name_key, b.cls = body.name.strip(), key, body.cls
     b.level, b.legacy, b.version, b.order, b.tags = body.level, body.legacy, body.version, body.order, body.tags
     b.talents = {k: v.model_dump(exclude_none=True) for k, v in body.talents.items()}
+    await session.commit()
+    await session.refresh(b)
+    return _out(b)
+
+
+@router.patch("/{build_id}", response_model=BuildOut)
+async def rename_build(build_id: str, body: RenameIn, user: CurrentUser, session: Session):
+    """Rename a build in place. 409 if another build of the class already has that name."""
+    b = await session.get(Build, build_id)
+    if not b or b.user_id != user.id:
+        raise HTTPException(404, "no such build")
+    name = body.name.strip()
+    if not name:
+        raise HTTPException(422, "empty name")
+    key = name.lower()
+    q = select(Build.id).where(Build.user_id == user.id, Build.cls == b.cls, Build.name_key == key, Build.id != b.id)
+    if (await session.execute(q)).first():
+        raise HTTPException(409, "name taken")
+    b.name, b.name_key = name, key
     await session.commit()
     await session.refresh(b)
     return _out(b)

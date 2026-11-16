@@ -56,7 +56,19 @@ def test_builds_crud(client):
     b = client.put("/api/builds", json={**body, "name": "shadow pvp", "level": 40}).json()
     assert a["id"] == b["id"] and b["level"] == 40
     assert len(client.get("/api/builds").json()) == 1
+    # opened, changed and saved under a new name: a second build, the first one is untouched
+    c = client.put("/api/builds", json={**body, "id": a["id"], "name": "Shadow PvE", "level": 50}).json()
+    assert c["id"] != a["id"]
+    rows = {r["name"]: r for r in client.get("/api/builds").json()}
+    assert rows["shadow pvp"]["level"] == 40 and rows["Shadow PvE"]["level"] == 50
+    # rename in place keeps the id; a taken name is refused
+    r = client.patch(f"/api/builds/{a['id']}", json={"name": " Shadow Duel "})
+    assert r.status_code == 200 and r.json()["id"] == a["id"] and r.json()["name"] == "Shadow Duel"
+    assert client.patch(f"/api/builds/{a['id']}", json={"name": "shadow pve"}).status_code == 409
+    assert client.patch(f"/api/builds/{a['id']}", json={"name": "SHADOW duel"}).status_code == 200
+    assert client.patch("/api/builds/nope", json={"name": "x"}).status_code == 404
     assert client.delete(f"/api/builds/{a['id']}").status_code == 204
+    assert client.delete(f"/api/builds/{c['id']}").status_code == 204
     assert client.get("/api/builds").json() == []
 
 

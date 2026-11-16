@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   analyzeSave, byId, makeLink, normOrder, snapshot, startLevel, type ClassData, type Ranks, type SaveAnalysis, type SaveFlag,
   type SavedBuild, type TalentDataset,
 } from "../../engine";
-import { api } from "../../lib/api";
+import { api, ApiError } from "../../lib/api";
 import { iconStyle, useAllBuilds, useDiffs, type DiffChange, type Icons } from "../../lib/gameData";
 import { fmtDate, useI18n, type Key } from "../../lib/i18n";
 import { Desc } from "./Tooltip";
@@ -39,6 +39,8 @@ export function Saves({ D, c, level, legacy, ranks, order, split, icons, np, act
   const [filter, setFilter] = useState<string | null>(null);
   const [arm, setArm] = useState<string | null>(null);
   const [cmp, setCmp] = useState<string[]>([]);
+  const [editing, setEditing] = useState<{ id: string; name: string } | null>(null);
+  const cancelRename = useRef(false); // Escape: the blur that follows must not save
   const list = useQuery({ queryKey: ["builds"], queryFn: api.builds });
   const saves = list.data || [];
 
@@ -66,13 +68,14 @@ export function Saves({ D, c, level, legacy, ranks, order, split, icons, np, act
   const put = useMutation({ mutationFn: api.saveBuild, onSuccess: invalidate, onError: () => toast(t("sv_cloud_err")) });
   const del = useMutation({ mutationFn: api.deleteBuild, onSuccess: invalidate });
 
+  // A build is its class + name: the same name overwrites, a new name is a new build (the opened
+  // one stays as it was). Renaming in place is a double click on the build's title.
   const saveCurrent = async () => {
     if (np) return toast(t("np_nosave"));
     const nm = name.trim() || `${c.name} ${split.join("/")}`;
-    const existed = saves.some((s) => s.id === activeSave || (s.cls === c.token && s.name.toLowerCase() === nm.toLowerCase()));
-    const keep = saves.find((s) => s.id === activeSave && s.cls === c.token);
+    const existed = saves.some((s) => s.cls === c.token && s.name.trim().toLowerCase() === nm.toLowerCase());
     const sv = await put.mutateAsync({
-      id: keep?.id, name: nm, cls: c.token, level, legacy, version: D.build, order: normOrder(c, ranks, order),
+      name: nm, cls: c.token, level, legacy, version: D.build, order: normOrder(c, ranks, order),
       talents: snapshot(c, ranks), tags,
     });
     setName(sv.name);
@@ -88,6 +91,24 @@ export function Saves({ D, c, level, legacy, ranks, order, split, icons, np, act
     });
     if (activeSave === sv.id) clearFlags();
     toast(t("sv_updated", { n: sv.name }));
+  };
+
+  const ren = useMutation({ mutationFn: api.renameBuild, onSuccess: invalidate });
+  const commitRename = async () => {
+    const e = cancelRename.current ? null : editing;
+    cancelRename.current = false;
+    setEditing(null);
+    const sv = e && saves.find((s) => s.id === e.id);
+    const nm = e?.name.trim();
+    if (!sv || !nm || nm === sv.name) return;
+    try {
+      const out = await ren.mutateAsync({ id: sv.id, name: nm });
+      if (activeSave === sv.id) setName(out.name);
+      toast(t("sv_renamed", { n: out.name }));
+    } catch (err) {
+      const k = D.classes.find((x) => x.token === sv.cls);
+      toast(err instanceof ApiError && err.status === 409 ? t("sv_name_taken", { n: nm, c: k?.name ?? sv.cls }) : t("sv_cloud_err"));
+    }
   };
 
   const remove = (id: string) => {
@@ -198,7 +219,27 @@ export function Saves({ D, c, level, legacy, ranks, order, split, icons, np, act
                   <header className="flex gap-2.5">
                     <span className="h-8 w-8 flex-none rounded border border-black" style={iconStyle(icons, K.icon)} />
                     <div className="min-w-0">
-                      <h3 className="truncate font-semibold" style={{ color: A.broken ? "#f3a39e" : K.color }}>{sv.name}</h3>
+                      {editing?.id === sv.id ? (
+                        <input
+                          autoFocus className="input w-full py-0.5 font-semibold" maxLength={40} value={editing.name}
+                          aria-label={t("sv_name")} style={{ color: K.color }}
+                          onChange={(e) => setEditing({ id: sv.id, name: e.target.value })}
+                          onFocus={(e) => e.currentTarget.select()}
+                          onBlur={commitRename}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") e.currentTarget.blur();
+                            else if (e.key === "Escape") (cancelRename.current = true, e.currentTarget.blur());
+                          }}
+                        />
+                      ) : (
+                        <h3
+                          className="cursor-text truncate font-semibold" title={t("sv_rename_t")}
+                          style={{ color: A.broken ? "#f3a39e" : K.color }}
+                          onDoubleClick={() => (cancelRename.current = false, setEditing({ id: sv.id, name: sv.name }))}
+                        >
+                          {sv.name}
+                        </h3>
+                      )}
                       <div className="font-mono text-[12px] leading-snug text-muted">
                         {K.name} · {A.broken ? "" : A.split.join(" / ") + " · "}
                         {t("sv_meta", { l: sv.level, b: ver ?? "", d: fmtDate(lang, sv.updated || sv.created || Date.now(), { day: "numeric", month: "short" }) })}
