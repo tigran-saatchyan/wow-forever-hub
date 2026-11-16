@@ -302,7 +302,7 @@ export function QuestsTab({ cid }: { cid: number }) {
   );
 }
 
-function QuestDetails({ id, who }: { id: number; who: { name: string; cls: string; race: string } }) {
+export function QuestDetails({ id, who }: { id: number; who: { name: string; cls: string; race: string } }) {
   const { t, lang } = useI18n();
   const q = useQuery({ queryKey: ["quest", id, lang], queryFn: () => wowApi.quest(id, lang), staleTime: Infinity, retry: false });
   if (q.isLoading) return <p className="pb-2 pl-5 text-sm text-muted">…</p>;

@@ -432,7 +432,9 @@ def titles(p: dict, lang: str | None = None) -> dict:
 
 def quests(p: dict, lang: str | None = None) -> dict:
     qs = p.get("quests") or []
-    return {"count": len(qs), "recent": [n for q in qs[-15:] if (n := name_of(q, lang))]}
+    return {"count": len(qs), "recent": [n for q in qs[-15:] if (n := name_of(q, lang))],
+            # every completed quest id: chains (the Onyxia attunement) are checked against them
+            "ids": [q["id"] for q in qs if isinstance(q, dict) and isinstance(q.get("id"), int)]}
 
 
 

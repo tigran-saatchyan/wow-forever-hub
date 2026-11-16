@@ -643,3 +643,8 @@ def test_craft_overview_and_plan(client, monkeypatch):
     # only the shirt reaches 150..155, and the reference lists no reagents for it: its cost is not known
     assert p["gaps"] == [150, 151, 152, 153, 154] and not p["steps"]
     assert client.get(f"/api/craft/plan?cid={c['id']}&prof=171&target=10").status_code == 404
+
+
+def test_completed_quests_keep_ids():
+    q = wow.quests({"quests": [{"id": 4903, "name": "Warlord's Command"}, {"id": 4941, "name": "Eitrigg's Wisdom"}]}, "en")
+    assert q["count"] == 2 and q["ids"] == [4903, 4941] and q["recent"] == ["Warlord's Command", "Eitrigg's Wisdom"]

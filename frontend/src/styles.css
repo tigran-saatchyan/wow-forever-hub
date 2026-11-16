@@ -1249,3 +1249,27 @@ button.order-line:hover { @apply text-gold; }
   text-transform: uppercase; color: rgb(var(--gold)); border-bottom: 1px solid rgb(var(--gold) / 0.25);
 }
 .tr-pace { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 16px; margin-top: 2px; font-size: 12px; }
+
+/* raids: the countdown under the arch, the raids, the attunement steps */
+.raid-hero {
+  position: relative; overflow: hidden; border-radius: 14px; padding: 24px 28px;
+  border: 1px solid rgb(var(--gold) / 0.3);
+  background:
+    radial-gradient(ellipse 50% 90% at 85% 0%, rgb(255 110 40 / 0.18), transparent 60%),
+    radial-gradient(ellipse 40% 80% at 10% 100%, rgb(116 214 84 / 0.12), transparent 60%),
+    linear-gradient(180deg, rgb(12 10 9 / 0.92), rgb(5 6 6 / 0.96));
+  box-shadow: inset 0 0 80px rgb(0 0 0 / 0.6), 0 20px 50px -25px #000;
+}
+.raid-card {
+  border-radius: 10px; padding: 14px 16px; border: 1px solid rgb(var(--gold) / 0.22);
+  background: linear-gradient(180deg, rgb(20 14 10 / 0.7), rgb(6 6 6 / 0.8));
+}
+.raid-step { display: flex; width: 100%; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 6px; text-align: left; font-size: 14px; }
+.raid-step:hover { background: rgb(var(--gold) / 0.06); }
+.raid-step .raid-mark { width: 16px; flex: none; text-align: center; }
+.raid-step.done { color: rgb(var(--muted)); }
+.raid-step.done .raid-mark { color: #1eff00; }
+.raid-step.log .raid-mark { color: #ffd100; }
+.raid-step.next { color: rgb(var(--gold)); font-weight: 600; }
+.raid-step.next .raid-mark { color: #ff8040; }
+.raid-step.later { color: rgb(var(--ink) / 0.75); }
