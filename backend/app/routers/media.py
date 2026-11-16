@@ -54,6 +54,8 @@ async def media(u: str, _: CurrentUser):
 GAME_FILES: dict[int, str] = {
     8181003: "audio/mpeg", 8181005: "audio/mpeg", 8181007: "audio/mpeg",  # Forever: Undercity music
     8181009: "audio/mpeg",  # Forever: Undercity intro moment
+    53216: "audio/mpeg", 53217: "audio/mpeg", 53218: "audio/mpeg", 53219: "audio/mpeg",  # classic Undercity
+    53221: "audio/mpeg",  # Lament of the Highborne (Sylvanas' song, her music box)
     537437: "audio/ogg", 537439: "audio/ogg",  # Undercity ambience, the throne room
     561230: "audio/ogg", 561256: "audio/ogg", 561225: "audio/ogg", 561242: "audio/ogg",  # Sylvanas, quest turn-in
     561241: "audio/ogg", 561268: "audio/ogg", 561231: "audio/ogg",

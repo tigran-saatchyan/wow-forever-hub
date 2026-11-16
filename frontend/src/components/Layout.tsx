@@ -1,10 +1,10 @@
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import { useLogout, useMe } from "../lib/auth";
 import { useIndex } from "../lib/gameData";
 import { LANGS, useI18n } from "../lib/i18n";
 import { Ambient } from "../theme/Ambient";
-import { musicPlaying, startMusic, stopMusic } from "../theme/music";
+import { MusicPlayer } from "./MusicPlayer";
 import { THEMES } from "../theme/themes";
 import { useTheme } from "../theme/ThemeProvider";
 
@@ -57,7 +57,7 @@ export function Layout({ children }: { children: ReactNode }) {
             <button className="btn px-2" onClick={() => setSound(!sound)} title={sound ? t("sound_on") : t("sound_off")}>
               {sound ? "🔊" : "🔇"}
             </button>
-            {theme.id === "undercity" && <MusicButton />}
+            {theme.id === "undercity" && <MusicPlayer />}
             <div className="flex overflow-hidden rounded-md border border-edge">
               {LANGS.map((l) => (
                 <button
@@ -82,18 +82,3 @@ export function Layout({ children }: { children: ReactNode }) {
   );
 }
 
-/** Forever's Undercity music: starts only on a click (browsers block sound before one), remembered as a wish. */
-function MusicButton() {
-  const { t } = useI18n();
-  const [on, setOn] = useState(musicPlaying());
-  const toggle = () => {
-    if (on) stopMusic();
-    else startMusic();
-    setOn(!on);
-  };
-  return (
-    <button className="btn px-2" aria-pressed={on} onClick={toggle} title={t(on ? "uc_music_off" : "uc_music_on")}>
-      {on ? "♫" : "♪"}
-    </button>
-  );
-}
