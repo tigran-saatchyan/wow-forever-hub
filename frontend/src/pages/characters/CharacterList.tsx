@@ -81,7 +81,7 @@ export function CharacterList({ chars, cur, onSelect, icon }: Props) {
           setDrag(null);
           setOver(null);
         }}
-        className={`panel flex items-center gap-2 p-2 transition ${cur === c.id ? "!border-gold/70" : "hover:border-gold/40"} ${drag === c.id ? "opacity-40" : ""} ${line}`}
+        className={`panel ch-tile flex items-center gap-2 p-2 transition ${cur === c.id ? "on !border-gold/70" : "hover:border-gold/40"} ${drag === c.id ? "opacity-40" : ""} ${line}`}
       >
         <button className="flex min-w-0 flex-1 items-center gap-3 text-left" onClick={() => onSelect(c.id)}>
           {icon(c)}

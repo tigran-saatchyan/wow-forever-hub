@@ -130,21 +130,25 @@ function CharacterCard({ id }: { id: number }) {
 
   return (
     <section className="panel space-y-4 p-4">
-      <header className="flex flex-wrap items-start gap-4">
-        {c.avatar ? <img src={media(c.avatar)} alt="" className="h-16 w-16 rounded-md border border-edge object-cover" /> : <ClassIcon classId={s?.classId ?? null} size={64} />}
-        <div className="min-w-[200px] flex-1">
-          <h2 className="font-display text-2xl" style={{ color: k?.color }}>{fullName(c, lang)}</h2>
+      <header className="ch-hero" style={{ ["--cls" as string]: k?.color ?? "#c8be8c" }}>
+        <div className="ch-hero-art" aria-hidden />
+        <div className="ch-portrait">
+          {c.avatar ? <img src={media(c.avatar)} alt="" /> : <ClassIcon classId={s?.classId ?? null} size={72} />}
+          {s?.level != null && <span className="ch-portrait-lvl">{s.level}</span>}
+        </div>
+        <div className="relative min-w-[200px] flex-1">
+          <div className="brand-sub">{s?.guild?.name ? `<${s.guild.name}>` : t("tr_servant")}</div>
+          <h2 className="ch-name">{fullName(c, lang)}</h2>
           {s && (
-            <p className="text-sm text-muted">
-              {t("ch_level", { l: s.level ?? "?" })} · {s.race} {s.className}
-              {s.guild?.name ? <> · <span className="text-ink">&lt;{s.guild.name}&gt;</span></> : null}
-              {s.ruleset ? ` · ${s.ruleset}` : ""}
-              {s.ilvl ? ` · ${t("ch_ilvl", { i: s.ilvl })}` : ""}
+            <p className="text-sm">
+              <span style={{ color: k?.color }}>{s.race} {s.className}</span>
+              {s.ruleset ? <span className="text-muted"> · {s.ruleset}</span> : null}
+              {s.ilvl ? <span className="ch-ilvl">{t("ch_ilvl", { i: s.ilvl })}</span> : null}
             </p>
           )}
           <p className="text-xs text-muted">{c.region.toUpperCase()} · {c.slug}{c.fetched ? ` · ${t("ch_updated", { d: fmtDate(lang, c.fetched) })}` : ""}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="relative flex gap-2">
           <button className="btn" disabled={acts.refresh.isPending} onClick={() => acts.refresh.mutate(c.id)}>{t("ch_refresh")}</button>
           <button className="btn text-bad" onClick={() => acts.remove.mutate(c.id)}>{t("ch_delete")}</button>
         </div>

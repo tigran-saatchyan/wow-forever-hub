@@ -1273,3 +1273,96 @@ button.order-line:hover { @apply text-gold; }
 .raid-step.next { color: rgb(var(--gold)); font-weight: 600; }
 .raid-step.next .raid-mark { color: #ff8040; }
 .raid-step.later { color: rgb(var(--ink) / 0.75); }
+
+/* ===================== characters in the Undercity's frames ===================== */
+.ch-hero {
+  position: relative; overflow: hidden; isolation: isolate;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 18px;
+  margin: -16px -16px 0; padding: 22px 22px 18px; border-radius: 8px 8px 0 0;
+  border-bottom: 1px solid rgb(var(--gold) / 0.3);
+}
+.ch-hero-art {
+  position: absolute; inset: 0; z-index: -1;
+  background:
+    radial-gradient(ellipse 45% 120% at 0% 50%, color-mix(in srgb, var(--cls) 30%, transparent), transparent 70%),
+    linear-gradient(90deg, rgb(5 8 7 / 0.55), rgb(5 8 7 / 0.92) 55%),
+    url("/undercity/lordaeron.webp") center 35% / cover no-repeat;
+  filter: saturate(0.8);
+}
+.ch-hero-art::after {
+  content: ""; position: absolute; right: 18px; top: -6px; width: 64px; height: 86px; opacity: 0.55;
+  background: url("/undercity/banner.webp") top / contain no-repeat;
+  filter: drop-shadow(0 6px 8px #000);
+}
+.ch-portrait {
+  position: relative; width: 84px; height: 84px; flex: none; border-radius: 50%; padding: 5px;
+  background: conic-gradient(from 210deg, #6d532a, #e4c873, #8a6a2c, #e4c873, #6d532a);
+  box-shadow: 0 0 0 1px #000, 0 0 22px -4px var(--cls), 0 8px 16px -6px #000;
+}
+.ch-portrait img, .ch-portrait > span:first-child { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; box-shadow: inset 0 0 0 2px #000; }
+.ch-portrait-lvl {
+  position: absolute; right: -4px; bottom: -2px; min-width: 28px; height: 24px; padding: 0 6px; border-radius: 12px;
+  display: grid; place-items: center; font: 600 12px/1 var(--font-display, inherit); color: #ffd100;
+  background: linear-gradient(180deg, #2a2116, #0d0a06); box-shadow: 0 0 0 1px #000, 0 0 0 2px rgb(var(--gold) / 0.6);
+}
+.ch-name {
+  font-family: var(--font-display, inherit); font-size: clamp(1.6rem, 2.6vw, 2.2rem); line-height: 1.1;
+  background: linear-gradient(180deg, #fff6d2 0%, #e4c873 50%, #8a6a2c 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 2px 0 #000);
+}
+.ch-ilvl {
+  margin-left: 10px; padding: 1px 8px; border-radius: 999px; font-size: 12px; color: #ffd100;
+  border: 1px solid rgb(var(--gold) / 0.4); background: rgb(0 0 0 / 0.35);
+}
+
+/* the tab strip carved into stone; the open tab glows with plague light */
+:root[data-theme="undercity"] .armory-tabs {
+  gap: 2px; border-color: rgb(var(--gold) / 0.3);
+  background: linear-gradient(180deg, transparent, rgb(0 0 0 / 0.25));
+}
+:root[data-theme="undercity"] .armory-tabs button {
+  border: 1px solid transparent; border-bottom: 0;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.02), rgb(0 0 0 / 0.2));
+}
+:root[data-theme="undercity"] .armory-tabs button:hover { border-color: rgb(var(--gold) / 0.18); }
+:root[data-theme="undercity"] .armory-tabs button.on {
+  border-color: rgb(var(--gold) / 0.45);
+  background: linear-gradient(180deg, rgb(116 214 84 / 0.16), rgb(10 16 15 / 0.9));
+  box-shadow: inset 0 2px 0 rgb(140 240 106 / 0.6), 0 -6px 18px -10px rgb(116 214 84 / 0.8);
+  text-shadow: 0 0 10px rgb(116 214 84 / 0.5);
+}
+
+/* the paper doll: the figure stands on the crest in a pillar of light, as in the throne room */
+:root[data-theme="undercity"] .char-doll {
+  border-color: rgb(var(--gold) / 0.4);
+  background:
+    radial-gradient(ellipse 40% 55% at 50% 48%, rgb(116 214 84 / 0.14), transparent 70%),
+    radial-gradient(ellipse 30% 40% at 50% 30%, rgb(168 108 232 / 0.12), transparent 70%),
+    linear-gradient(180deg, #0a0f0e, #050807);
+}
+:root[data-theme="undercity"] .char-render-box::before {
+  content: ""; position: absolute; left: 50%; bottom: 6%; width: 78%; aspect-ratio: 1; translate: -50% 42%;
+  background: url("/undercity/crest.webp") center / contain no-repeat;
+  transform: perspective(500px) rotateX(74deg); opacity: 0.6; mix-blend-mode: screen;
+  filter: drop-shadow(0 0 16px rgb(116 214 84 / 0.9));
+}
+:root[data-theme="undercity"] .char-render-box::after {
+  content: ""; position: absolute; left: 50%; bottom: 6%; width: 46%; height: 80%; translate: -50% 0;
+  background: linear-gradient(0deg, rgb(140 240 106 / 0.13), transparent 75%); filter: blur(14px);
+  border-radius: 50% 50% 0 0; pointer-events: none;
+}
+:root[data-theme="undercity"] .char-render { z-index: 1; filter: drop-shadow(0 0 1px rgb(180 255 150 / 0.3)) drop-shadow(0 12px 16px #000); }
+
+/* blocks inside the tabs: small framed tablets */
+:root[data-theme="undercity"] .char-stats {
+  border-color: rgb(var(--gold) / 0.22);
+  background: linear-gradient(180deg, rgb(12 18 17 / 0.85), rgb(6 9 9 / 0.9));
+  box-shadow: inset 0 1px 0 rgb(var(--gold) / 0.1), inset 0 0 24px rgb(0 0 0 / 0.5);
+}
+
+/* the list of servants: the chosen one marked with plague light and a gold bar */
+:root[data-theme="undercity"] .ch-tile.on {
+  background: linear-gradient(90deg, rgb(116 214 84 / 0.14), rgb(8 13 12 / 0.92) 60%);
+  box-shadow: inset 3px 0 0 #e4c873, inset 0 0 0 1px rgb(0 0 0 / 0.6), 0 0 20px -8px rgb(116 214 84 / 0.7);
+}
