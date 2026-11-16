@@ -85,6 +85,21 @@ async def set_config(body: MarketIn, _: AdminUser, session: Session):
     return body
 
 
+async def fetch_house(ruleset: int, house: int, region: str) -> list[dict]:
+    """All lots of a house: items sold one by one (auctions) and stackable goods (commodities: herbs,
+    cloth, ore...), which Forever serves from a second address, linked from the first answer."""
+    data = await client().get(f"/data/wow/ruleset/{ruleset}/auctions/{house}", "dynamic", region)
+    lots = list(data.get("auctions") or [])
+    com = data.get("commodities")
+    if com:
+        try:
+            more = await client().get(f"/data/wow/ruleset/{ruleset}/auctions/{house}/commodities", "dynamic", region)
+            lots += more.get("auctions") or []
+        except BnetError as e:
+            log.warning("commodities %s/%s: %s", ruleset, house, e)
+    return lots
+
+
 async def poll_once() -> dict:
     """Fetch the chosen house once: replace its latest prices, append history for watched items."""
     async with SessionLocal() as session:
@@ -94,8 +109,8 @@ async def poll_once() -> dict:
         r, h, region = cfg["ruleset"], cfg["house"], cfg.get("region", "eu")
         state: dict = {"at": utcnow().isoformat()}
         try:
-            data = await client().get(f"/data/wow/ruleset/{r}/auctions/{h}", "dynamic", region)
-            summary = wow.summarize_auctions(data.get("auctions") or [])
+            lots = await fetch_house(r, h, region)
+            summary = wow.summarize_auctions(lots)
             now = utcnow()
             await session.execute(delete(AhLatest).where(AhLatest.ruleset == r, AhLatest.house == h))
             rows = [
@@ -114,7 +129,7 @@ async def poll_once() -> dict:
             if hist:
                 await session.execute(insert(AhHistory), hist)
             await session.execute(delete(AhHistory).where(AhHistory.ts < now - timedelta(days=HISTORY_DAYS)))
-            state |= {"ok": True, "items": len(rows), "auctions": len(data.get("auctions") or [])}
+            state |= {"ok": True, "items": len(rows), "auctions": len(lots)}
         except BnetError as e:
             state |= {"ok": False, "error": str(e)}
         await _put_setting(session, "market_state", state)
@@ -157,10 +172,9 @@ async def compare(_: AdminUser, ruleset: int, region: str = "eu", item: int = 25
         async def one(h: dict) -> dict:
             async with sem:
                 try:
-                    data = await bn.get(f"/data/wow/ruleset/{ruleset}/auctions/{h['id']}", "dynamic", region)
+                    lots = await fetch_house(ruleset, h["id"], region)
                 except BnetError as e:
                     return {**h, "error": str(e), "summary": {}}
-            lots = data.get("auctions") or []
             return {**h, "lots": len(lots), "summary": wow.summarize_auctions(lots)}
 
         houses_ = await asyncio.gather(*(one(h) for h in wow.houses(idx, lang)))

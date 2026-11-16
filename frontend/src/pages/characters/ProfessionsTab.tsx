@@ -85,7 +85,7 @@ export function ProfessionsTab({ c }: { c: Character }) {
       <div>
         {idx.data?.status === "building" && <p className="text-sm text-muted">{t("pf_building")}</p>}
         {idx.data?.status === "error" && <BuildError error={idx.data.error} />}
-        {idx.data?.status === "ready" && own?.id != null && <Recipes cid={c.id} line={own.id} own={own} />}
+        {idx.data?.status === "ready" && own?.id != null && <Recipes line={own.id} own={own} />}
       </div>
     </div>
   );
@@ -107,15 +107,9 @@ function BuildError({ error }: { error?: string }) {
 
 type Range = "mine" | "all";
 
-function Recipes({ cid, line, own }: { cid: number; line: number; own: CharProfession }) {
+function Recipes({ line, own }: { line: number; own: CharProfession }) {
   const { t, lang } = useI18n();
-  const qc = useQueryClient();
   const q = useQuery({ queryKey: ["profession", line, lang], queryFn: () => wowApi.profession(line, lang), staleTime: Infinity });
-  const marks = useQuery({ queryKey: ["known", cid], queryFn: () => wowApi.known(cid) });
-  const mark = useMutation({
-    mutationFn: (b: { ids: number[]; known: boolean }) => wowApi.markKnown(cid, { line, ...b }),
-    onSuccess: (v) => qc.setQueryData(["known", cid], v),
-  });
   const [showKnown, setShowKnown] = useState(() => store.get<boolean>("pfKnown", true));
   const [showNew, setShowNew] = useState(() => store.get<boolean>("pfNew", true));
   const [range, setRange] = useState<Range>(() => store.get<Range>("pfRange", "mine"));
@@ -124,9 +118,8 @@ function Recipes({ cid, line, own }: { cid: number; line: number; own: CharProfe
   const skill = own.skill ?? null;
   const apiIds = useMemo(() => new Set(own.known || []), [own]);
   const apiNames = useMemo(() => new Set((own.knownNames || []).map((n) => n.toLowerCase())), [own]);
-  const manual = useMemo(() => new Set(marks.data?.[String(line)] || []), [marks.data, line]);
-  const byApi = (r: Recipe) => apiIds.has(r.id) || apiIds.has(r.spell) || apiNames.has(r.nameEn.toLowerCase());
-  const isKnown = (r: Recipe) => byApi(r) || manual.has(r.id);
+  // learned recipes: Blizzard's known_recipes ids are the client's recipe ids (names as a fallback)
+  const isKnown = (r: Recipe) => apiIds.has(r.id) || apiIds.has(r.spell) || apiNames.has(r.nameEn.toLowerCase());
 
   if (!q.data?.recipes) return <p className="text-sm text-muted">{q.data?.status === "building" ? t("pf_building") : "…"}</p>;
   const all = q.data.recipes;
@@ -154,7 +147,8 @@ function Recipes({ cid, line, own }: { cid: number; line: number; own: CharProfe
       <div className="flex flex-wrap items-center gap-2">
         <h3 className="font-display text-xl text-gold">{q.data.name}</h3>
         {skill != null && <span className="chip">{t("pf_skill", { s: skill })}{own.max ? ` / ${own.max}` : ""}</span>}
-        <span className="text-xs text-muted">{t("pf_known_n", { n: nKnown, m: all.length })}</span>
+        {own.hasKnown && <span className="text-xs text-muted">{t("pf_known_n", { n: nKnown, m: all.length })}</span>}
+        {own.hasKnown && learnable.length > 0 && <span className="pf-badge new">{t("pf_can_now", { n: learnable.filter((r) => skill == null || need(r).v <= skill).length })}</span>}
       </div>
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="flex overflow-hidden rounded-md border border-edge">
@@ -167,19 +161,13 @@ function Recipes({ cid, line, own }: { cid: number; line: number; own: CharProfe
         </span>
         <button className="btn px-2 py-1 text-xs" aria-pressed={showNew} onClick={() => toggle("pfNew", !showNew, setShowNew)}>{t("pf_show_new")}</button>
         <button className="btn px-2 py-1 text-xs" aria-pressed={showKnown} onClick={() => toggle("pfKnown", !showKnown, setShowKnown)}>{t("pf_show_known")}</button>
-        {learnable.length > 0 && range === "mine" && (
-          <button className="btn px-2 py-1 text-xs" title={t("pf_mark_all_t")} onClick={() => mark.mutate({ ids: learnable.map((r) => r.id), known: true })}>
-            {t("pf_mark_all")}
-          </button>
-        )}
         <input className="input ml-auto w-48 py-1" placeholder={t("ar_filter")} value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
-      <p className="text-xs text-muted">{t(own.hasKnown ? "pf_from_api" : "pf_mark_hint")}</p>
+      {!own.hasKnown && <p className="text-xs text-muted">{t("pf_mark_hint")}</p>}
       <div className="overflow-x-auto">
         <table className="w-full min-w-[680px] text-sm">
           <thead className="text-left text-xs text-muted">
             <tr>
-              <th className="w-8 p-1.5 font-normal" title={t("pf_known")}>✓</th>
               <th className="p-1.5 font-normal" title={t("pf_c_skill_t")}>{t("pf_c_skill")}</th>
               <th className="p-1.5 font-normal">{t("pf_c_recipe")}</th>
               <th className="p-1.5 font-normal">{t("pf_c_reagents")}</th>
@@ -192,11 +180,7 @@ function Recipes({ cid, line, own }: { cid: number; line: number; own: CharProfe
               const known = isKnown(r);
               const n = need(r);
               return (
-                <tr key={r.id} className={`border-t border-edge/40 align-top ${known ? "opacity-60" : ""}`}>
-                  <td className="p-1.5">
-                    <input type="checkbox" className="accent-[#ffd100]" checked={known} disabled={byApi(r)}
-                      aria-label={t("pf_known")} onChange={(e) => mark.mutate({ ids: [r.id], known: e.target.checked })} />
-                  </td>
+                <tr key={r.id} className={`border-t border-edge/40 align-top ${known ? "bg-good/[0.06]" : ""}`}>
                   <td className="whitespace-nowrap p-1.5 font-mono text-xs" title={t(d.key)}>
                     <span style={{ color: "#ff8040" }} title={n.exact ? t("pf_need") : t("pf_need_est")}>{n.exact ? n.v : `≈${n.v}`}</span>{" "}
                     <span style={{ color: "#ffff00" }}>{r.yellow ?? "—"}</span>{" "}
@@ -204,6 +188,11 @@ function Recipes({ cid, line, own }: { cid: number; line: number; own: CharProfe
                     <span style={{ color: "#909090" }}>{r.gray ?? "—"}</span>
                   </td>
                   <td className="p-1.5">
+                    {own.hasKnown && (
+                      known ? <span className="pf-badge known">✓ {t("pf_known")}</span>
+                        : skill != null && n.v <= skill ? <span className="pf-badge new">{t("pf_learnable")}</span>
+                          : <span className="pf-badge later">{t("pf_later", { s: n.exact ? n.v : `≈${n.v}` })}</span>
+                    )}
                     <span className="mr-1.5 inline-block h-2 w-2 rounded-full align-middle" style={{ background: d.color }} title={t(d.key)} />
                     {r.item ? <Item x={r.item} count={r.count} onOpen={setPanel} /> : <span>{r.name}</span>}
                     {r.item && r.name && <div className="text-[11px] text-muted">{r.name}</div>}

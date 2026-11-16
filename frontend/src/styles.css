@@ -311,6 +311,25 @@ body {
     fill: #f0c541;
   }
 
+  /* recipe state next to its name */
+  .pf-badge {
+    @apply mr-2 inline-block whitespace-nowrap rounded px-1.5 py-px align-middle text-[10.5px] font-semibold uppercase tracking-wide;
+  }
+  .pf-badge.known {
+    color: #6fdc6f;
+    background: #2e7d3226;
+    box-shadow: inset 0 0 0 1px #2e7d3299;
+  }
+  .pf-badge.new {
+    color: #ffb070;
+    background: #ff804022;
+    box-shadow: inset 0 0 0 1px #ff804088;
+  }
+  .pf-badge.later {
+    color: rgb(var(--muted));
+    box-shadow: inset 0 0 0 1px rgb(var(--edge));
+  }
+
   /* "how to get it" slide-over */
   .source-panel {
     background: linear-gradient(180deg, #0d1117f7, #07090cf7);

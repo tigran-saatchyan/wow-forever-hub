@@ -80,7 +80,11 @@ def handler(req: httpx.Request) -> httpx.Response:
     if p == "/data/wow/ruleset/1/auctions/":
         return httpx.Response(200, json={"auctions": [{"id": 6, "name": "Horde"}, {"id": 2, "name": "Alliance"}]})
     if p == "/data/wow/ruleset/1/auctions/6":
-        return httpx.Response(200, json=AUCTIONS)
+        com = {"href": "https://x/ruleset/1/auctions/6/commodities"}
+        return httpx.Response(200, json={**AUCTIONS, "commodities": com})
+    if p == "/data/wow/ruleset/1/auctions/6/commodities":
+        stack = {"id": 9, "item": {"id": 2589}, "quantity": 100, "unit_price": 40}
+        return httpx.Response(200, json={"auctions": [stack]})
     if p.startswith("/data/wow/item/") or p.startswith("/data/wow/media/item/"):
         if ns == "static-forever-eu":
             return httpx.Response(403, text="forbidden")  # plain static refused: versioned one works
@@ -257,14 +261,14 @@ def test_market_poll_and_watch(client):
     assert client.put("/api/market/config", json={"region": "eu", "ruleset": 1, "house": 6}).status_code == 200
     w = client.post("/api/market/watch", json={"item_id": 2589, "below": 55}).json()
     st = client.post("/api/market/refresh").json()
-    assert st["ok"] and st["items"] == 2 and st["auctions"] == 4
+    assert st["ok"] and st["items"] == 2 and st["auctions"] == 5  # 4 lots + 1 stack of goods
     cards = client.get("/api/market/watch?lang=en").json()
-    assert cards[0]["latest"]["min"] == 50 and cards[0]["latest"]["quantity"] == 26 and cards[0]["alert"]
+    assert cards[0]["latest"]["min"] == 40 and cards[0]["latest"]["quantity"] == 126 and cards[0]["alert"]
     assert len(cards[0]["history"]) == 1 and cards[0]["item"]["name"] == "Linen Cloth"
     assert client.get("/api/market/price/4306").json()["min"] == 120
     assert client.delete(f"/api/market/watch/{w['id']}").status_code == 204
     cmp = {h["id"]: h for h in client.get("/api/market/compare?ruleset=1&item=2589").json()}
-    assert cmp[6]["lots"] == 4 and cmp[6]["itemMin"] == 50 and cmp[6]["itemQty"] == 26
+    assert cmp[6]["lots"] == 5 and cmp[6]["itemMin"] == 40 and cmp[6]["itemQty"] == 126
     assert cmp[2]["error"] and cmp[2]["lots"] == 0
 
 
