@@ -20,6 +20,8 @@ export interface ChainStep {
   at?: Place[];
   turnin: Place;
   dungeon?: "lbrs" | "ubrs" | "brd";
+  /** the lowest character level the quest can be taken at; `sure` when a source says so, else an estimate */
+  min?: { level: number; sure: boolean };
 }
 export interface Chain { key: string; name: L; faction: "HORDE" | "ALLIANCE" | null; level: L; steps: ChainStep[] }
 
@@ -51,7 +53,7 @@ export const CHAINS: Chain[] = [
   {
     key: "onyxia-horde", faction: "HORDE",
     name: { ru: "Амулет Пламени дракона (Орда)", en: "Drakefire Amulet (Horde)" },
-    level: { ru: "задания 60 уровня, взять можно примерно с 55; нужны Нижняя и Верхняя части пика Черной горы", en: "level 60 quests, taken from about 55; Lower and Upper Blackrock Spire" },
+    level: { ru: "задания 60 уровня, первое берётся с 58 (по Warcraft Wiki); нужны Нижняя и Верхняя части пика Черной горы", en: "level 60 quests, the first taken from 58 (Warcraft Wiki); Lower and Upper Blackrock Spire" },
     steps: [
       { id: 4903, giver: GORETOOTH, dungeon: "lbrs",
         todo: { ru: "В Нижней части пика Черной горы убить вождя Омокка, воеводу Вуна и Повелителя Змейталака; доставить найденные при них документы.", en: "In Lower Blackrock Spire kill Highlord Omokk, War Master Voone and Overlord Wyrmthalak; find the Important Blackrock Documents (they lie somewhere in the Lower Spire)." },
@@ -85,7 +87,7 @@ export const CHAINS: Chain[] = [
   {
     key: "onyxia-alliance", faction: "ALLIANCE",
     name: { ru: "Амулет Пламени дракона (Альянс)", en: "Drakefire Amulet (Alliance)" },
-    level: { ru: "задания 60 уровня, взять можно примерно с 55; нужны Глубины и Верхняя часть пика Черной горы", en: "level 60 quests, taken from about 55; Blackrock Depths and Upper Blackrock Spire" },
+    level: { ru: "задания 60 уровня, взять — примерно с 55 (оценка); нужны Глубины и Верхняя часть пика Черной горы", en: "level 60 quests, taken from about 55 (an estimate); Blackrock Depths and Upper Blackrock Spire" },
     steps: [
       { id: 4182, giver: HELENDIS, todo: { ru: "В Пылающих степях убить 15 черных драконидов, 10 черных змеевиков и 4 черных дракона.", en: "In the Burning Steppes kill 15 Black Dragonspawn, 10 Black Wyrmkin and 4 Black Drakes." },
         at: [{ who: { ru: "черные дракониды", en: "black dragonkin" }, map: STEPPES, x: 70, y: 50, note: { ru: "по всей восточной половине степей", en: "all over the eastern Steppes" } }], turnin: HELENDIS },
@@ -130,6 +132,19 @@ export const CHAINS: Chain[] = [
     ],
   },
 ];
+
+/*
+ * Lowest levels. The Warcraft Wiki (via Everloot) gives Warlord's Command, the Horde chain's first step,
+ * as "the lowest level that you can attempt this quest is Level 58"; no step can be taken before it, so the
+ * whole Horde chain opens at 58. For the other chains no source here gives the original requirement: these
+ * are estimates from the zones and dungeons involved, marked as such on the page.
+ */
+const MIN: Record<string, { level: number; sure: boolean }> = {
+  "onyxia-horde": { level: 58, sure: true },
+  "onyxia-alliance": { level: 55, sure: false },
+};
+const KEY_MIN: Record<number, { level: number; sure: boolean }> = { 4743: { level: 55, sure: false }, 3802: { level: 50, sure: false } };
+for (const c of CHAINS) for (const st of c.steps) st.min = MIN[c.key] ?? KEY_MIN[st.id];
 
 export const chainFor = (faction: string | null | undefined) => CHAINS.find((c) => c.faction === (faction === "ALLIANCE" ? "ALLIANCE" : "HORDE"))!;
 

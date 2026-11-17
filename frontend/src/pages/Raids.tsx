@@ -144,7 +144,8 @@ function Attunement({ c, delay, open, toggle }: { c: Character; delay: number; o
 }
 
 /** A chain's steps: status, what to do, where to take and hand in, and a way onto the map. */
-function Steps({ chain, ids, inLog, next, who }: { chain: Chain; ids: Set<number>; inLog: Set<number>; next?: number; who?: { name?: string; className?: string; race?: string } }) {
+function Steps({ chain, ids, inLog, next, who }: { chain: Chain; ids: Set<number>; inLog: Set<number>; next?: number; who?: { name?: string; className?: string; race?: string; level?: number | null } }) {
+  const level = who?.level ?? null;
   const { t, lang } = useI18n();
   const [open, setOpen] = useState<number | null>(null);
   const firstOpen = next ?? chain.steps.find((q) => !ids.has(q.id))?.id;
@@ -161,6 +162,7 @@ function Steps({ chain, ids, inLog, next, who }: { chain: Chain; ids: Set<number
             <button className={`raid-step ${st}`} onClick={() => setOpen(open === q.id ? null : q.id)} aria-expanded={open === q.id}>
               <span className="raid-mark">{st === "done" ? "✓" : st === "log" ? "●" : st === "next" ? "▶" : "·"}</span>
               <QuestName id={q.id} />
+              {q.min && <MinLevel min={q.min} level={level} />}
               <span className="ml-auto shrink-0 text-[11px] text-muted">{t(`rd_st_${st}` as Key)}</span>
             </button>
             {open === q.id && (
@@ -180,6 +182,18 @@ function Steps({ chain, ids, inLog, next, who }: { chain: Chain; ids: Set<number
         );
       })}
     </ol>
+  );
+}
+
+/** "from level 58": red while the character is below it; "≈" when it is an estimate. */
+export function MinLevel({ min, level }: { min: { level: number; sure: boolean }; level: number | null }) {
+  const { t } = useI18n();
+  const low = level != null && level < min.level;
+  return (
+    <span className={`ml-2 shrink-0 rounded px-1.5 text-[11px] ${low ? "bg-bad/15 text-bad" : "bg-good/10 text-good"}`}
+      title={t(min.sure ? "rd_min_sure" : "rd_min_est")}>
+      {t("rd_min", { l: `${min.sure ? "" : "≈"}${min.level}` })}
+    </span>
   );
 }
 

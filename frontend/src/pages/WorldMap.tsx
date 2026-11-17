@@ -13,6 +13,7 @@ import MAPS from "../lib/maps.json";
 import { store } from "../lib/store";
 import { fullName, useCharacters, wowApi, type QuestInfo } from "../lib/wowApi";
 import { QuestDetails, useTab } from "./characters/ArmoryTabs";
+import { MinLevel } from "./Raids";
 
 interface MapMeta {
   id: number; name: L; parent: number; type: number; w: number; h: number;
@@ -69,13 +70,26 @@ export function MapView({ map, pins, focus }: { map: number; pins: Pin[]; focus?
     setOff(clamp({ x: px - ((px - off.x) / z) * zz, y: py - ((py - off.y) / z) * zz }, zz));
     setZ(zz);
   };
+  // the wheel zooms the map and never scrolls the page: a native listener, since React's is passive
+  const zoomRef = useRef(zoom);
+  zoomRef.current = zoom;
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const r = el.getBoundingClientRect();
+      zoomRef.current(e.deltaY < 0 ? 1.25 : 0.8, e.clientX - r.left, e.clientY - r.top);
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [map]);
   if (!m) return null;
   return (
     <div className="wm-frame">
       <div className="wm-title">{m.name[lang]}</div>
       <div
         ref={box} className="wm-box" style={{ aspectRatio: `${m.w} / ${m.h}` }}
-        onWheel={(e) => { const r = e.currentTarget.getBoundingClientRect(); zoom(e.deltaY < 0 ? 1.25 : 0.8, e.clientX - r.left, e.clientY - r.top); }}
         onPointerDown={(e) => { drag.current = { x: e.clientX, y: e.clientY, ox: off.x, oy: off.y }; (e.target as HTMLElement).setPointerCapture?.(e.pointerId); }}
         onPointerMove={(e) => { const d = drag.current; if (d) setOff(clamp({ x: d.ox + e.clientX - d.x, y: d.oy + e.clientY - d.y }, z)); }}
         onPointerUp={() => { drag.current = null; }}
@@ -175,6 +189,7 @@ export function WorldMap() {
                   <button className={`raid-step ${ids.has(s.id) ? "done" : i === firstOpen ? "next" : "later"} ${i === stepIdx ? "cur" : ""}`} onClick={() => go(i)}>
                     <span className="raid-mark">{ids.has(s.id) ? "✓" : i === firstOpen ? "▶" : i + 1}</span>
                     <QuestTitle id={s.id} />
+                    {s.min && <MinLevel min={s.min} level={char?.summary?.[lang]?.level ?? null} />}
                   </button>
                 </li>
               ))}
@@ -209,7 +224,7 @@ function Route({ step, phase, setPhase }: { step: ChainStep; phase: Phase; setPh
   );
 }
 
-function StepCard({ chain, i, ids, who, go }: { chain: Chain; i: number; ids: Set<number>; who?: { summary?: Record<string, { name?: string; className?: string; race?: string }> | null } | undefined; go: (i: number) => void }) {
+function StepCard({ chain, i, ids, who, go }: { chain: Chain; i: number; ids: Set<number>; who?: { summary?: Record<string, { name?: string; className?: string; race?: string; level?: number | null }> | null } | undefined; go: (i: number) => void }) {
   const { t, lang } = useI18n();
   const s = chain.steps[i];
   const sum = who?.summary?.[lang];
@@ -220,7 +235,7 @@ function StepCard({ chain, i, ids, who, go }: { chain: Chain; i: number; ids: Se
           <span className="eyebrow">{t("wm_step", { a: i + 1, b: chain.steps.length })}{s.group ? ` · ${t("rd_any_order")}` : ""}</span>
           {ids.has(s.id) && <span className="text-xs text-good">✓ {t("rd_st_done")}</span>}
         </div>
-        <div className="mt-1 font-display text-lg text-gold"><QuestTitle id={s.id} /></div>
+        <div className="mt-1 flex items-center font-display text-lg text-gold"><QuestTitle id={s.id} />{s.min && <MinLevel min={s.min} level={sum?.level ?? null} />}</div>
         {s.dungeon && <div className="mt-0.5 text-xs text-[#ffb070]">{t(`wm_dg_${s.dungeon}` as Key)}</div>}
         <p className="mt-2 text-sm">{s.todo[lang]}</p>
         <QuestDetails id={s.id} who={{ name: sum?.name ?? "", cls: sum?.className ?? "", race: sum?.race ?? "" }} />
