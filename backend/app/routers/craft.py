@@ -5,6 +5,7 @@ prices from the client (the recipe reference). The arithmetic lives in app/craft
 """
 
 from datetime import datetime
+from email.utils import parsedate_to_datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -38,9 +39,16 @@ async def _prices(session: AsyncSession) -> tuple[dict, dict]:
     left = None
     if state.get("next"):
         left = max(0, round((datetime.fromisoformat(state["next"]) - utcnow()).total_seconds()))
+    # the prices' time is when Blizzard built the snapshot (its Last-Modified), else when the hub fetched it
+    at = state.get("at")
+    if state.get("modified"):
+        try:
+            at = parsedate_to_datetime(state["modified"]).isoformat()
+        except (TypeError, ValueError):
+            pass
     return ({i: {"ah": p, "qty": q} for i, p, q in rows},
-            {"configured": True, "at": state.get("at"), "items": len(rows), "ok": state.get("ok"), "every": every,
-             "left": left})
+            {"configured": True, "at": at, "items": len(rows), "ok": state.get("ok"), "every": every,
+             "left": left, "checked": state.get("checked") or state.get("at")})
 
 
 async def _reference() -> dict | None:

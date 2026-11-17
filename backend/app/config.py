@@ -33,8 +33,9 @@ class Settings(BaseSettings):
     bnet_region: str = "eu"  # default region for lookups: eu | us
     # Public address of the hub, for the Battle.net sign-in redirect (…/api/bnet/callback).
     public_url: str = ""
-    # Auction house poll interval in minutes; 0 turns the poller off (tests, local runs without keys).
-    ah_poll_minutes: int = 60
+    # How often, in minutes, to ask whether the auction house snapshot changed (a short 304 answer while it has
+    # not; the whole house is downloaded only when it has). 0 turns the poller off (tests, runs without keys).
+    ah_poll_minutes: int = 5
     # Fetch Everloot's "how to get it" for every recipe item in the background (off in tests).
     everloot_prefetch: bool = True
     # Refresh every character from Blizzard this often, in hours, so the leveling pace has points to go on

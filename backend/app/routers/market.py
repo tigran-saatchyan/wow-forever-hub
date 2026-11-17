@@ -7,7 +7,7 @@ Forever's auction data sits under rulesets (PvP, Normal, RP, RP-PvP), not realms
 import asyncio
 import logging
 import time
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -85,10 +85,11 @@ async def set_config(body: MarketIn, _: AdminUser, session: Session):
     return body
 
 
-async def fetch_house(ruleset: int, house: int, region: str) -> list[dict]:
+async def fetch_house(ruleset: int, house: int, region: str, data: dict | None = None) -> list[dict]:
     """All lots of a house: items sold one by one (auctions) and stackable goods (commodities: herbs,
     cloth, ore...), which Forever serves from a second address, linked from the first answer."""
-    data = await client().get(f"/data/wow/ruleset/{ruleset}/auctions/{house}", "dynamic", region)
+    if data is None:
+        data = await client().get(f"/data/wow/ruleset/{ruleset}/auctions/{house}", "dynamic", region)
     lots = list(data.get("auctions") or [])
     com = data.get("commodities")
     if com:
@@ -100,16 +101,39 @@ async def fetch_house(ruleset: int, house: int, region: str) -> list[dict]:
     return lots
 
 
-async def poll_once() -> dict:
-    """Fetch the chosen house once: replace its latest prices, append history for watched items."""
+# Without a Last-Modified from the server there is no telling a new snapshot from the old one: then the house
+# is downloaded whole at most this often (Blizzard rebuilds the snapshot about hourly).
+BLIND_MINUTES = 55
+
+
+async def poll_once(force: bool = False) -> dict:
+    """Look at the chosen house; when its snapshot changed (or `force`), replace its latest prices and append
+    history for watched items. Asking costs one short request: Blizzard answers 304 while nothing changed."""
     async with SessionLocal() as session:
         cfg = await _setting(session, "market")
         if not cfg or not client().configured:
             return {"skipped": True}
         r, h, region = cfg["ruleset"], cfg["house"], cfg.get("region", "eu")
-        state: dict = {"at": utcnow().isoformat()}
+        old = await _setting(session, "market_state")
+        same_house = old.get("house") == [r, h]
+        now_ = utcnow()
+        state: dict = {"at": now_.isoformat(), "house": [r, h]}
         try:
-            lots = await fetch_house(r, h, region)
+            since = old.get("modified") if same_house and not force else None
+            if same_house and not force and not since and old.get("at"):
+                # the server sends no Last-Modified: download whole only now and then
+                last = datetime.fromisoformat(old["at"])
+                if now_ - last < timedelta(minutes=BLIND_MINUTES):
+                    await _put_setting(session, "market_state", {**old, "checked": now_.isoformat()})
+                    await session.commit()
+                    return {"unchanged": True}
+            data, modified = await client().get_if_newer(f"/data/wow/ruleset/{r}/auctions/{h}", "dynamic", region, since)
+            if data is None:
+                await _put_setting(session, "market_state", {**old, "checked": now_.isoformat()})
+                await session.commit()
+                return {"unchanged": True, "modified": modified}
+            state["modified"] = modified
+            lots = await fetch_house(r, h, region, data)
             summary = wow.summarize_auctions(lots)
             now = utcnow()
             await session.execute(delete(AhLatest).where(AhLatest.ruleset == r, AhLatest.house == h))
@@ -131,7 +155,9 @@ async def poll_once() -> dict:
             await session.execute(delete(AhHistory).where(AhHistory.ts < now - timedelta(days=HISTORY_DAYS)))
             state |= {"ok": True, "items": len(rows), "auctions": len(lots)}
         except BnetError as e:
-            state |= {"ok": False, "error": str(e)}
+            # a failed look keeps the prices and the snapshot time of the last good one
+            state = {**old, "ok": False, "error": str(e), "checked": now_.isoformat()}
+        state["checked"] = now_.isoformat()
         await _put_setting(session, "market_state", state)
         await session.commit()
         return state
@@ -197,7 +223,7 @@ async def compare(_: AdminUser, ruleset: int, region: str = "eu", item: int = 25
 
 @router.post("/refresh")
 async def refresh(_: AdminUser):
-    return await poll_once()
+    return await poll_once(force=True)
 
 
 async def _item_card(session: AsyncSession, cfg: dict, w: AhWatch, lang: str) -> dict:

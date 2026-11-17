@@ -86,8 +86,11 @@ def handler(req: httpx.Request) -> httpx.Response:
     if p == "/data/wow/ruleset/1/auctions/":
         return httpx.Response(200, json={"auctions": [{"id": 6, "name": "Horde"}, {"id": 2, "name": "Alliance"}]})
     if p == "/data/wow/ruleset/1/auctions/6":
+        stamp = "Tue, 17 Nov 2026 21:00:00 GMT"
+        if req.headers.get("if-modified-since") == stamp:
+            return httpx.Response(304)  # nothing new: a short answer
         com = {"href": "https://x/ruleset/1/auctions/6/commodities"}
-        return httpx.Response(200, json={**AUCTIONS, "commodities": com})
+        return httpx.Response(200, json={**AUCTIONS, "commodities": com}, headers={"Last-Modified": stamp})
     if p == "/data/wow/ruleset/1/auctions/6/commodities":
         stack = {"id": 9, "item": {"id": 2589}, "quantity": 100, "unit_price": 40}
         return httpx.Response(200, json={"auctions": [stack]})
@@ -315,6 +318,9 @@ def test_market_poll_and_watch(client):
     w = client.post("/api/market/watch", json={"item_id": 2589, "below": 55}).json()
     st = client.post("/api/market/refresh").json()
     assert st["ok"] and st["items"] == 2 and st["auctions"] == 5  # 4 lots + 1 stack of goods
+    # the poller's look: the snapshot has not changed, so the house is not downloaded again
+    again = client.portal.call(market.poll_once)
+    assert again == {"unchanged": True, "modified": "Tue, 17 Nov 2026 21:00:00 GMT"}
     cards = client.get("/api/market/watch?lang=en").json()
     assert cards[0]["latest"]["min"] == 40 and cards[0]["latest"]["quantity"] == 126 and cards[0]["alert"]
     assert len(cards[0]["history"]) == 1 and cards[0]["item"]["name"] == "Linen Cloth"

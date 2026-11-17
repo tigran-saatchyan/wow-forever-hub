@@ -100,13 +100,32 @@ class Bnet:
             return self._static_ns.get(region, f"static-forever-{region}")
         return f"{kind}-forever-{region}"
 
-    async def _get(self, path: str, namespace: str, region: str, locale: str | None, token: str | None):
+    async def _get(self, path: str, namespace: str, region: str, locale: str | None, token: str | None,
+                   extra: dict[str, str] | None = None):
         params = {"namespace": namespace}
         if locale:
             params["locale"] = locale
         url = path if path.startswith("http") else f"https://{region}.api.blizzard.com{path}"
-        headers = {"Authorization": f"Bearer {token or await self.token()}"}
+        headers = {"Authorization": f"Bearer {token or await self.token()}", **(extra or {})}
         return await self.http.get(url, params=params, headers=headers)
+
+    async def get_if_newer(self, path: str, kind: str, region: str | None, since: str | None
+                           ) -> tuple[dict[str, Any] | None, str | None]:
+        """GET a dynamic resource only if it changed since `since` (its Last-Modified, as given back before).
+
+        Returns (data, last_modified); data is None when Blizzard answers 304 Not Modified: a short answer
+        that costs nothing to fetch, so a resource that changes hourly can be watched every few minutes.
+        last_modified is None when the server sends none."""
+        region = (region or self.s.bnet_region).lower()
+        if region not in REGIONS:
+            raise BnetError(400, path, f"unknown region {region}")
+        r = await self._get(path, self.namespace(kind, region), region, None, None,
+                            {"If-Modified-Since": since} if since else None)
+        if r.status_code == 304:
+            return None, since
+        if r.status_code != 200:
+            raise BnetError(r.status_code, path, r.text[:200])
+        return r.json(), r.headers.get("last-modified")
 
     async def get(
         self, path: str, kind: str, region: str | None = None, lang: str | None = None, token: str | None = None
