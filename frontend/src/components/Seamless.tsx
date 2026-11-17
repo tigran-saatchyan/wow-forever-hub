@@ -17,7 +17,7 @@ const BY_ID = new Map(WORLD_MAPS.map((m) => [m.id, m]));
 export const CITIES = new Set([1453, 1454, 1455, 1456, 1457, 1458]);
 
 // zoom 0 shows the world 512 px wide; the tiles go to zoom 5 (16384 px), the map zooms two steps past them
-const W0 = 512, H0 = (512 * 668) / 1002, NATIVE = 4, MAX = 7;
+const W0 = 512, H0 = (512 * 668) / 1002, NATIVE = 5, MAX = 7;
 const ll = (u: number, v: number) => L.latLng(-v * H0, u * W0);
 const WORLD = L.latLngBounds(ll(0, 0), ll(1, 1));
 
