@@ -99,7 +99,7 @@ export function Characters() {
   );
 }
 
-function ClassIcon({ classId, size = 40 }: { classId: number | null; size?: number }) {
+export function ClassIcon({ classId, size = 40 }: { classId: number | null; size?: number }) {
   const { lang } = useI18n();
   const D = useTalents(lang);
   const icons = useIcons();

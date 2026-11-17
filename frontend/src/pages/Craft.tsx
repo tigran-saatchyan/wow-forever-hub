@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { CharProfPicker, profKey } from "../components/CharProfPicker";
 import { SourcePanel } from "../components/SourcePanel";
 import { Money, parseMoney } from "../components/Wow";
 import { markSeen, signalKey, useSeen, useSignals } from "../lib/signals";
@@ -24,7 +25,7 @@ interface Row {
   cost: number | null; value: number | null; profit: number | null; margin: number | null; sale: Sale; parts: Part[];
 }
 interface Advice extends RefItem { ah: number | null; vendor: number | null; where: "ah" | "vendor"; qty: number; flip: number | null }
-interface Market { configured: boolean; at?: string; items?: number; ok?: boolean }
+interface Market { configured: boolean; at?: string; items?: number; ok?: boolean; every?: number }
 interface Overview { status: "ready" | "building"; market?: Market; rows?: Row[]; advice?: Advice[] }
 interface Step {
   id: number; name: string; item: RefItem | null; made: number; from: number; to: number; crafts: number;
@@ -45,7 +46,10 @@ export function Craft() {
       <div className="flex flex-wrap items-baseline gap-3">
         <h1 className="font-display text-3xl text-gold">{t("cr_title")}</h1>
         {d?.market?.configured && d.market.at && (
-          <span className="text-sm text-muted">{t("cr_prices", { d: fmtDate(lang, d.market.at), n: d.market.items ?? 0 })}</span>
+          <span className="text-sm text-muted">
+            {t("cr_prices", { d: fmtDate(lang, d.market.at), n: d.market.items ?? 0 })}
+            {d.market.every ? <> · <NextUpdate at={d.market.at} every={d.market.every} /></> : null}
+          </span>
         )}
       </div>
       {d?.market && !d.market.configured && (
@@ -64,12 +68,42 @@ export function Craft() {
   );
 }
 
-function Section({ title, hint, children, delay = 0 }: { title: string; hint?: string; children: React.ReactNode; delay?: number }) {
+/** Time to the next auction snapshot (the server fetches the house every `every` minutes), ticking. */
+function NextUpdate({ at, every }: { at: string; every: number }) {
+  const { t } = useI18n();
+  const qc = useQueryClient();
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => { const h = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(h); }, []);
+  const left = Math.round((new Date(at).getTime() + every * 60e3 - now) / 1000);
+  // once it is due, look again every half minute until the new snapshot is in
+  useEffect(() => {
+    if (left <= 0 && left % 30 === 0) {
+      qc.invalidateQueries({ queryKey: ["craft"] });
+      qc.invalidateQueries({ queryKey: ["craft-signals"] });
+    }
+  }, [left <= 0 && Math.floor(-left / 30)]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (left <= 0) return <span className="text-gold">{t("cr_updating")}</span>;
+  const h = Math.floor(left / 3600), m = Math.floor(left / 60) % 60, sec = left % 60;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return <span>{t("cr_next_update")} <b className="font-mono text-ink">{h ? `${h}:${pad(m)}` : m}:{pad(sec)}</b></span>;
+}
+
+/** A block of the page that folds away; whether it is open is remembered. */
+function Section({ id, title, hint, children, delay = 0 }: { id: string; title: string; hint?: string; children: React.ReactNode; delay?: number }) {
+  const [open, setOpen] = useState(() => store.get(`crOpen:${id}`, true));
+  const toggle = () => { store.set(`crOpen:${id}`, !open); setOpen(!open); };
   return (
     <motion.section className="panel p-4" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }}>
-      <h2 className="panel-title">{title}</h2>
-      {hint && <p className="mt-1 text-xs text-muted">{hint}</p>}
-      <div className="mt-3">{children}</div>
+      <button type="button" className="cr-toggle" aria-expanded={open} onClick={toggle}>
+        <h2 className="panel-title">{title}</h2>
+        <span className="cr-chev" aria-hidden>▾</span>
+      </button>
+      {open && (
+        <>
+          {hint && <p className="mt-1 text-xs text-muted">{hint}</p>}
+          <div className="mt-3">{children}</div>
+        </>
+      )}
     </motion.section>
   );
 }
@@ -108,7 +142,7 @@ function SignalsBlock({ onOpen }: { onOpen: (x: RefItem) => void }) {
   };
   const New = ({ k }: { k: string }) => (seen.has(k) ? null : <span className="sg-new">{t("sg_new")}</span>);
   return (
-    <Section title={t("sg_title")} hint={t("sg_hint", { c: fmtMoney(d.cfg!.minCraft), f: fmtMoney(d.cfg!.minFlip) })}>
+    <Section id="signals" title={t("sg_title")} hint={t("sg_hint", { c: fmtMoney(d.cfg!.minCraft), f: fmtMoney(d.cfg!.minFlip) })}>
       <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
         {!edit ? (
           <button className="btn text-xs" onClick={() => (setMc(fmtMoney(d.cfg!.minCraft)), setMf(fmtMoney(d.cfg!.minFlip)), setEdit(true))}>{t("sg_edit")}</button>
@@ -172,7 +206,7 @@ function Profitable({ rows, onOpen }: { rows: Row[]; onOpen: (x: RefItem) => voi
   const [onlyKnown, setOnlyKnown] = useState(() => store.get("crKnown", true));
   const [onlyProfit, setOnlyProfit] = useState(() => store.get("crProfit", false));
   const [open, setOpen] = useState<string | null>(null);
-  const keys = useMemo(() => [...new Map(rows.map((r) => [`${r.cid}:${r.prof}`, `${r.char} · ${r.profName}`])).entries()], [rows]);
+  const opts = useMemo(() => [...new Map(rows.map((r) => [profKey(r), r])).values()], [rows]);
   const shown = rows
     .filter((r) => who === "all" || `${r.cid}:${r.prof}` === who)
     .filter((r) => !onlyKnown || r.known)
@@ -180,12 +214,9 @@ function Profitable({ rows, onOpen }: { rows: Row[]; onOpen: (x: RefItem) => voi
     .sort((a, b) => (b.profit ?? -Infinity) - (a.profit ?? -Infinity));
   const set = <T,>(k: string, v: T, f: (v: T) => void) => (store.set(k, v), f(v));
   return (
-    <Section title={t("cr_profit_t")} hint={t("cr_profit_h")}>
+    <Section id="profit" title={t("cr_profit_t")} hint={t("cr_profit_h")}>
       <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
-        <select className="input w-auto py-1" value={who} onChange={(e) => set("crWho", e.target.value, setWho)}>
-          <option value="all">{t("cr_all")}</option>
-          {keys.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
-        </select>
+        <CharProfPicker options={opts} value={who} all={t("cr_all")} onChange={(k) => set("crWho", k, setWho)} />
         <label className="chip cursor-pointer"><input type="checkbox" className="mr-1.5" checked={onlyKnown} onChange={(e) => set("crKnown", e.target.checked, setOnlyKnown)} />{t("cr_only_known")}</label>
         <label className="chip cursor-pointer"><input type="checkbox" className="mr-1.5" checked={onlyProfit} onChange={(e) => set("crProfit", e.target.checked, setOnlyProfit)} />{t("cr_only_profit")}</label>
         <span className="ml-auto text-xs text-muted">{t("cr_count", { n: shown.length })}</span>
@@ -263,11 +294,9 @@ function Leveling({ rows, onOpen }: { rows: Row[]; onOpen: (x: RefItem) => void 
   if (!cur) return null;
   const p = q.data;
   return (
-    <Section title={t("cr_plan_t")} hint={t("cr_plan_h")} delay={0.05}>
+    <Section id="plan" title={t("cr_plan_t")} hint={t("cr_plan_h")} delay={0.05}>
       <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
-        <select className="input w-auto py-1" value={`${cur.cid}:${cur.prof}`} onChange={(e) => (store.set("crPlan", e.target.value), setKey(e.target.value), setTarget(null))}>
-          {profs.map((r) => <option key={`${r.cid}:${r.prof}`} value={`${r.cid}:${r.prof}`}>{r.char} · {r.profName} ({r.skill ?? "?"})</option>)}
-        </select>
+        <CharProfPicker options={profs} value={profKey(cur)} onChange={(k) => (store.set("crPlan", k), setKey(k), setTarget(null))} />
         <span className="text-muted">{t("cr_from", { s: skill })}</span>
         <input type="number" className="input w-24 py-1" min={skill + 1} max={450} value={goal}
           onChange={(e) => setTarget(Math.max(skill + 1, Math.min(450, Number(e.target.value) || skill + 1)))} />
@@ -320,10 +349,22 @@ function Where({ advice, onOpen }: { advice: Advice[]; onOpen: (x: RefItem) => v
   const { t } = useI18n();
   const [q, setQ] = useState("");
   const shown = advice.filter((a) => !q || a.name.toLowerCase().includes(q.toLowerCase()));
-  const flips = advice.filter((a) => a.flip);
+  const [minFlip, setMinFlip] = useState<number>(() => store.get("crFlipMin", 1));
+  const [minText, setMinText] = useState(() => fmtMoney(minFlip));
+  const flips = advice.filter((a) => a.flip && a.flip >= minFlip);
+  const saveMin = (v: string) => {
+    setMinText(v);
+    const c = parseMoney(v);
+    if (c != null) { store.set("crFlipMin", c); setMinFlip(c); }
+  };
   return (
-    <Section title={t("cr_where_t")} hint={t("cr_where_h")} delay={0.1}>
-      {flips.length > 0 && (
+    <Section id="where" title={t("cr_where_t")} hint={t("cr_where_h")} delay={0.1}>
+      <label className="mb-2 flex flex-wrap items-center gap-2 text-sm">
+        {t("cr_flip_min")}
+        <input className="input w-28 py-1" value={minText} onChange={(e) => saveMin(e.target.value)} placeholder="1s" />
+        <span className="text-xs text-muted">{t("cr_flip_min_h")}</span>
+      </label>
+      {flips.length > 0 ? (
         <div className="mb-3 rounded-md border border-good/40 bg-good/10 p-2.5 text-sm">
           <b className="text-good">{t("cr_flip_t")}</b>
           <ul className="mt-1 space-y-0.5">
@@ -332,7 +373,7 @@ function Where({ advice, onOpen }: { advice: Advice[]; onOpen: (x: RefItem) => v
             ))}
           </ul>
         </div>
-      )}
+      ) : <p className="mb-3 text-sm text-muted">{t("cr_flip_none")}</p>}
       <input className="input mb-2 w-56 py-1 text-sm" placeholder={t("co_find")} value={q} onChange={(e) => setQ(e.target.value)} />
       <div className="swipe-x overflow-x-auto">
         <table className="w-full min-w-[560px] text-sm">

@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import craft
 from ..auth import CurrentUser
+from ..config import get_settings
 from ..db import AhLatest, Character, Setting, get_session
 from . import professions as prof_routes
 from .market import _setting
@@ -31,8 +32,9 @@ async def _prices(session: AsyncSession) -> tuple[dict, dict]:
         select(AhLatest.item_id, AhLatest.min_price, AhLatest.quantity)
         .where(AhLatest.ruleset == cfg["ruleset"], AhLatest.house == cfg["house"])
     )).all()
+    every = get_settings().ah_poll_minutes  # the poller fetches the house this often (app/routers/market.py)
     return ({i: {"ah": p, "qty": q} for i, p, q in rows},
-            {"configured": True, "at": state.get("at"), "items": len(rows), "ok": state.get("ok")})
+            {"configured": True, "at": state.get("at"), "items": len(rows), "ok": state.get("ok"), "every": every})
 
 
 async def _reference() -> dict | None:
