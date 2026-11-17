@@ -6,6 +6,7 @@ import { useTheme } from "./theme/ThemeProvider";
 import { Characters } from "./pages/Characters";
 import { Craft } from "./pages/Craft";
 import { Raids } from "./pages/Raids";
+import { WorldMap } from "./pages/WorldMap";
 import { Dashboard } from "./pages/Dashboard";
 import { Login } from "./pages/Login";
 import { Market } from "./pages/Market";
@@ -54,6 +55,7 @@ export function App() {
             <Route path="/market" element={<Private><Market /></Private>} />
             <Route path="/craft" element={<Private><Craft /></Private>} />
             <Route path="/raids" element={<Private><Raids /></Private>} />
+            <Route path="/map" element={<Private><WorldMap /></Private>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </motion.div>

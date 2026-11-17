@@ -45,6 +45,7 @@ export function Layout({ children }: { children: ReactNode }) {
               <NavLink to="/market" className={link} onClick={() => sfx("nav")}>{t("nav_market")}</NavLink>
               <NavLink to="/craft" className={link} onClick={() => sfx("nav")}>{t("nav_craft")}</NavLink>
               <NavLink to="/raids" className={link} onClick={() => sfx("nav")}>{t("nav_raids")}</NavLink>
+              <NavLink to="/map" className={link} onClick={() => sfx("nav")}>{t("nav_map")}</NavLink>
             </nav>
           )}
           <div className="ml-auto flex flex-wrap items-center gap-2 text-sm">

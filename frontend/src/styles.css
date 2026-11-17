@@ -1366,3 +1366,54 @@ button.order-line:hover { @apply text-gold; }
   background: linear-gradient(90deg, rgb(116 214 84 / 0.14), rgb(8 13 12 / 0.92) 60%);
   box-shadow: inset 3px 0 0 #e4c873, inset 0 0 0 1px rgb(0 0 0 / 0.6), 0 0 20px -8px rgb(116 214 84 / 0.7);
 }
+
+/* ===================== the map ===================== */
+.wm-frame {
+  position: relative; border-radius: 12px; padding: 10px;
+  border: 1px solid rgb(var(--gold) / 0.35);
+  background: linear-gradient(180deg, #1a140c, #0b0906);
+  box-shadow: inset 0 0 0 1px #000, inset 0 0 30px #000, 0 20px 40px -24px #000;
+}
+.wm-title { position: absolute; z-index: 3; top: 16px; left: 50%; translate: -50% 0; padding: 2px 14px; border-radius: 6px;
+  font: 600 14px var(--font-display, inherit); letter-spacing: 0.12em; text-transform: uppercase; color: #e4c873;
+  background: rgb(10 8 5 / 0.8); border: 1px solid rgb(var(--gold) / 0.4); pointer-events: none; }
+.wm-box { position: relative; overflow: hidden; border-radius: 6px; cursor: grab; touch-action: none; user-select: none; }
+.wm-box:active { cursor: grabbing; }
+.wm-layer { position: absolute; inset: 0; transform-origin: 0 0; transition: transform 0.35s ease; }
+.wm-layer img { width: 100%; height: 100%; display: block; }
+.wm-zoom { position: absolute; right: 10px; bottom: 10px; display: grid; gap: 4px; z-index: 3; }
+.wm-zoom button { width: 30px; height: 30px; border-radius: 6px; color: #e4c873; font-weight: 700;
+  background: rgb(10 8 5 / 0.85); border: 1px solid rgb(var(--gold) / 0.4); }
+.wm-pin { position: absolute; display: flex; align-items: center; gap: 4px; transform-origin: center; z-index: 2; white-space: nowrap; }
+.wm-glyph { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; font: 700 15px/1 var(--font-display, inherit);
+  color: #ffd100; background: radial-gradient(circle, #3a2a0a, #120c03); box-shadow: 0 0 0 1px #000, 0 0 0 2px #c9a24a, 0 2px 6px #000; }
+.wm-pin.do .wm-glyph { color: #ff5a3c; box-shadow: 0 0 0 1px #000, 0 0 0 2px #b8402a, 0 2px 6px #000; }
+.wm-pin.city .wm-glyph { color: #e4c873; }
+.wm-pin.raid .wm-glyph { color: #c58cff; box-shadow: 0 0 0 1px #000, 0 0 0 2px #8a3fd6, 0 2px 6px #000; }
+.wm-pin.dungeon .wm-glyph { color: #ff9a40; }
+.wm-pin.hub .wm-glyph { width: 14px; height: 14px; font-size: 12px; }
+.wm-label { padding: 1px 6px; border-radius: 4px; font-size: 12px; color: #fff; background: rgb(0 0 0 / 0.6); text-shadow: 0 1px 2px #000; }
+.wm-pin.hub .wm-label { font-size: 11px; color: #f0e2b8; background: rgb(0 0 0 / 0.45); }
+.wm-pin.hot .wm-glyph { animation: wm-pulse 1.4s ease-in-out infinite; }
+.wm-pin.hot .wm-label { background: rgb(60 40 5 / 0.85); color: #ffd100; }
+@keyframes wm-pulse { 0%, 100% { box-shadow: 0 0 0 1px #000, 0 0 0 2px #c9a24a, 0 0 0 0 rgb(255 209 0 / 0.7); }
+  50% { box-shadow: 0 0 0 1px #000, 0 0 0 2px #ffd100, 0 0 0 10px rgb(255 209 0 / 0); } }
+.wm-route { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.wm-route-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; text-align: left;
+  border: 1px solid rgb(var(--gold) / 0.2); background: linear-gradient(180deg, rgb(12 18 17 / 0.85), rgb(6 9 9 / 0.9)); }
+.wm-route-item.on { border-color: rgb(var(--gold) / 0.6); box-shadow: 0 0 18px -8px rgb(255 209 0 / 0.7); }
+.wm-route-item.do .wm-glyph { color: #ff5a3c; }
+.wm-route-n { font: 600 12px var(--font-display, inherit); color: rgb(var(--muted)); }
+.wm-steps { max-height: 46vh; overflow-y: auto; padding-right: 4px; }
+.raid-step.cur { background: rgb(var(--gold) / 0.1); box-shadow: inset 3px 0 0 #e4c873; }
+@media (prefers-reduced-motion: reduce) { .wm-layer { transition: none; } .wm-pin.hot .wm-glyph { animation: none; } }
+
+/* raids: one character open at a time */
+.raid-block { padding: 0; }
+.raid-head { display: flex; width: 100%; align-items: center; gap: 10px; padding: 14px 16px 8px; text-align: left; }
+.raid-chev { color: rgb(var(--gold)); width: 14px; }
+.raid-block .prof-bar { margin-bottom: 12px; }
+.raid-detail { margin: 2px 0 8px 24px; padding: 8px 10px; border-left: 2px solid rgb(var(--gold) / 0.35); font-size: 14px; }
+.wm-pin.zone .wm-glyph { width: 10px; height: 10px; background: rgb(228 200 115 / 0.85); box-shadow: 0 0 0 1px #000; }
+.wm-pin.zone .wm-label { opacity: 0; transition: opacity 0.15s; pointer-events: none; }
+.wm-pin.zone:hover .wm-label, .wm-pin.zone:focus-visible .wm-label { opacity: 1; }
