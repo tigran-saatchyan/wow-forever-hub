@@ -1,6 +1,7 @@
 /**
- * Quest chains walked on the map: the Onyxia attunement (Drakefire Amulet) of each faction and the keys to
- * Blackrock Mountain. Quest ids are the original ones, each checked against Forever's own quest data (the
+ * Quest chains walked on the map, in the order to do them (stages): keys, the Onyxia attunement of each faction,
+ * and the original game's Molten Core, Blackwing Lair and Naxxramas chains a priest needs (not announced for
+ * Forever yet). The chains added last (Scholomance key on) are marked `unverified` where a source was missing. Quest ids are the original ones, each checked against Forever's own quest data (the
  * names and texts on the pages come from there, in the page's language).
  *
  * Places are where the original game has them (zone map coordinates, 0–100); Forever keeps these zones, but
@@ -11,7 +12,11 @@
 export type L = { ru: string; en: string };
 export interface Place { who: L; map: number; x: number; y: number; note?: L }
 export interface ChainStep {
+  /** the quest; below zero for a step that is not a quest (a drop, putting pieces together), named by `title` */
   id: number;
+  title?: L;
+  /** other quest ids that count as this step (the same quest under another id) */
+  alt?: number[];
   /** players the step takes, when more than one (5, 10, 20, 40) */
   size?: number;
   /** the quests of a "group" can be done in any order */
@@ -33,11 +38,11 @@ export const STAGES: Stage[] = [
   { n: 2, announced: true, name: { ru: "Ониксия — 9 декабря", en: "Onyxia — 9 December" },
     note: { ru: "открывается 9 декабря вместе с Barrow Deeps и Hyjal Summit (у тех допуска нет)", en: "opens on 9 December with Barrow Deeps and Hyjal Summit (those need no attunement)" } },
   { n: 3, announced: false, name: { ru: "Огненные Недра", en: "Molten Core" },
-    note: { ru: "в Forever не объявлены: цепочки из классики, квесты есть в клиенте", en: "not announced for Forever: chains from the original game, the quests are in the client" } },
+    note: { ru: "в классике — фаза 1; цепочки из классики, квесты есть в клиенте Forever", en: "phase 1 in the original game; chains from the original game, the quests are in Forever's client" } },
   { n: 4, announced: false, name: { ru: "Логово Крыла Тьмы", en: "Blackwing Lair" },
-    note: { ru: "в Forever не объявлено", en: "not announced for Forever" } },
+    note: { ru: "в классике — фаза 3; допуск можно получить заранее, задание есть в клиенте", en: "phase 3 in the original game; the attunement can be done early, the quest is in the client" } },
   { n: 5, announced: false, name: { ru: "Наксрамас", en: "Naxxramas" },
-    note: { ru: "в Forever не объявлен", en: "not announced for Forever" } },
+    note: { ru: "в классике — фаза 6, последний рейд; задания есть в клиенте", en: "phase 6 in the original game, the last raid; the quests are in the client" } },
 ];
 
 export type Category = "attune" | "key" | "rep" | "legendary" | "class";
@@ -57,6 +62,8 @@ export interface Chain {
   minLevel?: number; classic?: L;
   /** group size of the hardest part */
   group?: L;
+  /** what has not been checked yet (shown on the page) */
+  unverified?: L;
 }
 
 // maps (UiMap ids, see maps.json)
@@ -82,6 +89,18 @@ const WINDSOR = BRM({ ru: "маршал Виндзор — в тюрьме Гл�
 const HALEH: Place = { who: { ru: "Haleh", en: "Haleh" }, map: WINTERSPRING, x: 54.8, y: 51.4, note: { ru: "Мазтарил: в пещеру и через портал наверх", en: "Mazthoril: into the cave, up through the portal" } };
 
 const DRAKKISATH = BRM({ ru: "Верхняя часть пика Черной горы, последний босс — генерал Драккисат", en: "Upper Blackrock Spire, the last boss: General Drakkisath" });
+
+
+const AZSHARA = 1447, EPL = 1423, SILITHUS = 1451, TIRISFAL = 1420, UNGORO = 1449, BLASTED = 1419;
+const HYDRAXIS: Place = { who: { ru: "Герцог Гидраксис", en: "Duke Hydraxis" }, map: AZSHARA, x: 79, y: 73, note: { ru: "островок у юго-восточного берега", en: "a small island off the south-east coast" } };
+const LOTHOS: Place = BRM({ ru: "Lothos Riftwaker — на скале в лавовом зале Черной горы, у окна в Огненные Недра", en: "Lothos Riftwaker — on the rock in the lava hall of Blackrock Mountain, by the Molten Core window" });
+const LOTHOS_MC: Place = BRM({ ru: "Огненные Недра — вход через Глубины или от Lothos", en: "Molten Core — in through the Depths or from Lothos" });
+const ERIS: Place = { who: { ru: "Эрис Огненный Приют", en: "Eris Havenfire" }, map: EPL, x: 18, y: 47, note: { ru: "≈ северо-запад; видна только с надетым Оком Божественности", en: "≈ the north-west; seen only wearing the Eye of Divinity" } };
+const KAZZAK: Place = { who: { ru: "Владыка Каззак", en: "Lord Kazzak" }, map: BLASTED, x: 32, y: 45, note: { ru: "≈ Порченый шрам; мировой босс — рейд", en: "≈ the Tainted Scar; a world boss — a raid" } };
+const DERRINGTON: Place = { who: { ru: "High Executor Derrington", en: "High Executor Derrington" }, map: TIRISFAL, x: 83, y: 68, note: { ru: "≈ Бастион", en: "≈ the Bulwark" } };
+const DITHERS: Place = { who: { ru: "Apothecary Dithers", en: "Apothecary Dithers" }, map: TIRISFAL, x: 83.2, y: 69.2, note: { ru: "Бастион", en: "the Bulwark" } };
+const KRINKLE: Place = { who: { ru: "Krinkle Goodsteel", en: "Krinkle Goodsteel" }, map: TANARIS, x: 51.5, y: 28.8, note: { ru: "Прибамбасск, кузнец", en: "Gadgetzan, the blacksmith" } };
+const ANACHRONOS: Place = { who: { ru: "Анахронос", en: "Anachronos" }, map: TANARIS, x: 65, y: 50, note: { ru: "≈ у входа в Пещеры Времени", en: "≈ by the Caverns of Time entrance" } };
 
 export const CHAINS: Chain[] = [
   {
@@ -186,6 +205,149 @@ export const CHAINS: Chain[] = [
         at: [BRM({ ru: "Глубины Черной горы", en: "Blackrock Depths" })], turnin: BRM({ ru: "святилище Тауриссана", en: "the Shrine of Thaurissan" }) },
     ],
   },
+  {
+    key: "scholo-key", faction: "HORDE", stage: 1, category: "key", minLevel: 55,
+    name: { ru: "Ключ от Некроситета (Орда)", en: "The Key to Scholomance (Horde)" },
+    about: { ru: "Скелетный ключ открывает дверь Некроситета без разбойника и сефориевых зарядов. Некроситет — одно из лучших подземелий для претир-вещей жреца (часть комплекта Хранителя Тайн и не только). Цепочка у Бастиона на границе Тирисфаля: лагеря Алого ордена и башни в Западных Чумных землях, слепок в Прибамбасске, ковка на Огненном Венце в Ун'Горо и Арадж Призыватель в Андорале.", en: "The Skeleton Key opens Scholomance's door without a rogue or Seaforium charges. Scholomance is one of the best dungeons for a priest's pre-raid gear. The chain starts at the Bulwark on the Tirisfal border: Scarlet camps and towers in the Western Plaguelands, a mold in Gadgetzan, forging at Fire Plume Ridge in Un'Goro, and Araj the Summoner in Andorhal." },
+    reward: { item: 13704, text: { ru: "Скелетный ключ — вход в Некроситет", en: "Skeleton Key — entry to Scholomance" } },
+    needs: [
+      { text: { ru: "Арканитовый слиток и 15 золотых для слепка", en: "an Arcanite Bar and 15 gold for the mold" } },
+      { text: { ru: "ториевые слитки для ковки (сколько — не проверено)", en: "Thorium Bars for the forging (how many — not checked)" } },
+      { text: { ru: "группа на 5 для Араджа Призывателя", en: "a group of 5 for Araj the Summoner" } },
+    ],
+    level: { ru: "задания 53–60 уровня; с какого уровня берутся — источники не сходятся", en: "quests of level 53–60; the sources disagree on the level they open at" },
+    classic: { ru: "классика: фаза 1", en: "original game: phase 1" }, group: { ru: "соло, Арадж — 5 человек", en: "solo, Araj — 5 players" },
+    unverified: { ru: "номера 5096, 5098, 838, 964 и координаты лагерей и башен — по памяти, не сверены", en: "ids 5096, 5098, 838, 964 and the camp and tower spots are from memory, not checked" },
+    steps: [
+      { id: 5096, giver: DERRINGTON, todo: { ru: "Сжечь командный шатёр Алого ордена и поставить знамя Орды в их лагере в Западных Чумных землях.", en: "Burn a Scarlet Crusade command tent and plant the Horde standard at their camp in the Western Plaguelands." },
+        at: [{ who: { ru: "лагерь Алого ордена", en: "the Scarlet camp" }, map: WPL, x: 40, y: 52, note: { ru: "≈ место по памяти", en: "≈ the spot is from memory" } }], turnin: DERRINGTON },
+      { id: 5098, giver: DERRINGTON, todo: { ru: "Пометить факелом четыре сторожевые башни Плети вокруг Андорала.", en: "Mark the four Scourge watchtowers around Andorhal with a Beacon Torch." },
+        at: [{ who: { ru: "башни вокруг Андорала", en: "the towers around Andorhal" }, map: WPL, x: 44, y: 66, note: { ru: "≈", en: "≈" } }], turnin: DERRINGTON },
+      { id: 838, giver: DERRINGTON, todo: { ru: "Поговорить с аптекарем Dithers в двух шагах.", en: "Speak to Apothecary Dithers a few steps away." }, turnin: DITHERS },
+      { id: 964, giver: DITHERS, todo: { ru: "Собрать 15 фрагментов скелетов с нежити-скелетов в Западных Чумных землях.", en: "Collect 15 Skeletal Fragments from skeletal undead in the Western Plaguelands." },
+        at: [{ who: { ru: "скелеты", en: "skeletons" }, map: WPL, x: 50, y: 60, note: { ru: "≈ где именно падают — не сверено", en: "≈ where exactly they drop — not checked" } }], turnin: DITHERS },
+      { id: 5514, giver: DITHERS, todo: { ru: "Отнести заряженные фрагменты, арканитовый слиток и 15 золотых Krinkle Goodsteel в Прибамбасск: он сделает слепок ключа.", en: "Take the Imbued Skeletal Fragments, an Arcanite Bar and 15 gold to Krinkle Goodsteel in Gadgetzan for a key mold." }, turnin: KRINKLE },
+      { id: 5802, giver: KRINKLE, todo: { ru: "Со слепком и ториевыми слитками подняться к лавовому озеру на вершине Огненного Венца в Ун'Горо, выковать заготовку и отнести её Dithers.", en: "Take the mold and Thorium Bars to the lava lake atop Fire Plume Ridge in Un'Goro, forge the key blank and bring it to Dithers." },
+        at: [{ who: { ru: "Огненный Венец, лавовое озеро на вершине", en: "Fire Plume Ridge, the lava lake on top" }, map: UNGORO, x: 50, y: 47 }], turnin: DITHERS },
+      { id: 5804, giver: DITHERS, size: 5, todo: { ru: "Убить Араджа Призывателя в центре Андорала и принести Скарабея Араджа.", en: "Kill Araj the Summoner in the middle of Andorhal and bring Araj's Scarab." },
+        at: [{ who: { ru: "Арадж Призыватель", en: "Araj the Summoner" }, map: WPL, x: 45, y: 69, note: { ru: "центр Андорала, элитный — нужна группа", en: "the middle of Andorhal, elite — take a group" } }], turnin: DITHERS },
+      { id: 5511, giver: DITHERS, todo: { ru: "Поговорить с Dithers ещё раз: он доделает Скелетный ключ.", en: "Speak to Dithers once more: he finishes the Skeleton Key." }, turnin: DITHERS },
+    ],
+  },
+  {
+    key: "mc-attune", faction: null, stage: 3, category: "attune", minLevel: 55,
+    name: { ru: "Допуск к Огненным Недрам", en: "Attunement to the Core" },
+    about: { ru: "Одно задание: осколок ядра из глубины Глубин Черной горы. После него Lothos Riftwaker в Черной горе переносит прямо ко входу в Огненные Недра — не надо каждый раз идти через все Глубины. В классике нужен каждому рейдеру ОН; без него цепочки Гидраксиса и Благословения теряют смысл.", en: "One quest: a Core Fragment from deep inside Blackrock Depths. Afterwards Lothos Riftwaker in Blackrock Mountain teleports you straight to the Molten Core entrance, no walk through the Depths each time. Every Molten Core raider needed it in the original game." },
+    reward: { text: { ru: "Допуск к Огненным Недрам: телепорт от Lothos Riftwaker", en: "Attunement to Molten Core: Lothos Riftwaker's teleport" } },
+    needs: [{ text: { ru: "группа на 5 в Глубины Черной горы, до самого входа в Недра", en: "a group of 5 into Blackrock Depths, all the way to the Core's entrance" } }],
+    level: { ru: "задание 60 уровня, берётся с 55", en: "a level 60 quest, taken from 55" },
+    classic: { ru: "классика: фаза 1", en: "original game: phase 1" }, group: { ru: "5 человек", en: "5 players" },
+    unverified: { ru: "есть и задание 7487 с тем же названием — засчитываются оба; место Lothos внутри горы — по описанию", en: "quest 7487 has the same name — both count; Lothos's spot inside the mountain is from descriptions" },
+    steps: [
+      { id: 7848, alt: [7487], giver: LOTHOS, dungeon: "brd", size: 5, todo: { ru: "Пройти Глубины Черной горы до входа в Огненные Недра и взять осколок ядра; вернуться к Lothos.", en: "Go through Blackrock Depths to the Molten Core entrance and take a Core Fragment; go back to Lothos." },
+        at: [BRM({ ru: "Глубины Черной горы, у входа в Огненные Недра", en: "Blackrock Depths, by the Molten Core entrance" })], turnin: LOTHOS, min: { level: 55, sure: false } },
+    ],
+  },
+  {
+    key: "hydraxis", faction: null, stage: 3, category: "rep", minLevel: 55,
+    name: { ru: "Гидраксианские Повелители Вод", en: "Hydraxian Waterlords" },
+    about: { ru: "Герцог Гидраксис на острове у Азшары воюет с Рагнаросом. Его цепочка ведёт в Чумные земли, Силитус, Верхнюю часть пика и в сами Огненные Недра. Главное — Акватическая квинтэссенция (с «Уважения»): ей тушат семь огненных рун в ОН, и только когда потушены все семь, появляется Мажордом Экзекутус. Без этого рейд не дойдёт до Рагнароса. На «Почтении» герцог даёт многоразовую Вечную квинтэссенцию. Работа для одного-двух человек рейда — жрецу по силам.", en: "Duke Hydraxis on an island off Azshara is at war with Ragnaros. His chain goes to the Plaguelands, Silithus, Upper Blackrock Spire and Molten Core itself. The point is the Aqual Quintessence (from Honored): it douses the seven fire runes in Molten Core, and only when all seven are out does Majordomo Executus appear. At Revered the Duke gives the reusable Eternal Quintessence." },
+    reward: { item: 17333, text: { ru: "Акватическая квинтэссенция (с «Уважения»), Вечная (с «Почтения»), кольцо", en: "Aqual Quintessence (Honored), Eternal Quintessence (Revered), a ring" } },
+    needs: [
+      { text: { ru: "Допуск к Огненным Недрам", en: "Attunement to the Core" }, chain: "mc-attune" },
+      { text: { ru: "доступ в Верхнюю часть пика (Печать Вознесения у кого-то в группе)", en: "access to Upper Blackrock Spire (someone in the group with the Seal of Ascension)" } },
+      { text: { ru: "«Уважение» у Гидраксианских Повелителей Вод: убийства в Огненных Недрах", en: "Honored with the Hydraxian Waterlords: kills in Molten Core" } },
+    ],
+    level: { ru: "задания 60 уровня, первые — с 55", en: "level 60 quests, the first from 55" },
+    classic: { ru: "классика: фаза 1", en: "original game: phase 1" }, group: { ru: "соло, ВЧС 10, рейд 40", en: "solo, UBRS 10, raid 40" },
+    unverified: { ru: "номера 6805, 6821, 6822, 6824, 7486, сколько кого убить и награды — по памяти; где именно элементали в Чумных землях — не сверено", en: "ids 6805, 6821, 6822, 6824, 7486, the kill counts and rewards are from memory; where exactly the elementals are in the Plaguelands — not checked" },
+    steps: [
+      { id: 6804, giver: HYDRAXIS, todo: { ru: "Убить испорченных водных элементалей и чумных тварей в Восточных Чумных землях.", en: "Kill corrupted water elementals and plague beasts in the Eastern Plaguelands." },
+        at: [{ who: { ru: "испорченные элементали", en: "corrupted elementals" }, map: EPL, x: 50, y: 50, note: { ru: "≈ место не сверено", en: "≈ the spot is not checked" } }], turnin: HYDRAXIS, min: { level: 55, sure: true } },
+      { id: 6805, giver: HYDRAXIS, todo: { ru: "Убить пылевых буревестников и пустынных громыхателей в Силитусе.", en: "Kill Dust Stormers and Desert Rumblers in Silithus." },
+        at: [{ who: { ru: "элементали пустыни", en: "desert elementals" }, map: SILITHUS, x: 40, y: 40, note: { ru: "бродят по открытой пустыне", en: "roam the open desert" } }], turnin: HYDRAXIS, min: { level: 57, sure: false } },
+      { id: 6821, giver: HYDRAXIS, dungeon: "ubrs", size: 10, todo: { ru: "Убить Пиростража Огнеглаза в Верхней части пика и принести его глаз.", en: "Kill Pyroguard Emberseer in Upper Blackrock Spire and bring his eye." },
+        at: [BRM({ ru: "Верхняя часть пика, первый босс", en: "Upper Blackrock Spire, the first boss" })], turnin: HYDRAXIS },
+      { id: 6822, giver: HYDRAXIS, size: 40, todo: { ru: "В Огненных Недрах убить повелителя огня, огненного великана, древнюю гончую Недр и лавового волнореза.", en: "In Molten Core kill a Fire Lord, a Molten Giant, an Ancient Core Hound and a Lava Surger." },
+        at: [LOTHOS_MC], turnin: HYDRAXIS },
+      { id: 6823, giver: HYDRAXIS, todo: { ru: "Заработать «Уважение» у Гидраксианских Повелителей Вод (убийства в Огненных Недрах) и поговорить с герцогом.", en: "Reach Honored with the Hydraxian Waterlords (kills in Molten Core) and speak to the Duke." }, turnin: HYDRAXIS, min: { level: 60, sure: false } },
+      { id: 6824, giver: HYDRAXIS, size: 40, todo: { ru: "Снять руки Люцифрона, Предвестника Сульфурона, Гееннаса и Шаззраха в Огненных Недрах.", en: "Take the hands of Lucifron, Sulfuron Harbinger, Gehennas and Shazzrah in Molten Core." },
+        at: [LOTHOS_MC], turnin: HYDRAXIS },
+      { id: 7486, giver: HYDRAXIS, todo: { ru: "Поговорить с герцогом и выбрать кольцо.", en: "Speak to the Duke and choose a ring." }, turnin: HYDRAXIS },
+      { id: -101, title: { ru: "Акватическая квинтэссенция", en: "Aqual Quintessence" }, giver: HYDRAXIS, size: 40,
+        todo: { ru: "С «Уважения» попросить у герцога квинтэссенцию и потушить ей руну у босса в Огненных Недрах. Одноразовая, при себе только одна — за следующей снова к герцогу. На «Почтении» — многоразовая Вечная.", en: "From Honored ask the Duke for a quintessence and douse a boss rune with it in Molten Core. Single use, one at a time — back to the Duke for the next. At Revered: the reusable Eternal one." },
+        at: [LOTHOS_MC], turnin: HYDRAXIS },
+    ],
+  },
+  {
+    key: "benediction", faction: null, classes: [5], stage: 3, category: "legendary", minLevel: 60,
+    name: { ru: "Благословение / Анафема", en: "Benediction / Anathema" },
+    about: { ru: "Эпический посох жреца: Благословение лечит, а в Анафему (посох Тьмы) превращается одним щелчком (раз в 30 минут). Нужны три части: Око Божественности из Тайника Повелителя Огня после Мажордома в Огненных Недрах (только для жрецов), Око Тени с Владыки Каззака или элитных демонов (продаётся) и Щепка Нордрассила — награда Эрис Огненный Приют за испытание в Восточных Чумных землях: спасти 50 крестьян, пока не погибнут 15. Испытание — в одиночку.", en: "The priest's epic staff: Benediction heals and turns into Anathema (a shadow staff) with a click (every 30 minutes). Three pieces: the Eye of Divinity from Majordomo's Cache of the Firelord in Molten Core (priests only), the Eye of Shadow from Lord Kazzak or elite demons (tradeable) and the Splinter of Nordrassil — Eris Havenfire's reward for her trial in the Eastern Plaguelands: save 50 peasants before 15 die. The trial is solo." },
+    reward: { item: 18608, text: { ru: "Благословение / Анафема", en: "Benediction / Anathema" } },
+    needs: [
+      { text: { ru: "Допуск к Огненным Недрам", en: "Attunement to the Core" }, chain: "mc-attune" },
+      { text: { ru: "рейд, который тушит руны и убивает Мажордома (Гидраксианы)", en: "a raid that douses the runes and kills Majordomo (the Hydraxians)" }, chain: "hydraxis" },
+      { text: { ru: "Око Тени — с Каззака или купить на аукционе", en: "the Eye of Shadow — from Kazzak or the auction house" } },
+      { text: { ru: "60 уровень", en: "level 60" }, level: 60 },
+    ],
+    level: { ru: "60 уровень", en: "level 60" },
+    classic: { ru: "классика: фаза 1 (Каззак — фаза 2)", en: "original game: phase 1 (Kazzak — phase 2)" }, group: { ru: "рейд 40, испытание — соло", en: "raid 40, the trial — solo" },
+    unverified: { ru: "номер задания «Предостережение» (7621) и место Эрис — не сверены", en: "the id of “A Warning” (7621) and Eris's spot are not checked" },
+    steps: [
+      { id: -201, title: { ru: "Око Божественности", en: "The Eye of Divinity" }, giver: LOTHOS_MC, size: 40,
+        todo: { ru: "Убить Мажордома Экзекутуса в Огненных Недрах: в Тайнике Повелителя Огня жрецу может выпасть Око Божественности. Надеть его (аксессуар) — тогда видна Эрис.", en: "Kill Majordomo Executus in Molten Core: a priest may get the Eye of Divinity from the Cache of the Firelord. Wear it (a trinket) to see Eris." }, turnin: LOTHOS_MC },
+      { id: 7621, giver: ERIS, todo: { ru: "С надетым Оком найти Эрис Огненный Приют и выслушать её.", en: "Wearing the Eye, find Eris Havenfire and hear her out." }, turnin: ERIS },
+      { id: 7622, giver: ERIS, todo: { ru: "Защитить бегущих крестьян от Плети: спасти 50, пока не погибнут 15. Только в одиночку. Награда — Щепка Нордрассила.", en: "Protect the fleeing peasants from the Scourge: save 50 before 15 die. Alone only. Reward: the Splinter of Nordrassil." }, turnin: ERIS },
+      { id: -202, title: { ru: "Око Тени", en: "The Eye of Shadow" }, giver: KAZZAK, size: 40,
+        todo: { ru: "Око Тени падает с Владыки Каззака и, редко, с элитных демонов высокого уровня; его можно купить на аукционе.", en: "The Eye of Shadow drops from Lord Kazzak and, rarely, high-level elite demons; it can be bought on the auction house." }, turnin: KAZZAK },
+      { id: -203, title: { ru: "Собрать посох", en: "Put the staff together" }, giver: ERIS,
+        todo: { ru: "Соединить Щепку Нордрассила, Око Божественности и Око Тени — получится Благословение. Щелчок по нему превращает его в Анафему и обратно.", en: "Combine the Splinter of Nordrassil, the Eye of Divinity and the Eye of Shadow into Benediction. Clicking it turns it into Anathema and back." }, turnin: ERIS },
+    ],
+  },
+  {
+    key: "bwl-attune", faction: null, stage: 4, category: "attune", minLevel: 55,
+    name: { ru: "Приказ Чернорука", en: "Blackhand's Command" },
+    about: { ru: "Допуск в Логово Крыла Тьмы. Записку «Приказ Чернорука» роняет интендант Щитоносцев снаружи пика в самой Черной горе; она начинает задание. Нужно пройти Верхнюю часть пика, убить генерала Драккисата и коснуться Клейма Драккисата за ним. После этого Сфера Повиновения в Черной горе переносит прямо в Логово.", en: "The attunement to Blackwing Lair. The Scarshield Quartermaster outside the Spire in Blackrock Mountain drops Blackhand's Command, which starts the quest. Clear Upper Blackrock Spire, kill General Drakkisath and touch Drakkisath's Brand behind him. Afterwards the Orb of Command in the mountain takes you straight into the Lair." },
+    reward: { text: { ru: "Допуск в Логово Крыла Тьмы (Сфера Повиновения)", en: "Attunement to Blackwing Lair (the Orb of Command)" } },
+    needs: [
+      { text: { ru: "Печать Вознесения (или у кого-то в группе)", en: "the Seal of Ascension (or someone in the group)" }, quest: 4743 },
+      { text: { ru: "группа на 10 в Верхнюю часть пика", en: "a group of 10 for Upper Blackrock Spire" } },
+    ],
+    level: { ru: "задание 60 уровня, с 55", en: "a level 60 quest, from 55" },
+    classic: { ru: "классика: фаза 3 (задание есть с начала, Логово — с фазы 3)", en: "original game: phase 3 (the quest exists from the start, the Lair from phase 3)" }, group: { ru: "10 человек", en: "10 players" },
+    unverified: { ru: "номер предмета записки и место интенданта — не сверены", en: "the note's item id and the Quartermaster's spot are not checked" },
+    steps: [
+      { id: -301, title: { ru: "Записка «Приказ Чернорука»", en: "Blackhand's Command (the note)" },
+        giver: BRM({ ru: "интендант Щитоносцев — снаружи пика, к востоку от входа", en: "the Scarshield Quartermaster — outside the Spire, east of the entrance" }),
+        todo: { ru: "Убить интенданта Щитоносцев и взять записку; щелчок по ней начинает задание.", en: "Kill the Scarshield Quartermaster and take the note; right-click it to start the quest." },
+        turnin: BRM({ ru: "интендант Щитоносцев", en: "the Scarshield Quartermaster" }) },
+      { id: 7761, giver: BRM({ ru: "записка «Приказ Чернорука»", en: "the note, Blackhand's Command" }), dungeon: "ubrs", size: 10,
+        todo: { ru: "Пройти Верхнюю часть пика, убить генерала Драккисата и коснуться Клейма Драккисата за ним.", en: "Clear Upper Blackrock Spire, kill General Drakkisath and touch Drakkisath's Brand behind him." },
+        at: [DRAKKISATH], turnin: DRAKKISATH },
+    ],
+  },
+  {
+    key: "atiesh", faction: null, classes: [5, 8, 9, 11], stage: 5, category: "legendary", minLevel: 60,
+    name: { ru: "Атиеш, большой посох Стража", en: "Atiesh, Greatstaff of the Guardian" },
+    about: { ru: "Легендарный посох заклинателей (у жреца, мага, чернокнижника и друида — свои версии). 40 Осколков Атиеша из Наксрамаса складываются в Каркас; Анахронос у Пещер Времени просит Навершие (с Кел'Тузада) и Основание (с К'Туна в Ан'Кираже); потом посох очищают в Стратхольме, убив вырвавшегося из него демона. Посох даёт ауру группе и портал в Каражан. Очень долго и только с поддержкой гильдии.", en: "The casters' legendary staff (priest, mage, warlock and druid have their own versions). 40 Splinters of Atiesh from Naxxramas make the Frame; Anachronos at the Caverns of Time wants the Staff Head (Kel'Thuzad) and the Base (C'Thun in Ahn'Qiraj); then the staff is cleansed in Stratholme by killing the demon that comes out of it. It gives the party an aura and a portal to Karazhan. Very long, needs a guild behind you." },
+    reward: { item: 22631, text: { ru: "Атиеш, большой посох Стража (жреческий)", en: "Atiesh, Greatstaff of the Guardian (priest)" } },
+    needs: [
+      { text: { ru: "доступ в Наксрамас (в классике — допуск Серебряного Рассвета)", en: "access to Naxxramas (in the original game the Argent Dawn attunement)" } },
+      { text: { ru: "рейд в Храм Ан'Киража ради К'Туна", en: "a Temple of Ahn'Qiraj raid for C'Thun" } },
+      { text: { ru: "40 Осколков Атиеша", en: "40 Splinters of Atiesh" } },
+    ],
+    level: { ru: "60 уровень", en: "level 60" },
+    classic: { ru: "классика: фаза 6 (и К'Тун — фаза 5)", en: "original game: phase 6 (and C'Thun — phase 5)" }, group: { ru: "рейд 40", en: "raid 40" },
+    unverified: { ru: "какой из номеров последнего задания (9257, 9269, 9270, 9271) жреческий — не сверено; засчитывается любой", en: "which of the last quest's ids (9257, 9269, 9270, 9271) is the priest's is not checked; any counts" },
+    steps: [
+      { id: -501, title: { ru: "Каркас Атиеша", en: "Frame of Atiesh" }, giver: ANACHRONOS, size: 40,
+        todo: { ru: "Собрать 40 Осколков Атиеша в Наксрамасе и соединить их в Каркас; щелчок по Каркасу начинает задание.", en: "Collect 40 Splinters of Atiesh in Naxxramas and combine them into the Frame; clicking the Frame starts the quest." }, turnin: ANACHRONOS },
+      { id: 9250, giver: ANACHRONOS, todo: { ru: "Отнести Каркас Атиеша Анахроносу у Пещер Времени.", en: "Bring the Frame of Atiesh to Anachronos at the Caverns of Time." }, turnin: ANACHRONOS },
+      { id: 9251, giver: ANACHRONOS, size: 40, todo: { ru: "Добыть Навершие Атиеша с Кел'Тузада (Наксрамас) и Основание Атиеша с К'Туна (Храм Ан'Киража).", en: "Get the Staff Head of Atiesh from Kel'Thuzad (Naxxramas) and the Base of Atiesh from C'Thun (Temple of Ahn'Qiraj)." }, turnin: ANACHRONOS },
+      { id: 9270, alt: [9257, 9269, 9271], giver: ANACHRONOS, size: 5, todo: { ru: "В Стратхольме применить посох на Освящённой земле и убить вырвавшегося демона Атиеша; вернуться к Анахроносу.", en: "In Stratholme use the staff on the Consecrated Earth and kill the demon Atiesh that comes out; go back to Anachronos." },
+        at: [{ who: { ru: "Стратхольм, Освящённая земля", en: "Stratholme, the Consecrated Earth" }, map: EPL, x: 31, y: 14, note: { ru: "вход в Стратхольм", en: "the Stratholme entrance" } }], turnin: ANACHRONOS },
+    ],
+  },
 ];
 
 /*
@@ -200,7 +362,7 @@ const MIN: Record<string, { level: number; sure: boolean }> = {
   // no source: left blank rather than guessed, so the two factions are not compared on a guess
 };
 const KEY_MIN: Record<number, { level: number; sure: boolean }> = { 4743: { level: 55, sure: false }, 3802: { level: 50, sure: false } };
-for (const c of CHAINS) for (const st of c.steps) st.min = MIN[c.key] ?? KEY_MIN[st.id];
+for (const c of CHAINS) for (const st of c.steps) st.min ??= MIN[c.key] ?? KEY_MIN[st.id];
 
 export const chainFor = (faction: string | null | undefined) => CHAINS.find((c) => c.faction === (faction === "ALLIANCE" ? "ALLIANCE" : "HORDE"))!;
 
@@ -228,11 +390,18 @@ export function fits(c: Chain, faction: string | null | undefined, classId: numb
   return true;
 }
 
-/** How far a character has come in a chain, from their completed quests: done when the last step is. */
+/** Whether a step is done: a quest the character completed (null for a step that is not a quest). */
+export function stepDone(s: ChainStep, ids: Set<number>): boolean | null {
+  if (s.id < 0) return null;
+  return ids.has(s.id) || !!s.alt?.some((a) => ids.has(a));
+}
+
+/** How far a character has come in a chain, counted in its quests: done when the last quest is. */
 export function progress(c: Chain, ids: Set<number>) {
-  const done = c.steps.filter((s) => ids.has(s.id)).length;
-  const complete = ids.has(c.steps[c.steps.length - 1].id);
-  return { done: complete ? c.steps.length : done, total: c.steps.length, complete, next: complete ? undefined : c.steps.find((s) => !ids.has(s.id)) };
+  const qs = c.steps.filter((s) => s.id > 0);
+  const done = qs.filter((s) => stepDone(s, ids)).length;
+  const complete = !!qs.length && !!stepDone(qs[qs.length - 1], ids);
+  return { done: complete ? qs.length : done, total: qs.length, complete, next: complete ? undefined : qs.find((s) => !stepDone(s, ids)) };
 }
 
 /** Whether a requirement is met, when it can be told from the character (null: only the player knows). */

@@ -65,6 +65,7 @@ export function ChainInfo({ c, ids, who }: { c: Chain; ids: Set<number>; who: Wh
       </div>
       {!fits(c, who.faction, who.classId) && <p className="text-sm text-[#ffb070]">{t("cn_not_for")}</p>}
       <p className="text-sm">{c.about[lang]}</p>
+      {c.unverified && <p className="text-xs text-[#ffb070]">⚠ {t("cn_unverified")}: {c.unverified[lang]}</p>}
       <div className="flex items-center gap-2 text-sm">
         <span className="eyebrow">{t("cn_reward")}</span>
         {c.reward.item ? (

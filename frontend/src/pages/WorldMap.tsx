@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { CHAINS, ORDERED, PLACES, fits, progress, type Chain, type ChainStep, type L, type Place } from "../lib/chains";
+import { CHAINS, ORDERED, PLACES, fits, progress, stepDone, type Chain, type ChainStep, type L, type Place } from "../lib/chains";
 import { ChainChars, ChainInfo, ChainPicker } from "./map/ChainPanel";
 import { useI18n, type Key } from "../lib/i18n";
 import MAPS from "../lib/maps.json";
@@ -122,7 +122,9 @@ export function WorldMap() {
   // no chain asked for: the first one in order this character still has to do
   const chainKey = sp.get("chain") ?? (ORDERED.find((c) => fits(c, faction, who.classId) && !progress(c, ids).complete) ?? ORDERED[0]).key;
   const chain = CHAINS.find((c) => c.key === chainKey) ?? CHAINS[0];
-  const firstOpen = chain.steps.findIndex((s) => !ids.has(s.id));
+  // a step that is not a quest counts as done once a later quest is
+  const doneAt = (i: number) => stepDone(chain.steps[i], ids) ?? chain.steps.slice(i + 1).some((x) => stepDone(x, ids));
+  const firstOpen = chain.steps.findIndex((_, i) => !doneAt(i));
   const stepParam = Number(sp.get("step"));
   const idx = Math.max(0, chain.steps.findIndex((s) => s.id === stepParam));
   const stepIdx = sp.get("step") ? idx : Math.max(0, firstOpen);
@@ -203,9 +205,9 @@ export function WorldMap() {
             <ol className="wm-steps">
               {chain.steps.map((s, i) => (
                 <li key={s.id}>
-                  <button className={`raid-step ${ids.has(s.id) ? "done" : i === firstOpen ? "next" : "later"} ${i === stepIdx ? "cur" : ""}`} onClick={() => go(i)}>
-                    <span className="raid-mark">{ids.has(s.id) ? "✓" : i === firstOpen ? "▶" : i + 1}</span>
-                    <QuestTitle id={s.id} />
+                  <button className={`raid-step ${i < firstOpen || firstOpen < 0 ? "done" : i === firstOpen ? "next" : "later"} ${i === stepIdx ? "cur" : ""}`} onClick={() => go(i)}>
+                    <span className="raid-mark">{i < firstOpen || firstOpen < 0 ? "✓" : i === firstOpen ? "▶" : i + 1}</span>
+                    <StepTitle s={s} />
                     {s.min && <MinLevel min={s.min} level={char?.summary?.[lang]?.level ?? null} />}
                     {s.size && <span className="cn-size">{t("cn_size", { n: s.size })}</span>}
                   </button>
@@ -252,12 +254,12 @@ function StepCard({ chain, i, ids, who, go }: { chain: Chain; i: number; ids: Se
       <motion.div key={s.id} className="char-stats" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.25 }}>
         <div className="flex items-center justify-between gap-2">
           <span className="eyebrow">{t("wm_step", { a: i + 1, b: chain.steps.length })}{s.group ? ` · ${t("rd_any_order")}` : ""}</span>
-          {ids.has(s.id) && <span className="text-xs text-good">✓ {t("rd_st_done")}</span>}
+          {stepDone(s, ids) && <span className="text-xs text-good">✓ {t("rd_st_done")}</span>}
         </div>
-        <div className="mt-1 flex items-center font-display text-lg text-gold"><QuestTitle id={s.id} />{s.min && <MinLevel min={s.min} level={sum?.level ?? null} />}</div>
+        <div className="mt-1 flex items-center font-display text-lg text-gold"><StepTitle s={s} />{s.min && <MinLevel min={s.min} level={sum?.level ?? null} />}</div>
         {s.dungeon && <div className="mt-0.5 text-xs text-[#ffb070]">{t(`wm_dg_${s.dungeon}` as Key)}</div>}
         <p className="mt-2 text-sm">{s.todo[lang]}</p>
-        <QuestDetails id={s.id} who={{ name: sum?.name ?? "", cls: sum?.className ?? "", race: sum?.race ?? "" }} />
+        {s.id > 0 && <QuestDetails id={s.id} who={{ name: sum?.name ?? "", cls: sum?.className ?? "", race: sum?.race ?? "" }} />}
         <div className="mt-2 flex justify-between gap-2">
           <button className="btn text-sm" disabled={i === 0} onClick={() => go(i - 1)}>← {t("wm_prev")}</button>
           <button className="btn-primary text-sm" disabled={i === chain.steps.length - 1} onClick={() => go(i + 1)}>{t("wm_next")} →</button>
@@ -265,6 +267,12 @@ function StepCard({ chain, i, ids, who, go }: { chain: Chain; i: number; ids: Se
       </motion.div>
     </AnimatePresence>
   );
+}
+
+/** A step's name: the quest's own title from Forever, or the step's title when it is not a quest. */
+function StepTitle({ s }: { s: ChainStep }) {
+  const { lang } = useI18n();
+  return s.id > 0 ? <QuestTitle id={s.id} /> : <span className="truncate italic">{s.title?.[lang] ?? "—"}</span>;
 }
 
 function QuestTitle({ id }: { id: number }) {
