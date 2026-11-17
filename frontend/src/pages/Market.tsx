@@ -5,6 +5,22 @@ import { useMe } from "../lib/auth";
 import { fmtDate, useI18n } from "../lib/i18n";
 import { qColor, rulesetName, wowApi, type Region } from "../lib/wowApi";
 
+/**
+ * Forever has no realms: its auction houses come as five worlds of three (Alliance, Horde, Blackwater, the
+ * neutral one), the same list whatever ruleset is asked for. World 1 is PvP (matched in game: Horde #113);
+ * world 2 is most likely Normal (the other big one); world 3 is empty; worlds 4 and 5 are the two
+ * roleplay rulesets, which is which not known yet.
+ */
+const WORLDS: { key: "mk_w_pvp" | "mk_w_normal" | "mk_w_empty" | "mk_w_rp"; houses: number[] }[] = [
+  { key: "mk_w_pvp", houses: [110, 113, 116] },
+  { key: "mk_w_normal", houses: [111, 114, 117] },
+  { key: "mk_w_rp", houses: [119, 120, 121] },
+  { key: "mk_w_rp", houses: [123, 124, 125] },
+  { key: "mk_w_empty", houses: [112, 115, 118] },
+];
+const SIDES = ["mk_s_alliance", "mk_s_horde", "mk_s_neutral"] as const;
+const KNOWN = new Set(WORLDS.flatMap((w) => w.houses));
+
 export function Market() {
   const { t, lang } = useI18n();
   const qc = useQueryClient();
@@ -78,9 +94,15 @@ export function Market() {
           <label className="grid gap-1"><span className="eyebrow">{t("mk_house")}</span>
             <select className="input py-1.5" value={house ?? ""} onChange={(e) => setHouse(+e.target.value)}>
               <option value="" disabled>—</option>
-              {[...(houses.data || [])].sort((a, b) => a.name.localeCompare(b.name) || a.id - b.id).map((h) => (
-                <option key={h.id} value={h.id}>{h.name} · #{h.id}</option>
-              ))}
+              {WORLDS.map((w) => {
+                const hs = w.houses.filter((id) => (houses.data || []).some((h) => h.id === id));
+                return hs.length ? (
+                  <optgroup key={w.key} label={t(w.key)}>
+                    {hs.map((id, i) => <option key={id} value={id}>{t(SIDES[i])} · #{id}</option>)}
+                  </optgroup>
+                ) : null;
+              })}
+              {(houses.data || []).filter((h) => !KNOWN.has(h.id)).map((h) => <option key={h.id} value={h.id}>{h.name} · #{h.id}</option>)}
             </select>
           </label>
           <button
