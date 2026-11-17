@@ -263,7 +263,7 @@ function QuestTitle({ id }: { id: number }) {
 
 function focusOf(p: Place): Focus {
   const w = toWorld(p.map, p.x, p.y);
-  return w ? { ...w, zoom: 4.5 } : null;
+  return w ? { ...w, zoom: 5 } : null;
 }
 
 /** The seamless world: the places that matter, every zone named on the map; the list flies to a zone. */

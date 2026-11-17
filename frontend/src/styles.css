@@ -1420,13 +1420,13 @@ button.order-line:hover { @apply text-gold; }
 .om-name.city span { font-size: 11px; color: #ffe9a8; }
 .om-name span { opacity: 0; pointer-events: none !important; }
 .om-map:is([data-z="0"], [data-z="1"]) .om-name.continent span,
-.om-map:is([data-z="2"], [data-z="3"], [data-z="4"]) .om-name.zone span,
-.om-map:is([data-z="3"], [data-z="4"], [data-z="5"]) .om-name.city span { opacity: 1; pointer-events: auto !important; }
+.om-map:is([data-z="2"], [data-z="3"]) .om-name.zone span,
+.om-map:is([data-z="3"], [data-z="4"]) .om-name.city span { opacity: 1; pointer-events: auto !important; }
 .om-name.continent span { pointer-events: none !important; }
 .om-map[data-z="2"] .om-name.zone span { font-size: 10px; }
 .om-city { opacity: 0; transition: opacity 0.4s; -webkit-mask-image: radial-gradient(closest-side, #000 70%, transparent);
   mask-image: radial-gradient(closest-side, #000 70%, transparent); }
-.om-map[data-z="5"] .om-city, .om-map[data-z="6"] .om-city { opacity: 1; }
+.om-map[data-z="6"] .om-city, .om-map[data-z="7"] .om-city { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .wm-layer { transition: none; } .wm-pin.hot .wm-glyph { animation: none; } }
 
 /* raids: one character open at a time */
