@@ -12,6 +12,8 @@ export type L = { ru: string; en: string };
 export interface Place { who: L; map: number; x: number; y: number; note?: L }
 export interface ChainStep {
   id: number;
+  /** players the step takes, when more than one (5, 10, 20, 40) */
+  size?: number;
   /** the quests of a "group" can be done in any order */
   group?: string;
   giver: Place;
@@ -23,7 +25,39 @@ export interface ChainStep {
   /** the lowest character level the quest can be taken at; `sure` when a source says so, else an estimate */
   min?: { level: number; sure: boolean };
 }
-export interface Chain { key: string; name: L; faction: "HORDE" | "ALLIANCE" | null; level: L; steps: ChainStep[] }
+/** The order to go through the chains in: what is needed first comes first. */
+export interface Stage { n: number; name: L; note: L; announced: boolean }
+export const STAGES: Stage[] = [
+  { n: 1, announced: true, name: { ru: "Подземелья и ключи", en: "Dungeons and keys" },
+    note: { ru: "55–60 уровень: ключи открывают двери подземелий, где одеваются к рейдам", en: "levels 55–60: keys open the dungeon doors where you gear up for the raids" } },
+  { n: 2, announced: true, name: { ru: "Ониксия — 9 декабря", en: "Onyxia — 9 December" },
+    note: { ru: "открывается 9 декабря вместе с Barrow Deeps и Hyjal Summit (у тех допуска нет)", en: "opens on 9 December with Barrow Deeps and Hyjal Summit (those need no attunement)" } },
+  { n: 3, announced: false, name: { ru: "Огненные Недра", en: "Molten Core" },
+    note: { ru: "в Forever не объявлены: цепочки из классики, квесты есть в клиенте", en: "not announced for Forever: chains from the original game, the quests are in the client" } },
+  { n: 4, announced: false, name: { ru: "Логово Крыла Тьмы", en: "Blackwing Lair" },
+    note: { ru: "в Forever не объявлено", en: "not announced for Forever" } },
+  { n: 5, announced: false, name: { ru: "Наксрамас", en: "Naxxramas" },
+    note: { ru: "в Forever не объявлен", en: "not announced for Forever" } },
+];
+
+export type Category = "attune" | "key" | "rep" | "legendary" | "class";
+/** What has to be in hand before a chain can be finished. `chain`: another chain done; `quest`: one quest done
+ * (both checked against the character's completed quests); the rest is only told. */
+export interface Need { text: L; chain?: string; quest?: number; level?: number }
+export interface Chain {
+  key: string; name: L; faction: "HORDE" | "ALLIANCE" | null; level: L; steps: ChainStep[];
+  stage: number; category: Category;
+  /** class ids the chain is for (5 = Priest); none = every class */
+  classes?: number[];
+  /** what it is and why do it */
+  about: L;
+  reward: { item?: number; text: L };
+  needs: Need[];
+  /** the lowest level to start, and what the original game's phase was */
+  minLevel?: number; classic?: L;
+  /** group size of the hardest part */
+  group?: L;
+}
 
 // maps (UiMap ids, see maps.json)
 const BADLANDS = 1418, ORGRIMMAR = 1454, DESOLACE = 1443, WPL = 1422, DUSTWALLOW = 1445, WINTERSPRING = 1452,
@@ -51,7 +85,15 @@ const DRAKKISATH = BRM({ ru: "Верхняя часть пика Черной г
 
 export const CHAINS: Chain[] = [
   {
-    key: "onyxia-horde", faction: "HORDE",
+    key: "onyxia-horde", faction: "HORDE", stage: 2, category: "attune", minLevel: 58,
+    about: { ru: "Допуск в Логово Ониксии: без Амулета Пламени дракона в сумке в рейд не пустят. Цепочка длинная — Нижняя и Верхняя части пика, четыре дракона по всему миру и Драккисат, — её стоит начать заранее, до 9 декабря.", en: "The attunement to Onyxia's Lair: without the Drakefire Amulet in your bags the raid won't let you in. A long chain — Lower and Upper Blackrock Spire, four dragons around the world and Drakkisath — worth starting well before 9 December." },
+    reward: { item: 16309, text: { ru: "Амулет Пламени дракона — вход в Логово Ониксии", en: "Drakefire Amulet — entry to Onyxia's Lair" } },
+    classic: { ru: "классика: фаза 1", en: "original game: phase 1" }, group: { ru: "группы на 5–10: пик и драконы", en: "groups of 5–10: the Spire and the dragons" },
+    needs: [
+      { text: { ru: "Печать Вознесения — ключ Верхней части пика (цепочка «Ключи Черной горы»)", en: "The Seal of Ascension — the Upper Spire key (the Keys of Blackrock Mountain chain)" }, quest: 4743 },
+      { text: { ru: "58 уровень", en: "level 58" }, level: 58 },
+      { text: { ru: "группа на Нижнюю и Верхнюю части пика и на трёх драконов", en: "a group for the Lower and Upper Spire and three dragons" } },
+    ],
     name: { ru: "Амулет Пламени дракона (Орда)", en: "Drakefire Amulet (Horde)" },
     level: { ru: "задания 60 уровня; первое — с 58 по Warcraft Wiki для классики (там же сказано «с 55»; в Forever не проверено); нужны Нижняя и Верхняя части пика Черной горы", en: "level 60 quests; the first from 58 per the Warcraft Wiki for the original game (the same Wiki also says 55; not checked in Forever); Lower and Upper Blackrock Spire" },
     steps: [
@@ -87,7 +129,14 @@ export const CHAINS: Chain[] = [
     ],
   },
   {
-    key: "onyxia-alliance", faction: "ALLIANCE",
+    key: "onyxia-alliance", faction: "ALLIANCE", stage: 2, category: "attune",
+    about: { ru: "Допуск в Логово Ониксии: без Амулета Пламени дракона в сумке в рейд не пустят. Цепочка длинная — Нижняя и Верхняя части пика, четыре дракона по всему миру и Драккисат, — её стоит начать заранее, до 9 декабря.", en: "The attunement to Onyxia's Lair: without the Drakefire Amulet in your bags the raid won't let you in. A long chain — Lower and Upper Blackrock Spire, four dragons around the world and Drakkisath — worth starting well before 9 December." },
+    reward: { item: 16309, text: { ru: "Амулет Пламени дракона — вход в Логово Ониксии", en: "Drakefire Amulet — entry to Onyxia's Lair" } },
+    classic: { ru: "классика: фаза 1", en: "original game: phase 1" }, group: { ru: "группы на 5–10: пик и драконы", en: "groups of 5–10: the Spire and the dragons" },
+    needs: [
+      { text: { ru: "Печать Вознесения — ключ Верхней части пика", en: "The Seal of Ascension — the Upper Spire key" }, quest: 4743 },
+      { text: { ru: "группа на Глубины и Верхнюю часть пика", en: "a group for the Depths and the Upper Spire" } },
+    ],
     name: { ru: "Амулет Пламени дракона (Альянс)", en: "Drakefire Amulet (Alliance)" },
     level: { ru: "задания 60 уровня; с какого уровня берётся первое — источника нет; нужны Глубины и Верхняя часть пика Черной горы", en: "level 60 quests; no source gives the level the first one is taken at; Blackrock Depths and Upper Blackrock Spire" },
     steps: [
@@ -121,7 +170,11 @@ export const CHAINS: Chain[] = [
     ],
   },
   {
-    key: "keys", faction: null,
+    key: "keys", faction: null, stage: 1, category: "key", minLevel: 55,
+    about: { ru: "Два ключа Черной горы. Печать Вознесения открывает Верхнюю часть пика — без неё не пройти цепочку на Ониксию. Ключ Тенегорна открывает двери Глубин Черной горы: быстрее проходить подземелье и собирать вещи.", en: "The two keys of Blackrock Mountain. The Seal of Ascension opens Upper Blackrock Spire — the Onyxia chain can't be done without it. The Shadowforge Key opens the doors of Blackrock Depths: faster runs and gear." },
+    reward: { item: 12344, text: { ru: "Печать Вознесения и Ключ Тенегорна", en: "Seal of Ascension and Shadowforge Key" } },
+    needs: [{ text: { ru: "группа на Нижнюю часть пика и Глубины", en: "a group for the Lower Spire and the Depths" } }],
+    classic: { ru: "классика: фаза 1", en: "original game: phase 1" }, group: { ru: "5 человек", en: "5 players" },
     name: { ru: "Ключи Черной горы", en: "Keys of Blackrock Mountain" },
     level: { ru: "с 55–58 уровня, внутри Нижней части пика и Глубин", en: "from level 55–58, inside the Lower Spire and the Depths" },
     steps: [
@@ -167,3 +220,31 @@ export const PLACES: { name: L; map: number; x: number; y: number; kind: "city" 
   { name: { ru: "Пиратская Бухта", en: "Booty Bay" }, map: 1434, x: 27, y: 77, kind: "hub" },
   { name: { ru: "Круговзор", en: "Everlook" }, map: 1452, x: 61, y: 38, kind: "hub" },
 ];
+
+/** Whether a chain is for this character at all (faction, class). */
+export function fits(c: Chain, faction: string | null | undefined, classId: number | null | undefined): boolean {
+  if (c.faction && faction && c.faction !== faction) return false;
+  if (c.classes && classId != null && !c.classes.includes(classId)) return false;
+  return true;
+}
+
+/** How far a character has come in a chain, from their completed quests: done when the last step is. */
+export function progress(c: Chain, ids: Set<number>) {
+  const done = c.steps.filter((s) => ids.has(s.id)).length;
+  const complete = ids.has(c.steps[c.steps.length - 1].id);
+  return { done: complete ? c.steps.length : done, total: c.steps.length, complete, next: complete ? undefined : c.steps.find((s) => !ids.has(s.id)) };
+}
+
+/** Whether a requirement is met, when it can be told from the character (null: only the player knows). */
+export function needMet(n: Need, ids: Set<number>, level: number | null | undefined): boolean | null {
+  if (n.quest) return ids.has(n.quest);
+  if (n.chain) {
+    const c = CHAINS.find((x) => x.key === n.chain);
+    return c ? progress(c, ids).complete : null;
+  }
+  if (n.level) return level == null ? null : level >= n.level;
+  return null;
+}
+
+/** The chains in the order to do them: stage by stage, as listed. */
+export const ORDERED = [...CHAINS].sort((a, b) => a.stage - b.stage);

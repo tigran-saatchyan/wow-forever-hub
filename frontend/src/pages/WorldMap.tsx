@@ -7,7 +7,8 @@ import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { CHAINS, PLACES, type Chain, type ChainStep, type L, type Place } from "../lib/chains";
+import { CHAINS, ORDERED, PLACES, fits, progress, type Chain, type ChainStep, type L, type Place } from "../lib/chains";
+import { ChainChars, ChainInfo, ChainPicker } from "./map/ChainPanel";
 import { useI18n, type Key } from "../lib/i18n";
 import MAPS from "../lib/maps.json";
 import { store } from "../lib/store";
@@ -113,11 +114,14 @@ export function WorldMap() {
   const chars = (useCharacters().data || []).filter((c) => !c.error);
   const [cid, setCid] = useState<number | null>(() => store.get<number | null>("mapChar", null));
   const char = chars.find((c) => c.id === cid) ?? chars[0];
-  const faction = char?.summary?.[lang]?.faction === "ALLIANCE" ? "ALLIANCE" : "HORDE";
-  const chainKey = sp.get("chain") ?? (faction === "ALLIANCE" ? "onyxia-alliance" : "onyxia-horde");
-  const chain = CHAINS.find((c) => c.key === chainKey) ?? CHAINS[0];
+  const sum = char?.summary?.[lang];
+  const faction = sum?.faction === "ALLIANCE" ? "ALLIANCE" : "HORDE";
+  const who = { faction, classId: sum?.classId ?? null, level: sum?.level ?? null };
   const done = useTab<{ ids?: number[] }>(char?.id ?? 0, "quests");
   const ids = useMemo(() => new Set(char ? done.data?.data?.ids || [] : []), [char, done.data]);
+  // no chain asked for: the first one in order this character still has to do
+  const chainKey = sp.get("chain") ?? (ORDERED.find((c) => fits(c, faction, who.classId) && !progress(c, ids).complete) ?? ORDERED[0]).key;
+  const chain = CHAINS.find((c) => c.key === chainKey) ?? CHAINS[0];
   const firstOpen = chain.steps.findIndex((s) => !ids.has(s.id));
   const stepParam = Number(sp.get("step"));
   const idx = Math.max(0, chain.steps.findIndex((s) => s.id === stepParam));
@@ -179,6 +183,8 @@ export function WorldMap() {
       {view === "world" ? (
         <World continent={continent} setContinent={setContinent} zone={zone} setZone={setZone} />
       ) : (
+        <div className="space-y-4">
+        <ChainPicker current={chain.key} ids={ids} who={who} pick={setChain} />
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
           <div className="space-y-3">
             {chainPins ? (
@@ -187,12 +193,12 @@ export function WorldMap() {
               <MapView map={place.map} pins={pinsOn(place.map)} focus={{ x: place.x, y: place.y }} />
             )}
             <Route step={step} phase={phase} setPhase={look} />
+            <div className="grid gap-3 lg:grid-cols-[1.5fr_1fr]">
+              <ChainInfo c={chain} ids={ids} who={who} />
+              <ChainChars c={chain} chars={chars} current={char?.id} choose={(id) => (store.set("mapChar", id), setCid(id))} />
+            </div>
           </div>
           <aside className="space-y-3">
-            <div className="flex flex-wrap gap-1">
-              {CHAINS.map((c) => <button key={c.key} className={`chip ${c.key === chain.key ? "border-gold/60 text-gold" : ""}`} onClick={() => setChain(c.key)}>{c.name[lang]}</button>)}
-            </div>
-            <p className="text-xs text-muted">{chain.level[lang]}</p>
             <StepCard chain={chain} i={stepIdx} ids={ids} who={char} go={go} />
             <ol className="wm-steps">
               {chain.steps.map((s, i) => (
@@ -201,12 +207,14 @@ export function WorldMap() {
                     <span className="raid-mark">{ids.has(s.id) ? "✓" : i === firstOpen ? "▶" : i + 1}</span>
                     <QuestTitle id={s.id} />
                     {s.min && <MinLevel min={s.min} level={char?.summary?.[lang]?.level ?? null} />}
+                    {s.size && <span className="cn-size">{t("cn_size", { n: s.size })}</span>}
                   </button>
                 </li>
               ))}
             </ol>
             <p className="text-[11px] text-muted">{t("wm_note")}</p>
           </aside>
+        </div>
         </div>
       )}
     </div>

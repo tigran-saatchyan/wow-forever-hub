@@ -1457,3 +1457,15 @@ button.order-line:hover { @apply text-gold; }
 .cr-toggle { display: flex; width: 100%; align-items: center; gap: 10px; text-align: left; }
 .cr-chev { margin-left: auto; color: rgb(var(--muted)); transition: transform 0.2s; }
 .cr-toggle[aria-expanded="false"] .cr-chev { transform: rotate(-90deg); }
+
+/* quest chains on the map page */
+.cn-stages { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.cn-stage { padding: 8px 10px; border-radius: 8px; border: 1px solid rgb(var(--gold) / 0.22); background: rgb(10 14 13 / 0.6); }
+.cn-stage.later { border-style: dashed; opacity: 0.85; }
+.cn-stage-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.cn-stage-n { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; font: 700 12px var(--font-display, inherit);
+  color: #120c03; background: #c9a24a; }
+.cn-tag { padding: 0 6px; border-radius: 4px; font-size: 11px; color: #e4c873; border: 1px solid rgb(var(--gold) / 0.3); white-space: nowrap; }
+.cn-chip { display: inline-flex; align-items: center; gap: 6px; }
+.cn-prog { font: 600 11px var(--font-mono, monospace); color: rgb(var(--muted)); }
+.cn-size { margin-left: 6px; padding: 0 5px; border-radius: 4px; font-size: 10px; color: #9fd0ff; border: 1px solid #9fd0ff55; white-space: nowrap; }
