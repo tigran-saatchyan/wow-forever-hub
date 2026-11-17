@@ -88,7 +88,7 @@ def cut(im: Image.Image, level: int) -> None:
                 pad = Image.new("RGBA", (TILE, TILE))
                 pad.paste(t, (0, 0))
                 t = pad
-            t.save(d / f"{x}_{y}.webp", quality=78, method=6)
+            t.save(d / f"{x}_{y}.webp", quality=90, method=6)
     print("level", level, im.size, flush=True)
 
 

@@ -128,7 +128,11 @@ export function WorldMap() {
   const [continent, setContinent] = useState<number>(EK);
   const [zone, setZone] = useState<number | null>(null);
   useEffect(() => setPhase("giver"), [chain.key, step.id]);
-  const go = (i: number) => setSp({ chain: chain.key, step: String(chain.steps[Math.max(0, Math.min(chain.steps.length - 1, i))].id) });
+  // every request to look somewhere flies the map there, even to the place it already showed
+  const [tick, setTick] = useState(0);
+  const bump = () => setTick((n) => n + 1);
+  const look = (ph: Phase) => { setPhase(ph); bump(); };
+  const go = (i: number) => { bump(); setSp({ chain: chain.key, step: String(chain.steps[Math.max(0, Math.min(chain.steps.length - 1, i))].id) }); };
   const setChain = (k: string) => setSp({ chain: k });
 
   const place: Place = phase === "giver" ? step.giver : phase === "turnin" ? step.turnin : (step.at?.[0] ?? step.giver);
@@ -149,7 +153,7 @@ export function WorldMap() {
     const add = (p: Place, kind: Pin["kind"], ph: Phase) => {
       const w = toWorld(p.map, p.x, p.y);
       if (!w) return false;
-      out.push({ ...w, kind, glyph: GLYPH[kind], label: p.who[lang], hot: ph === phase, onClick: () => setPhase(ph) });
+      out.push({ ...w, kind, glyph: GLYPH[kind], label: p.who[lang], hot: ph === phase, onClick: () => look(ph) });
       return true;
     };
     const ok = add(step.giver, "giver", "giver") && (step.at || []).every((a) => add(a, "do", "do")) && add(step.turnin, "turnin", "turnin");
@@ -178,11 +182,11 @@ export function WorldMap() {
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
           <div className="space-y-3">
             {chainPins ? (
-              <Seamless pins={chainPins} focus={focusOf(place)} />
+              <Seamless pins={chainPins} focus={focusOf(place, tick)} />
             ) : (
               <MapView map={place.map} pins={pinsOn(place.map)} focus={{ x: place.x, y: place.y }} />
             )}
-            <Route step={step} phase={phase} setPhase={setPhase} />
+            <Route step={step} phase={phase} setPhase={look} />
           </div>
           <aside className="space-y-3">
             <div className="flex flex-wrap gap-1">
@@ -261,9 +265,9 @@ function QuestTitle({ id }: { id: number }) {
   return <span className="truncate">{q.data?.title || `#${id}`}</span>;
 }
 
-function focusOf(p: Place): Focus {
+function focusOf(p: Place, tick: number): Focus {
   const w = toWorld(p.map, p.x, p.y);
-  return w ? { ...w, zoom: 5 } : null;
+  return w ? { ...w, zoom: 5, tick } : null;
 }
 
 /** The seamless world: the places that matter, every zone named on the map; the list flies to a zone. */
@@ -275,18 +279,18 @@ function World({ continent, setContinent, zone, setZone }: { continent: number; 
     const out: WPin[] = [];
     for (const p of PLACES) {
       const w = toWorld(p.map, p.x, p.y);
-      if (w) out.push({ ...w, kind: p.kind, glyph: GLYPH[p.kind], label: p.name[lang], onClick: () => setFocus({ ...w, zoom: 5 }) });
+      if (w) out.push({ ...w, kind: p.kind, glyph: GLYPH[p.kind], label: p.name[lang], onClick: () => setFocus({ ...w, zoom: 5, tick: Date.now() }) });
     }
     return out;
   }, [lang]);
-  const pick = (id: number) => { setZone(id); setFocus({ map: id }); };
+  const pick = (id: number) => { setZone(id); setFocus({ map: id, tick: Date.now() }); };
   return (
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
       <Seamless pins={pins} focus={focus} onZone={setZone} />
       <aside className="space-y-2">
         <div className="flex gap-1">
           {[EK, KALIMDOR].map((c) => (
-            <button key={c} className={`chip ${continent === c && !zone ? "border-gold/60 text-gold" : ""}`} onClick={() => (setContinent(c), setZone(null), setFocus({ map: c }))}>{BY_ID.get(c)?.name[lang]}</button>
+            <button key={c} className={`chip ${continent === c && !zone ? "border-gold/60 text-gold" : ""}`} onClick={() => (setContinent(c), setZone(null), setFocus({ map: c, tick: Date.now() }))}>{BY_ID.get(c)?.name[lang]}</button>
           ))}
         </div>
         <div className="eyebrow pt-1">{t("wm_zones")}</div>
