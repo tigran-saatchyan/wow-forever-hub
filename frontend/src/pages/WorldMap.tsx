@@ -14,6 +14,7 @@ import { store } from "../lib/store";
 import { fullName, useCharacters, wowApi, type QuestInfo } from "../lib/wowApi";
 import { QuestDetails, useTab } from "./characters/ArmoryTabs";
 import { MinLevel } from "./Raids";
+import { Seamless, toWorld, type Focus, type WPin } from "../components/Seamless";
 
 interface MapMeta {
   id: number; name: L; parent: number; type: number; w: number; h: number;
@@ -22,19 +23,8 @@ interface MapMeta {
 const ALL = (MAPS as { maps: MapMeta[] }).maps;
 const BY_ID = new Map(ALL.map((m) => [m.id, m]));
 const EK = 1415, KALIMDOR = 1414;
-const CITY_MAPS = new Set([1453, 1454, 1455, 1456, 1457, 1458]);
 
 export interface Pin { x: number; y: number; kind: "giver" | "do" | "turnin" | "city" | "dungeon" | "raid" | "hub" | "zone"; label: string; hot?: boolean; onClick?: () => void }
-
-/** A point given on a zone map, carried up to its continent (null when the zone has no place there). */
-function toContinent(map: number, x: number, y: number): { map: number; x: number; y: number } | null {
-  const m = BY_ID.get(map);
-  if (!m) return null;
-  if (m.type === 2) return { map, x, y };
-  if (!m.onParent) return null;
-  const p = m.onParent;
-  return { map: m.parent, x: (p.x + (x / 100) * p.sx) * 100, y: (p.y + (y / 100) * p.sy) * 100 };
-}
 
 /** One map image with pins on it; wheel or buttons to zoom, drag to move. */
 export function MapView({ map, pins, focus }: { map: number; pins: Pin[]; focus?: { x: number; y: number } | null }) {
@@ -153,6 +143,19 @@ export function WorldMap() {
     return out;
   };
 
+  // every place of the step on the one seamless map (null when one of them has no place on it)
+  const chainPins = useMemo(() => {
+    const out: WPin[] = [];
+    const add = (p: Place, kind: Pin["kind"], ph: Phase) => {
+      const w = toWorld(p.map, p.x, p.y);
+      if (!w) return false;
+      out.push({ ...w, kind, glyph: GLYPH[kind], label: p.who[lang], hot: ph === phase, onClick: () => setPhase(ph) });
+      return true;
+    };
+    const ok = add(step.giver, "giver", "giver") && (step.at || []).every((a) => add(a, "do", "do")) && add(step.turnin, "turnin", "turnin");
+    return ok ? out : null;
+  }, [step, phase, lang]);
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
@@ -174,7 +177,11 @@ export function WorldMap() {
       ) : (
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
           <div className="space-y-3">
-            <MapView map={place.map} pins={pinsOn(place.map)} focus={{ x: place.x, y: place.y }} />
+            {chainPins ? (
+              <Seamless pins={chainPins} focus={focusOf(place)} />
+            ) : (
+              <MapView map={place.map} pins={pinsOn(place.map)} focus={{ x: place.x, y: place.y }} />
+            )}
             <Route step={step} phase={phase} setPhase={setPhase} />
           </div>
           <aside className="space-y-3">
@@ -254,39 +261,41 @@ function QuestTitle({ id }: { id: number }) {
   return <span className="truncate">{q.data?.title || `#${id}`}</span>;
 }
 
-/** The continents with the places that matter; a zone opens on click from the list. */
+function focusOf(p: Place): Focus {
+  const w = toWorld(p.map, p.x, p.y);
+  return w ? { ...w, zoom: 4.5 } : null;
+}
+
+/** The seamless world: the places that matter, every zone named on the map; the list flies to a zone. */
 function World({ continent, setContinent, zone, setZone }: { continent: number; setContinent: (m: number) => void; zone: number | null; setZone: (m: number | null) => void }) {
   const { t, lang } = useI18n();
   const zones = ALL.filter((m) => m.parent === continent && m.type === 3).sort((a, b) => a.name[lang].localeCompare(b.name[lang]));
-  const pins: Pin[] = [];
-  const target = zone ?? continent;
-  for (const p of PLACES) {
-    const at = zone ? (p.map === zone ? { map: zone, x: p.x, y: p.y } : null) : toContinent(p.map, p.x, p.y);
-    if (at && at.map === target) pins.push({ x: at.x, y: at.y, kind: p.kind, label: p.name[lang], onClick: zone ? undefined : () => setZone(p.map) });
-  }
-  if (!zone) {
-    for (const z of zones) {
-      const c = z.onParent;
-      // every zone is a quiet dot that names itself on hover; the capitals' own maps have their city pin already
-      if (c && !CITY_MAPS.has(z.id)) pins.push({ x: (c.x + c.sx / 2) * 100, y: (c.y + c.sy / 2) * 100, kind: "zone", label: z.name[lang], onClick: () => setZone(z.id) });
+  const [focus, setFocus] = useState<Focus>(null);
+  const pins = useMemo(() => {
+    const out: WPin[] = [];
+    for (const p of PLACES) {
+      const w = toWorld(p.map, p.x, p.y);
+      if (w) out.push({ ...w, kind: p.kind, glyph: GLYPH[p.kind], label: p.name[lang], onClick: () => setFocus({ ...w, zoom: 5 }) });
     }
-  }
+    return out;
+  }, [lang]);
+  const pick = (id: number) => { setZone(id); setFocus({ map: id }); };
   return (
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
-      <MapView map={target} pins={pins} />
+      <Seamless pins={pins} focus={focus} onZone={setZone} />
       <aside className="space-y-2">
         <div className="flex gap-1">
           {[EK, KALIMDOR].map((c) => (
-            <button key={c} className={`chip ${continent === c && !zone ? "border-gold/60 text-gold" : ""}`} onClick={() => (setContinent(c), setZone(null))}>{BY_ID.get(c)?.name[lang]}</button>
+            <button key={c} className={`chip ${continent === c && !zone ? "border-gold/60 text-gold" : ""}`} onClick={() => (setContinent(c), setZone(null), setFocus({ map: c }))}>{BY_ID.get(c)?.name[lang]}</button>
           ))}
         </div>
-        {zone && <button className="btn w-full text-sm" onClick={() => setZone(null)}>← {BY_ID.get(continent)?.name[lang]}</button>}
         <div className="eyebrow pt-1">{t("wm_zones")}</div>
         <ul className="max-h-[60vh] space-y-0.5 overflow-y-auto pr-1 text-sm">
           {zones.map((z) => (
-            <li key={z.id}><button className={`w-full rounded px-2 py-0.5 text-left hover:bg-gold/10 ${zone === z.id ? "text-gold" : ""}`} onClick={() => setZone(z.id)}>{z.name[lang]}</button></li>
+            <li key={z.id}><button className={`w-full rounded px-2 py-0.5 text-left hover:bg-gold/10 ${zone === z.id ? "text-gold" : ""}`} onClick={() => pick(z.id)}>{z.name[lang]}</button></li>
           ))}
         </ul>
+        <p className="text-[11px] text-muted">{t("wm_omap_note")}</p>
       </aside>
     </div>
   );

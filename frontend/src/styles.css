@@ -1406,6 +1406,27 @@ button.order-line:hover { @apply text-gold; }
 .wm-route-n { font: 600 12px var(--font-display, inherit); color: rgb(var(--muted)); }
 .wm-steps { max-height: 46vh; overflow-y: auto; padding-right: 4px; }
 .raid-step.cur { background: rgb(var(--gold) / 0.1); box-shadow: inset 3px 0 0 #e4c873; }
+.om-map, .om-map.leaflet-container { border-radius: 6px; background: #0b0906; font: inherit; overscroll-behavior: contain; }
+.om-map .leaflet-control-zoom a { background: rgb(10 8 5 / 0.85); color: #e4c873; border-color: rgb(var(--gold) / 0.4); }
+.om-map .leaflet-control-attribution { background: rgb(0 0 0 / 0.55); color: #b9a77a; font-size: 10px; }
+.om-map .leaflet-control-attribution a { color: #e4c873; }
+.om-pin { position: absolute; left: -12px; top: -12px; cursor: pointer; }
+.om-pin.hub { left: -7px; top: -7px; }
+.om-name { pointer-events: none; }
+.om-name span { position: absolute; transform: translate(-50%, -50%); white-space: nowrap; pointer-events: auto; cursor: pointer;
+  font: 600 12px var(--font-display, inherit); letter-spacing: 0.08em; color: #f3e3b0; text-shadow: 0 0 3px #000, 0 0 6px #000, 0 1px 2px #000;
+  transition: opacity 0.3s; }
+.om-name.continent span { font-size: 20px; letter-spacing: 0.2em; text-transform: uppercase; color: #ffd76a; pointer-events: none; }
+.om-name.city span { font-size: 11px; color: #ffe9a8; }
+.om-name span { opacity: 0; pointer-events: none !important; }
+.om-map:is([data-z="0"], [data-z="1"]) .om-name.continent span,
+.om-map:is([data-z="2"], [data-z="3"], [data-z="4"]) .om-name.zone span,
+.om-map:is([data-z="3"], [data-z="4"], [data-z="5"]) .om-name.city span { opacity: 1; pointer-events: auto !important; }
+.om-name.continent span { pointer-events: none !important; }
+.om-map[data-z="2"] .om-name.zone span { font-size: 10px; }
+.om-city { opacity: 0; transition: opacity 0.4s; -webkit-mask-image: radial-gradient(closest-side, #000 70%, transparent);
+  mask-image: radial-gradient(closest-side, #000 70%, transparent); }
+.om-map[data-z="5"] .om-city, .om-map[data-z="6"] .om-city { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .wm-layer { transition: none; } .wm-pin.hot .wm-glyph { animation: none; } }
 
 /* raids: one character open at a time */
