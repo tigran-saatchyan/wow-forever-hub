@@ -4,6 +4,7 @@ Prices come from the auction house chosen on the Auction page (its latest snapsh
 prices from the client (the recipe reference). The arithmetic lives in app/craft.py.
 """
 
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -14,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .. import craft
 from ..auth import CurrentUser
 from ..config import get_settings
-from ..db import AhLatest, Character, Setting, get_session
+from ..db import AhLatest, Character, Setting, get_session, utcnow
 from . import professions as prof_routes
 from .market import _setting
 
@@ -32,9 +33,14 @@ async def _prices(session: AsyncSession) -> tuple[dict, dict]:
         select(AhLatest.item_id, AhLatest.min_price, AhLatest.quantity)
         .where(AhLatest.ruleset == cfg["ruleset"], AhLatest.house == cfg["house"])
     )).all()
-    every = get_settings().ah_poll_minutes  # the poller fetches the house this often (app/routers/market.py)
+    # the next poll as the poller scheduled it, and the server's "now", so a browser's wrong clock can't skew it
+    every = get_settings().ah_poll_minutes
+    left = None
+    if state.get("next"):
+        left = max(0, round((datetime.fromisoformat(state["next"]) - utcnow()).total_seconds()))
     return ({i: {"ah": p, "qty": q} for i, p, q in rows},
-            {"configured": True, "at": state.get("at"), "items": len(rows), "ok": state.get("ok"), "every": every})
+            {"configured": True, "at": state.get("at"), "items": len(rows), "ok": state.get("ok"), "every": every,
+             "left": left})
 
 
 async def _reference() -> dict | None:

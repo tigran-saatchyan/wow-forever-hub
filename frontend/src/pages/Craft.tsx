@@ -25,7 +25,7 @@ interface Row {
   cost: number | null; value: number | null; profit: number | null; margin: number | null; sale: Sale; parts: Part[];
 }
 interface Advice extends RefItem { ah: number | null; vendor: number | null; where: "ah" | "vendor"; qty: number; flip: number | null }
-interface Market { configured: boolean; at?: string; items?: number; ok?: boolean; every?: number }
+interface Market { configured: boolean; at?: string; items?: number; ok?: boolean; every?: number; left?: number | null }
 interface Overview { status: "ready" | "building"; market?: Market; rows?: Row[]; advice?: Advice[] }
 interface Step {
   id: number; name: string; item: RefItem | null; made: number; from: number; to: number; crafts: number;
@@ -48,7 +48,7 @@ export function Craft() {
         {d?.market?.configured && d.market.at && (
           <span className="text-sm text-muted">
             {t("cr_prices", { d: fmtDate(lang, d.market.at), n: d.market.items ?? 0 })}
-            {d.market.every ? <> · <NextUpdate at={d.market.at} every={d.market.every} /></> : null}
+            {d.market.left != null ? <> · <NextUpdate left={d.market.left} since={q.dataUpdatedAt} every={d.market.every} /></> : null}
           </span>
         )}
       </div>
@@ -69,12 +69,13 @@ export function Craft() {
 }
 
 /** Time to the next auction snapshot (the server fetches the house every `every` minutes), ticking. */
-function NextUpdate({ at, every }: { at: string; every: number }) {
+function NextUpdate({ left: left0, since, every }: { left: number; since: number; every?: number }) {
   const { t } = useI18n();
   const qc = useQueryClient();
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => { const h = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(h); }, []);
-  const left = Math.round((new Date(at).getTime() + every * 60e3 - now) / 1000);
+  // seconds left as the server counted them when the page got the data, less the time since (no clock compare)
+  const left = left0 - Math.round((now - since) / 1000);
   // once it is due, look again every half minute until the new snapshot is in
   useEffect(() => {
     if (left <= 0 && left % 30 === 0) {
@@ -85,7 +86,7 @@ function NextUpdate({ at, every }: { at: string; every: number }) {
   if (left <= 0) return <span className="text-gold">{t("cr_updating")}</span>;
   const h = Math.floor(left / 3600), m = Math.floor(left / 60) % 60, sec = left % 60;
   const pad = (n: number) => String(n).padStart(2, "0");
-  return <span>{t("cr_next_update")} <b className="font-mono text-ink">{h ? `${h}:${pad(m)}` : m}:{pad(sec)}</b></span>;
+  return <span title={every ? t("cr_every", { n: every }) : undefined}>{t("cr_next_update")} <b className="font-mono text-ink">{h ? `${h}:${pad(m)}` : m}:{pad(sec)}</b></span>;
 }
 
 /** A block of the page that folds away; whether it is open is remembered. */

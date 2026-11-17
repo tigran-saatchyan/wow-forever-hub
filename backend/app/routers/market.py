@@ -144,6 +144,14 @@ async def poller() -> None:
             await poll_once()
         except Exception:  # noqa: BLE001 - the loop must survive anything
             log.exception("auction poll failed")
+        try:  # when the next poll comes, for the pages' countdown (the server's clock, not the browser's)
+            async with SessionLocal() as session:
+                state = await _setting(session, "market_state")
+                if state:
+                    await _put_setting(session, "market_state", {**state, "next": (utcnow() + timedelta(minutes=minutes)).isoformat()})
+                    await session.commit()
+        except Exception:  # noqa: BLE001
+            log.exception("auction poll: saving the next time failed")
         await asyncio.sleep(minutes * 60)
 
 
