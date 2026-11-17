@@ -53,7 +53,7 @@ export const CHAINS: Chain[] = [
   {
     key: "onyxia-horde", faction: "HORDE",
     name: { ru: "Амулет Пламени дракона (Орда)", en: "Drakefire Amulet (Horde)" },
-    level: { ru: "задания 60 уровня, первое берётся с 58 (по Warcraft Wiki); нужны Нижняя и Верхняя части пика Черной горы", en: "level 60 quests, the first taken from 58 (Warcraft Wiki); Lower and Upper Blackrock Spire" },
+    level: { ru: "задания 60 уровня; первое — с 58 по Warcraft Wiki для классики (там же сказано «с 55»; в Forever не проверено); нужны Нижняя и Верхняя части пика Черной горы", en: "level 60 quests; the first from 58 per the Warcraft Wiki for the original game (the same Wiki also says 55; not checked in Forever); Lower and Upper Blackrock Spire" },
     steps: [
       { id: 4903, giver: GORETOOTH, dungeon: "lbrs",
         todo: { ru: "В Нижней части пика Черной горы убить вождя Омокка, воеводу Вуна и Повелителя Змейталака; доставить найденные при них документы.", en: "In Lower Blackrock Spire kill Highlord Omokk, War Master Voone and Overlord Wyrmthalak; find the Important Blackrock Documents (they lie somewhere in the Lower Spire)." },
@@ -87,7 +87,7 @@ export const CHAINS: Chain[] = [
   {
     key: "onyxia-alliance", faction: "ALLIANCE",
     name: { ru: "Амулет Пламени дракона (Альянс)", en: "Drakefire Amulet (Alliance)" },
-    level: { ru: "задания 60 уровня, взять — примерно с 55 (оценка); нужны Глубины и Верхняя часть пика Черной горы", en: "level 60 quests, taken from about 55 (an estimate); Blackrock Depths and Upper Blackrock Spire" },
+    level: { ru: "задания 60 уровня; с какого уровня берётся первое — источника нет; нужны Глубины и Верхняя часть пика Черной горы", en: "level 60 quests; no source gives the level the first one is taken at; Blackrock Depths and Upper Blackrock Spire" },
     steps: [
       { id: 4182, giver: HELENDIS, todo: { ru: "В Пылающих степях убить 15 черных драконидов, 10 черных змеевиков и 4 черных дракона.", en: "In the Burning Steppes kill 15 Black Dragonspawn, 10 Black Wyrmkin and 4 Black Drakes." },
         at: [{ who: { ru: "черные дракониды", en: "black dragonkin" }, map: STEPPES, x: 70, y: 50, note: { ru: "по всей восточной половине степей", en: "all over the eastern Steppes" } }], turnin: HELENDIS },
@@ -140,8 +140,9 @@ export const CHAINS: Chain[] = [
  * are estimates from the zones and dungeons involved, marked as such on the page.
  */
 const MIN: Record<string, { level: number; sure: boolean }> = {
+  // the Wiki's line for the original game, not checked in Forever; the same Wiki's chain page says "begins at 55"
   "onyxia-horde": { level: 58, sure: true },
-  "onyxia-alliance": { level: 55, sure: false },
+  // no source: left blank rather than guessed, so the two factions are not compared on a guess
 };
 const KEY_MIN: Record<number, { level: number; sure: boolean }> = { 4743: { level: 55, sure: false }, 3802: { level: 50, sure: false } };
 for (const c of CHAINS) for (const st of c.steps) st.min = MIN[c.key] ?? KEY_MIN[st.id];
