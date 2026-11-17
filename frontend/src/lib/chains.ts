@@ -44,7 +44,7 @@ const SOLOMON: Place = { who: { ru: "Мировой судья Соломон", 
 const BOLVAR: Place = { who: { ru: "Болвар Фордрагон", en: "Highlord Bolvar Fordragon" }, map: STORMWIND, x: 78.2, y: 17.6, note: { ru: "Крепость Штормграда", en: "Stormwind Keep" } };
 const PRESTOR: Place = { who: { ru: "Леди Катрана Престор", en: "Lady Katrana Prestor" }, map: STORMWIND, x: 78.0, y: 18.4, note: { ru: "рядом с Болваром", en: "beside Bolvar" } };
 const MAXWELL: Place = { who: { ru: "Маршал Максвелл", en: "Marshal Maxwell" }, map: STEPPES, x: 84.6, y: 68.6, note: { ru: "Застава Моргана", en: "Morgan's Vigil" } };
-const WINDSOR = BRM({ ru: "Маршал Виндзор сидит на уступе у входа в Глубины", en: "Marshal Windsor sits on a ledge by the way into the Depths" });
+const WINDSOR = BRM({ ru: "маршал Виндзор — в тюрьме Глубин Черной горы", en: "Marshal Windsor — in the Detention Block of Blackrock Depths" });
 const HALEH: Place = { who: { ru: "Haleh", en: "Haleh" }, map: WINTERSPRING, x: 54.8, y: 51.4, note: { ru: "Мазтарил: в пещеру и через портал наверх", en: "Mazthoril: into the cave, up through the portal" } };
 
 const DRAKKISATH = BRM({ ru: "Верхняя часть пика Черной горы, последний босс — генерал Драккисат", en: "Upper Blackrock Spire, the last boss: General Drakkisath" });
@@ -70,13 +70,15 @@ export const CHAINS: Chain[] = [
         at: [BRM({ ru: "пик Черной горы, черные дракониды", en: "Blackrock Spire, the black dragonspawn" })], turnin: MYRANDA },
       { id: 6570, giver: MYRANDA, todo: { ru: "С амулетом-обличьем прийти к Огнебору в Пылевые топи и поговорить с ним.", en: "Wear the disguise and speak to Emberstrife in Dustwallow Marsh." }, turnin: EMBERSTRIFE },
       ...[
-        { id: 6582, at: { who: { ru: "Провидец", en: "Scryer" }, map: WINTERSPRING, x: 65, y: 34, note: { ru: "вожак синих драконов, Зимние Ключи", en: "a blue dragonkin in Winterspring" } } },
-        { id: 6583, at: { who: { ru: "Сомнус", en: "Somnus" }, map: SWAMP, x: 85, y: 52, note: { ru: "вожак зелёных драконов, восток Болота Печали", en: "a green dragon, east Swamp of Sorrows" } } },
+        { id: 6582, at: { who: { ru: "Провидец", en: "Scryer" }, map: WINTERSPRING, x: 55, y: 53, note: { ru: "в глубине пещеры Мазтарил с синими драконидами, к юго-западу от Круговзора; руна на полу переносит наверх — не наступайте в бою", en: "in the back of the Mazthoril cave of blue dragonkin, south-west of Everlook; a rune on the floor sends you up — keep off it in the fight" } } },
+        { id: 6583, at: { who: { ru: "Сомнус", en: "Somnus" }, map: SWAMP, x: 70, y: 50, note: { ru: "бродит вокруг озера Затонувшего храма; усыпляет — самый трудный из трёх", en: "walks around the lake of the Sunken Temple; puts people to sleep — the hardest of the three" } } },
         { id: 6584, at: { who: { ru: "Изменяющий время Хроналис", en: "Chronalis" }, map: TANARIS, x: 64, y: 50, note: { ru: "бронзовый дракон, охраняет Пещеры Времени", en: "a bronze dragon at the Caverns of Time" } } },
         { id: 6585, at: { who: { ru: "Военачальник Акстроз", en: "Axtroz" }, map: WETLANDS, x: 66, y: 70, note: { ru: "вожак красных драконов над горами Грим Батола", en: "a red dragon by Grim Batol" } } },
       ].map((s) => ({
-        id: s.id, group: "skulls", giver: EMBERSTRIFE, at: [s.at], turnin: EMBERSTRIFE,
-        todo: { ru: `Убить дракона (${s.at.who.ru}) и принести его череп Огнебору. Нужна группа.`, en: `Kill the dragon (${s.at.who.en}) and bring its skull to Emberstrife. Take a group.` },
+        id: s.id, group: s.id === 6585 ? undefined : "skulls", giver: EMBERSTRIFE, at: [s.at], turnin: EMBERSTRIFE,
+        todo: s.id === 6585
+          ? { ru: "Огнебор даёт это задание, когда сданы три первых черепа. Убить военачальника Акстроза над горами Грим Батола и принести его череп. Нужна группа.", en: "Emberstrife gives this one once the first three skulls are in. Kill Axtroz above Grim Batol and bring his skull. Take a group." }
+          : { ru: `Убить дракона (${s.at.who.ru}) и принести его череп Огнебору. Три черепа берутся вместе. Нужна группа.`, en: `Kill the dragon (${s.at.who.en}) and bring its skull to Emberstrife. The three skulls are taken together. Take a group.` },
       })),
       { id: 6601, giver: EMBERSTRIFE, todo: { ru: "Отнести Тусклый амулет Пламени дракона Рексару.", en: "Take the Dull Drakefire Amulet to Rexxar." }, turnin: REXXAR },
       { id: 6602, giver: REXXAR, dungeon: "ubrs",
@@ -98,7 +100,7 @@ export const CHAINS: Chain[] = [
       { id: 4223, giver: SOLOMON, todo: { ru: "Отнести письмо маршалу Максвеллу на заставу Моргана.", en: "Take the letter to Marshal Maxwell at Morgan's Vigil." }, turnin: MAXWELL },
       { id: 4224, giver: MAXWELL, todo: { ru: "Найти Джона-Оборванца в пещере к северу от заставы и выслушать его.", en: "Find Ragged John in the north of the Burning Steppes and hear his story." },
         at: [{ who: { ru: "Джон-Оборванец", en: "Ragged John" }, map: STEPPES, x: 65, y: 23.6 }], turnin: MAXWELL },
-      { id: 4241, giver: MAXWELL, todo: { ru: "Найти маршала Виндзора в Черной горе.", en: "Find Marshal Windsor in Blackrock Mountain." }, turnin: WINDSOR },
+      { id: 4241, giver: MAXWELL, todo: { ru: "Джон-Оборванец говорит, что Виндзор жив: найти его в Глубинах Черной горы.", en: "Ragged John says Windsor lives: find him in Blackrock Depths." }, dungeon: "brd", turnin: WINDSOR },
       { id: 4242, giver: WINDSOR, todo: { ru: "Вернуться к маршалу Максвеллу.", en: "Go back to Marshal Maxwell." }, turnin: MAXWELL },
       { id: 4264, giver: { who: { ru: "записка из Глубин", en: "a note from the Depths" }, map: STEPPES, x: 29, y: 38, note: { ru: "падает с Черного Железа в Глубинах Черной горы", en: "dropped by Dark Iron dwarves in Blackrock Depths" } },
         dungeon: "brd", todo: { ru: "Измятая записка падает в Глубинах Черной горы; отнести её Виндзору.", en: "The Crumpled Up Note drops in Blackrock Depths; take it to Windsor." }, turnin: WINDSOR },
