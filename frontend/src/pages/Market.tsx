@@ -1,25 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ItemHover, ItemIcon, Money, parseMoney, Sparkline } from "../components/Wow";
 import { useMe } from "../lib/auth";
 import { fmtDate, useI18n } from "../lib/i18n";
-import { qColor, rulesetName, wowApi, type Region } from "../lib/wowApi";
+import { qColor, wowApi, type Region } from "../lib/wowApi";
 
 /**
- * Forever has no realms: its auction houses come as five worlds of three (Alliance, Horde, Blackwater, the
- * neutral one), the same list whatever ruleset is asked for. World 1 is PvP (matched in game: Horde #113);
- * world 2 is most likely Normal (the other big one); world 3 is empty; worlds 4 and 5 are the two
- * roleplay rulesets, which is which not known yet.
+ * Forever has no realms: its auction houses come as five worlds of three (Alliance, Horde, Blackwater), the
+ * same list for every ruleset. World 1 is PvP (matched in game on Horde #113). All the owner's characters are
+ * Horde on PvP in Europe, so the hub reads only that world's Horde house or its neutral one.
  */
-const WORLDS: { key: "mk_w_pvp" | "mk_w_normal" | "mk_w_empty" | "mk_w_rp"; houses: number[] }[] = [
-  { key: "mk_w_pvp", houses: [110, 113, 116] },
-  { key: "mk_w_normal", houses: [111, 114, 117] },
-  { key: "mk_w_rp", houses: [119, 120, 121] },
-  { key: "mk_w_rp", houses: [123, 124, 125] },
-  { key: "mk_w_empty", houses: [112, 115, 118] },
-];
-const SIDES = ["mk_s_alliance", "mk_s_horde", "mk_s_neutral"] as const;
-const KNOWN = new Set(WORLDS.flatMap((w) => w.houses));
+const REGION: Region = "eu";
+const RULESET = 1;
+const MINE = [
+  { id: 113, key: "mk_s_horde" },
+  { id: 116, key: "mk_s_neutral" },
+] as const;
 
 export function Market() {
   const { t, lang } = useI18n();
@@ -28,24 +24,10 @@ export function Market() {
   const admin = me.data?.role === "superadmin";
   const cfg = useQuery({ queryKey: ["market", lang], queryFn: () => wowApi.market(lang) });
   const watch = useQuery({ queryKey: ["watch", lang], queryFn: () => wowApi.watch(lang), refetchInterval: 5 * 60e3 });
-  const [region, setRegion] = useState<Region>("eu");
-  const [ruleset, setRuleset] = useState<number | null>(null);
-  const [house, setHouse] = useState<number | null>(null);
   const [q, setQ] = useState("");
   const [below, setBelow] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
 
-  useEffect(() => {
-    const s = cfg.data?.selected;
-    if (s) (setRegion(s.region), setRuleset(s.ruleset), setHouse(s.house));
-    else if (cfg.data?.rulesets[0] && ruleset == null) setRuleset(cfg.data.rulesets[0].id);
-  }, [cfg.data]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const houses = useQuery({
-    queryKey: ["houses", ruleset, region, lang],
-    queryFn: () => wowApi.houses(ruleset!, region, lang),
-    enabled: ruleset != null && !!cfg.data?.configured,
-  });
   const search = useQuery({
     queryKey: ["item-search", q, lang],
     queryFn: () => wowApi.searchItems(q.trim(), lang),
@@ -80,48 +62,20 @@ export function Market() {
       {cfg.data && !cfg.data.configured && <p className="panel p-3 text-sm text-muted">{t("api_off")}</p>}
 
       {cfg.data?.configured && admin && (
-        <div className="panel flex flex-wrap items-end gap-3 p-3 text-sm">
-          <label className="grid gap-1"><span className="eyebrow">{t("mk_region")}</span>
-            <select className="input py-1.5" value={region} onChange={(e) => (setRegion(e.target.value as Region), setHouse(null))}>
-              <option value="eu">EU</option><option value="us">US</option>
-            </select>
-          </label>
-          <label className="grid gap-1"><span className="eyebrow">{t("mk_ruleset")}</span>
-            <select className="input py-1.5" value={ruleset ?? ""} onChange={(e) => (setRuleset(+e.target.value), setHouse(null))}>
-              {cfg.data.rulesets.map((r) => <option key={r.id} value={r.id}>{rulesetName(r, t)}</option>)}
-            </select>
-          </label>
-          <label className="grid gap-1"><span className="eyebrow">{t("mk_house")}</span>
-            <select className="input py-1.5" value={house ?? ""} onChange={(e) => setHouse(+e.target.value)}>
-              <option value="" disabled>—</option>
-              {WORLDS.map((w) => {
-                const hs = w.houses.filter((id) => (houses.data || []).some((h) => h.id === id));
-                return hs.length ? (
-                  <optgroup key={w.key} label={t(w.key)}>
-                    {hs.map((id, i) => <option key={id} value={id}>{t(SIDES[i])} · #{id}</option>)}
-                  </optgroup>
-                ) : null;
-              })}
-              {(houses.data || []).filter((h) => !KNOWN.has(h.id)).map((h) => <option key={h.id} value={h.id}>{h.name} · #{h.id}</option>)}
-            </select>
-          </label>
-          <button
-            className="btn-primary" disabled={ruleset == null || house == null || save.isPending
-              || (sel?.region === region && sel?.ruleset === ruleset && sel?.house === house)}
-            onClick={() => save.mutate({ region, ruleset: ruleset!, house: house! })}
-          >
-            {t("mk_save")}
-          </button>
-          {sel && <button className="btn" disabled={poll.isPending} onClick={() => poll.mutate()}>{t("mk_refresh")}</button>}
-          {ruleset != null && (
-            <a className="text-xs text-gold underline-offset-2 hover:underline" target="_blank" rel="noopener noreferrer" title={t("mk_raw_t")}
-              href={`/api/bnet/raw?kind=dynamic&region=${region}&path=${encodeURIComponent(`/data/wow/ruleset/${ruleset}/auctions/`)}`}>
-              {t("mk_raw")}
-            </a>
-          )}
+        <div className="panel flex flex-wrap items-center gap-3 p-3 text-sm">
+          <span className="eyebrow">{t("mk_mine")}</span>
+          {MINE.map((h) => {
+            const on = sel?.house === h.id && sel?.ruleset === RULESET && sel?.region === REGION;
+            return (
+              <button key={h.id} className={on ? "btn-primary" : "btn"} disabled={save.isPending || on}
+                onClick={() => save.mutate({ region: REGION, ruleset: RULESET, house: h.id })}>
+                {t(h.key)}
+              </button>
+            );
+          })}
+          {sel && <button className="btn ml-auto" disabled={poll.isPending} onClick={() => poll.mutate()}>{t("mk_refresh")}</button>}
           {!sel && <span className="text-muted">{t("mk_pick")}</span>}
           {cfg.data.error && <span className="text-bad">{cfg.data.error}</span>}
-          {ruleset != null && <Compare ruleset={ruleset} region={region} current={house} onPick={setHouse} />}
         </div>
       )}
 
@@ -199,64 +153,5 @@ export function Market() {
         </div>
       )}
     </div>
-  );
-}
-
-/** All houses of a ruleset side by side, to recognise yours by a price you see in game. */
-function Compare({ ruleset, region, current, onPick }: { ruleset: number; region: Region; current: number | null; onPick: (h: number) => void }) {
-  const { t, lang } = useI18n();
-  const [item, setItem] = useState("2589");
-  const [go, setGo] = useState(false);
-  const id = parseInt(item, 10);
-  const q = useQuery({
-    queryKey: ["compare", ruleset, region, id, lang],
-    queryFn: () => wowApi.compare(ruleset, region, id, lang),
-    enabled: go && id > 0,
-    staleTime: 10 * 60e3,
-    retry: false,
-  });
-  const info = useQuery({ queryKey: ["item", id, lang], queryFn: () => wowApi.item(id, lang), enabled: id > 0, retry: false, staleTime: Infinity });
-  return (
-    <details className="w-full" onToggle={(e) => (e.target as HTMLDetailsElement).open && setGo(true)}>
-      <summary className="cursor-pointer text-gold">{t("mk_cmp")}</summary>
-      <p className="mt-1 text-xs text-muted">{t("mk_cmp_t")}</p>
-      <label className="mt-2 flex flex-wrap items-center gap-2">
-        <span className="text-muted">{t("mk_cmp_item")}</span>
-        <input className="input w-24 py-1" inputMode="numeric" value={item} onChange={(e) => setItem(e.target.value.replace(/\D/g, ""))} />
-        {info.data && <span style={{ color: qColor(info.data.quality) }}>{info.data.name}</span>}
-      </label>
-      {q.isFetching && <p className="mt-2 text-muted">{t("mk_cmp_loading")}</p>}
-      {q.isError && <p className="mt-2 text-bad">{String(q.error)}</p>}
-      {q.data && (
-        <div className="mt-2 overflow-x-auto">
-          <table className="w-full min-w-[520px]">
-            <thead className="text-left text-xs text-muted">
-              <tr>
-                <th className="p-1.5 font-normal" />
-                <th className="p-1.5 text-right font-normal">{t("mk_cmp_lots")}</th>
-                <th className="p-1.5 text-right font-normal">{t("mk_cmp_items")}</th>
-                <th className="p-1.5 text-right font-normal">{t("mk_cmp_price")}</th>
-                <th className="p-1.5 text-right font-normal">{t("mk_qty")}</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {[...q.data].sort((a, b) => a.name.localeCompare(b.name) || a.id - b.id).map((h) => (
-                <tr key={h.id} className={`border-t border-edge/40 ${current === h.id ? "bg-accent/15" : ""}`}>
-                  <td className="p-1.5">{h.name} <span className="text-muted">· #{h.id}</span></td>
-                  <td className="p-1.5 text-right font-mono">{h.error ? "—" : h.lots}</td>
-                  <td className="p-1.5 text-right font-mono">{h.error ? "—" : h.items}</td>
-                  <td className="p-1.5 text-right">{h.itemMin != null ? <Money c={h.itemMin} /> : "—"}</td>
-                  <td className="p-1.5 text-right font-mono">{h.itemQty ?? "—"}</td>
-                  <td className="p-1.5 text-right">
-                    <button className="btn px-2 py-0.5 text-xs" disabled={current === h.id} onClick={() => onPick(h.id)}>{t("mk_cmp_pick")}</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </details>
   );
 }
