@@ -65,3 +65,10 @@ def test_vendor_or_auction_advice():
     a = {x["id"]: x for x in craft.advice(REF, PRICES, {2447, 5, 118})}
     assert a[5]["where"] == "vendor" and a[5]["flip"] == 100  # buy at 300 on the house, a vendor pays 400
     assert a[2447]["where"] == "ah" and a[2447]["flip"] is None
+
+
+def test_flips():
+    sell = {"5": 400, "118": 5, "2447": 10}
+    f = craft.flips(sell, PRICES, min_profit=50)
+    assert f == [{"id": 5, "buy": 300, "sell": 400, "profit": 100, "qty": 2}]  # a vendor pays more than the lot costs
+    assert craft.flips(sell, PRICES, min_profit=101) == []

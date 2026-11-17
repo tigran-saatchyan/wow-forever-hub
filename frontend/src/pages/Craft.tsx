@@ -5,10 +5,12 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { SourcePanel } from "../components/SourcePanel";
-import { Money } from "../components/Wow";
+import { Money, parseMoney } from "../components/Wow";
+import { markSeen, signalKey, useSeen, useSignals } from "../lib/signals";
 import { fmtDate, useI18n, type Key } from "../lib/i18n";
 import { store } from "../lib/store";
 import { wowApi, type RefItem } from "../lib/wowApi";
@@ -51,6 +53,7 @@ export function Craft() {
       )}
       {!d || d.status === "building" ? <p className="text-muted">{t("pf_building")}</p> : (
         <>
+          <SignalsBlock onOpen={setPanel} />
           <Profitable rows={d.rows || []} onOpen={setPanel} />
           <Leveling rows={d.rows || []} onOpen={setPanel} />
           <Where advice={d.advice || []} onOpen={setPanel} />
@@ -75,6 +78,92 @@ const Gold = ({ c, sign = false }: { c: number | null | undefined; sign?: boolea
   c == null ? <span className="text-muted">—</span> : (
     <span className={sign ? (c >= 0 ? "text-good" : "text-bad") : ""}>{sign && c < 0 ? "−" : sign && c > 0 ? "+" : ""}<Money c={Math.abs(c)} /></span>
   );
+
+const fmtMoney = (c: number) => {
+  const g = Math.floor(c / 10000), sv = Math.floor(c / 100) % 100, cu = c % 100;
+  return [g ? `${g}g` : "", sv ? `${sv}s` : "", cu || (!g && !sv) ? `${cu}c` : ""].filter(Boolean).join(" ");
+};
+
+/** 0. Signals: what pays right now, new ones marked; the thresholds are the user's. */
+function SignalsBlock({ onOpen }: { onOpen: (x: RefItem) => void }) {
+  const { t } = useI18n();
+  const qc = useQueryClient();
+  const q = useSignals();
+  const seen = useSeen();
+  const d = q.data;
+  const [edit, setEdit] = useState(false);
+  const [mc, setMc] = useState("");
+  const [mf, setMf] = useState("");
+  // what is on screen now counts as seen when the page is left (the badges are for what came since)
+  useEffect(() => () => {
+    if (d) markSeen([...(d.crafts || []).map(signalKey.craft), ...(d.flips || []).map(signalKey.flip)]);
+  }, [d]);
+  if (!d || d.status !== "ready") return null;
+  const crafts = d.crafts || [], flips = d.flips || [];
+  const save = async () => {
+    const b = { minCraft: parseMoney(mc) ?? d.cfg!.minCraft, minFlip: parseMoney(mf) ?? d.cfg!.minFlip };
+    await wowApi.setSignalCfg(b);
+    setEdit(false);
+    qc.invalidateQueries({ queryKey: ["craft-signals"] });
+  };
+  const New = ({ k }: { k: string }) => (seen.has(k) ? null : <span className="sg-new">{t("sg_new")}</span>);
+  return (
+    <Section title={t("sg_title")} hint={t("sg_hint", { c: fmtMoney(d.cfg!.minCraft), f: fmtMoney(d.cfg!.minFlip) })}>
+      <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
+        {!edit ? (
+          <button className="btn text-xs" onClick={() => (setMc(fmtMoney(d.cfg!.minCraft)), setMf(fmtMoney(d.cfg!.minFlip)), setEdit(true))}>{t("sg_edit")}</button>
+        ) : (
+          <>
+            <label className="flex items-center gap-1">{t("sg_min_craft")} <input className="input w-28 py-1" value={mc} onChange={(e) => setMc(e.target.value)} /></label>
+            <label className="flex items-center gap-1">{t("sg_min_flip")} <input className="input w-28 py-1" value={mf} onChange={(e) => setMf(e.target.value)} /></label>
+            <button className="btn-primary text-xs" onClick={save}>{t("mk_save")}</button>
+          </>
+        )}
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div>
+          <div className="eyebrow mb-1">⚗ {t("sg_crafts", { n: crafts.length })}</div>
+          {!crafts.length ? <p className="text-sm text-muted">{t("sg_none")}</p> : (
+            <ul className="space-y-1.5 text-sm">
+              {crafts.slice(0, 30).map((s) => (
+                <li key={signalKey.craft(s)} className="sg-row">
+                  <div className="flex flex-wrap items-baseline gap-x-2">
+                    {s.item ? <Item x={s.item} count={s.made > 1 ? s.made : null} onOpen={onOpen} /> : s.name}
+                    <New k={signalKey.craft(s)} />
+                    <span className="ml-auto font-display text-good">+<Money c={s.profit} /></span>
+                  </div>
+                  <div className="text-[11px] text-muted">
+                    {s.char} · {s.profName} · {t("sg_buy_for")} <Money c={s.cost} /> → {t(s.sale.where === "vendor" ? "cr_sell_vendor" : "cr_sell_ah")} <Money c={s.value} />
+                  </div>
+                  <div className="text-[11px] text-muted">
+                    {s.parts.map((p, i) => <span key={p.id}>{i ? ", " : ""}{p.name} ×{p.count}{p.src === "vendor" ? ` (${t("cr_at_vendor")})` : ""}</span>)}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <div>
+          <div className="eyebrow mb-1">💰 {t("sg_flips", { n: flips.length })}</div>
+          {!flips.length ? <p className="text-sm text-muted">{t("sg_none")}</p> : (
+            <ul className="space-y-1.5 text-sm">
+              {flips.slice(0, 30).map((f) => (
+                <li key={signalKey.flip(f)} className="sg-row">
+                  <div className="flex flex-wrap items-baseline gap-x-2">
+                    <Item x={f} onOpen={onOpen} />
+                    <New k={signalKey.flip(f)} />
+                    <span className="ml-auto font-display text-good">+<Money c={f.profit} /></span>
+                  </div>
+                  <div className="text-[11px] text-muted">{t("sg_flip_line", { n: f.qty })} <Money c={f.buy} /> → {t("cr_at_vendor")} <Money c={f.sell} /></div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </Section>
+  );
+}
 
 /** 1. What pays: every recipe of every character, by profit of one craft. */
 function Profitable({ rows, onOpen }: { rows: Row[]; onOpen: (x: RefItem) => void }) {

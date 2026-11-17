@@ -1417,3 +1417,10 @@ button.order-line:hover { @apply text-gold; }
 .wm-pin.zone .wm-glyph { width: 10px; height: 10px; background: rgb(228 200 115 / 0.85); box-shadow: 0 0 0 1px #000; }
 .wm-pin.zone .wm-label { opacity: 0; transition: opacity 0.15s; pointer-events: none; }
 .wm-pin.zone:hover .wm-label, .wm-pin.zone:focus-visible .wm-label { opacity: 1; }
+
+/* crafting signals */
+.sg-row { padding: 6px 8px; border-radius: 6px; border: 1px solid rgb(var(--gold) / 0.15); background: rgb(0 0 0 / 0.2); }
+.sg-new { padding: 0 6px; border-radius: 999px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;
+  color: #0b0f0e; background: #8cf06a; box-shadow: 0 0 10px rgb(116 214 84 / 0.7); }
+.nav-badge { margin-left: 6px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; display: inline-grid; place-items: center;
+  font: 700 11px/1 system-ui, sans-serif; color: #0b0f0e; background: #8cf06a; box-shadow: 0 0 10px rgb(116 214 84 / 0.8); vertical-align: 2px; }

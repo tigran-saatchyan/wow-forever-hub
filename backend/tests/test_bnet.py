@@ -380,7 +380,7 @@ TABLES = {
     "SpellReagents": [{"SpellID": "2387", "Reagent_0": "2996", "ReagentCount_0": "1",
                        "Reagent_1": "2320", "ReagentCount_1": "1"}],
     "ItemSparse": [{"ID": "2570", "Display_lang": "Linen Cloak", "OverallQualityID": "1"},
-                   {"ID": "2996", "Display_lang": "Bolt of Linen Cloth", "OverallQualityID": "1"},
+                   {"ID": "2996", "Display_lang": "Bolt of Linen Cloth", "OverallQualityID": "1", "SellPrice": "150"},
                    {"ID": "6833", "Display_lang": "White Tuxedo Shirt", "OverallQualityID": "1"},
                    {"ID": "6272", "Display_lang": "Pattern: Stylish Red Shirt", "OverallQualityID": "2"}],
     "ItemSparse@ru": [{"ID": "2570", "Display_lang": "Льняной плащ"}],
@@ -643,6 +643,13 @@ def test_craft_overview_and_plan(client, monkeypatch):
     # only the shirt reaches 150..155, and the reference lists no reagents for it: its cost is not known
     assert p["gaps"] == [150, 151, 152, 153, 154] and not p["steps"]
     assert client.get(f"/api/craft/plan?cid={c['id']}&prof=171&target=10").status_code == 404
+    sg = client.get("/api/craft/signals?lang=en").json()
+    assert sg["cfg"] == {"minCraft": 2000, "minFlip": 100}
+    assert sg["crafts"] == []  # nothing known by Joe pays 20s
+    assert [f["id"] for f in sg["flips"]] == []  # the bolt: 150 from a vendor, 100 to buy: 50c, under 1s
+    assert client.put("/api/craft/signals/settings", json={"minCraft": 0, "minFlip": 10}).status_code == 200
+    sg = client.get("/api/craft/signals?lang=en").json()
+    assert [(f["id"], f["profit"], f["name"]) for f in sg["flips"]] == [(2996, 50, "Bolt of Linen Cloth")]
 
 
 def test_completed_quests_keep_ids():

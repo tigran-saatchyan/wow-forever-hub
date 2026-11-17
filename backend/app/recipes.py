@@ -28,7 +28,7 @@ LOCALES = {"en": "enUS", "ru": "ruRU"}
 PROFESSION_CATEGORIES = {9, 11}  # secondary skills (cooking, first aid, fishing), professions
 CREATE_ITEM, LEARN_SPELL = 24, 36  # SpellEffect.Effect
 LOCALIZED = {"SkillLine", "SpellName", "ItemSparse"}
-VERSION = 3  # bump when the dataset shape changes: a stored older one is built again (3: vendor prices)
+VERSION = 4  # bump when the dataset shape changes: a stored older one is built again (4: every item's vendor price)
 TABLES = ["SkillLine", "SkillLineAbility", "SpellName", "SpellEffect", "SpellReagents", "ItemSparse", "ItemEffect"]
 
 
@@ -154,6 +154,8 @@ def build_dataset(t: dict[str, list[dict]], build: str) -> dict:
     return {
         "v": VERSION,
         "build": build,
+        # what a vendor pays for every item that sells (copper), for "buy on the auction house, sell to a vendor"
+        "sell": {str(i): p for i, r in items.items() if (p := _i(r, "SellPrice")) > 0},
         "professions": {str(k): v for k, v in sorted(out.items())},
         "items": {
             str(i): {"en": items[i].get("Display_lang", ""),

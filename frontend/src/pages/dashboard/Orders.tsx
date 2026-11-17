@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { iconStyle, useIcons, useTalents } from "../../lib/gameData";
 import { useI18n, type Key } from "../../lib/i18n";
 import { nextReset } from "../../lib/status";
+import { useNewSignals } from "../../lib/signals";
 import { store } from "../../lib/store";
 import { fullName, useCharacter, useCharacters, wowApi, type Character } from "../../lib/wowApi";
 import { need } from "../characters/ProfessionsTab";
@@ -77,11 +78,13 @@ export function Orders() {
   const watch = useQuery({ queryKey: ["watch", "orders"], queryFn: () => wowApi.watch("ru"), staleTime: 5 * 60e3, retry: false });
   const servants = (chars.data || []).filter((c) => !c.error).slice(0, 3);
   const alerts = (watch.data || []).filter((w) => w.alert).length;
+  const newSignals = useNewSignals();
   const ms = nextReset("eu") - Date.now();
   const d = Math.floor(ms / 864e5), h = Math.floor(ms / 36e5) % 24;
   const common: { icon: string; text: string; to?: string; hot?: boolean }[] = [
     { icon: "⌛", text: t("or_reset", { d, h }) },
   ];
+  if (newSignals > 0) common.unshift({ icon: "⚗", text: t("or_signals", { n: newSignals }), to: "/craft", hot: true });
   if (watch.data) common.unshift({ icon: "⚖", text: alerts ? t("or_alerts", { n: alerts }) : t("or_alerts_none"), to: "/market", hot: alerts > 0 });
   return (
     <div className="mt-6">

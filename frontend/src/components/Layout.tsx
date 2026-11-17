@@ -1,3 +1,4 @@
+import { useNewSignals } from "../lib/signals";
 import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import { useLogout, useMe } from "../lib/auth";
@@ -43,7 +44,7 @@ export function Layout({ children }: { children: ReactNode }) {
               <NavLink to="/talents" className={link} onClick={() => sfx("nav")}>{t("nav_talents")}</NavLink>
               <NavLink to="/characters" className={link} onClick={() => sfx("nav")}>{t("nav_chars")}</NavLink>
               <NavLink to="/market" className={link} onClick={() => sfx("nav")}>{t("nav_market")}</NavLink>
-              <NavLink to="/craft" className={link} onClick={() => sfx("nav")}>{t("nav_craft")}</NavLink>
+              <NavLink to="/craft" className={link} onClick={() => sfx("nav")}>{t("nav_craft")}<SignalBadge /></NavLink>
               <NavLink to="/raids" className={link} onClick={() => sfx("nav")}>{t("nav_raids")}</NavLink>
               <NavLink to="/map" className={link} onClick={() => sfx("nav")}>{t("nav_map")}</NavLink>
             </nav>
@@ -88,3 +89,8 @@ export function Layout({ children }: { children: ReactNode }) {
   );
 }
 
+/** New crafting signals since the Crafting page was last open. */
+function SignalBadge() {
+  const n = useNewSignals();
+  return n > 0 ? <span className="nav-badge" aria-label={String(n)}>{n > 99 ? "99+" : n}</span> : null;
+}

@@ -166,4 +166,16 @@ def advice(ref: dict, prices: dict, items: set[int]) -> list[dict]:
     return sorted(out, key=lambda x: (x["where"] != "vendor", -(x["flip"] or 0), -(x["ah"] or x["vendor"] or 0)))
 
 
+def flips(sell: dict[str, int], prices: dict, min_profit: int = 1) -> list[dict]:
+    """Items a vendor buys for more than their cheapest buyout: buy on the auction house, sell to a vendor.
+    No cut is taken when buying, so the profit is the vendor's price less the buyout, per item."""
+    out = []
+    for i, p in prices.items():
+        low = p.get("ah")
+        v = sell.get(str(i))
+        if low and v and v - low >= min_profit:
+            out.append({"id": i, "buy": low, "sell": v, "profit": v - low, "qty": p.get("qty", 0)})
+    return sorted(out, key=lambda x: -x["profit"])
+
+
 Prices = dict[int, dict[str, Any]]

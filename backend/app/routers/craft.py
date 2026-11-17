@@ -7,12 +7,13 @@ prices from the client (the recipe reference). The arithmetic lives in app/craft
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import craft
 from ..auth import CurrentUser
-from ..db import AhLatest, Character, get_session
+from ..db import AhLatest, Character, Setting, get_session
 from . import professions as prof_routes
 from .market import _setting
 
@@ -60,6 +61,13 @@ async def overview(user: CurrentUser, session: Session, lang: str = "ru"):
         prof_routes._start(prof_routes._build())
         return {"status": "building"}
     prices, market = await _prices(session)
+    rows, used = await _rows(session, user, ds, prices, lang)
+    item = _namer(ds, lang)
+    advice = [{**item(a["id"]), **a} for a in craft.advice(ds["items"], prices, used)]
+    return {"status": "ready", "market": market, "rows": rows, "advice": advice}
+
+
+async def _rows(session: AsyncSession, user, ds: dict, prices: dict, lang: str) -> tuple[list[dict], set[int]]:
     item = _namer(ds, lang)
     chars = (await session.execute(select(Character).where(Character.user_id == user.id))).scalars().all()
     rows, used = [], set()
@@ -88,8 +96,7 @@ async def overview(user: CurrentUser, session: Session, lang: str = "ru"):
                     "sale": e["sale"],
                     "parts": [{**item(x["id"]), "count": x["count"], "unit": x["unit"], "src": x["src"]} for x in e["parts"]],
                 })
-    advice = [{**item(a["id"]), **a} for a in craft.advice(ds["items"], prices, used)]
-    return {"status": "ready", "market": market, "rows": rows, "advice": advice}
+    return rows, used
 
 
 def _color(r: dict, skill: int | None) -> str | None:
@@ -137,3 +144,45 @@ async def leveling_plan(user: CurrentUser, session: Session, cid: int, prof: int
                       "made": r.get("count") or 1, "learn": learn})
     return {"status": "ready", "market": market, "skill": skill, "target": target, "steps": steps,
             "reagents": [{**item(x["id"]), **x} for x in out["reagents"]], "total": out["total"], "gaps": out["gaps"]}
+
+
+DEFAULTS = {"minCraft": 2000, "minFlip": 100}  # 20 silver a craft, 1 silver an item
+
+
+async def _cfg(session: AsyncSession, uid: int) -> dict:
+    row = await session.get(Setting, f"craft_cfg:{uid}")
+    return {**DEFAULTS, **(row.value if row else {})}
+
+
+@router.get("/signals")
+async def signals(user: CurrentUser, session: Session, lang: str = "ru"):
+    """What pays right now, from the latest auction prices: crafts a character knows that, with every reagent
+    bought, sell (auction house or vendor) for at least minCraft more; and items a vendor buys for at least
+    minFlip more than their cheapest buyout."""
+    lang = "ru" if lang == "ru" else "en"
+    ds = await _reference()
+    if not ds:
+        prof_routes._start(prof_routes._build())
+        return {"status": "building"}
+    cfg = await _cfg(session, user.id)
+    prices, market = await _prices(session)
+    if not prices:
+        return {"status": "ready", "market": market, "cfg": cfg, "crafts": [], "flips": []}
+    rows, _ = await _rows(session, user, ds, prices, lang)
+    crafts = sorted((r for r in rows if r["known"] and r["profit"] is not None and r["profit"] >= cfg["minCraft"]),
+                    key=lambda r: -r["profit"])
+    item = _namer(ds, lang)
+    flips = [{**item(f["id"]), **f} for f in craft.flips(ds.get("sell") or {}, prices, cfg["minFlip"])[:100]]
+    return {"status": "ready", "market": market, "cfg": cfg, "crafts": crafts[:100], "flips": flips}
+
+
+class SignalCfg(BaseModel):
+    minCraft: int = Field(ge=0, le=100_000_000)
+    minFlip: int = Field(ge=0, le=100_000_000)
+
+
+@router.put("/signals/settings")
+async def set_signal_cfg(body: SignalCfg, user: CurrentUser, session: Session):
+    await session.merge(Setting(key=f"craft_cfg:{user.id}", value=body.model_dump()))
+    await session.commit()
+    return body.model_dump()

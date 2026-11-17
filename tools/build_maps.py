@@ -60,6 +60,29 @@ def blp(fdid: str, build: str) -> Image.Image:
     return Image.open(io.BytesIO(data)).convert("RGBA")
 
 
+def world_rect(mapid: str, region: dict[str, list[dict]]) -> tuple[float, float, float, float] | None:
+    """Where a map lies on Azeroth's map (947), normalized (l, r, t, b), as the game's C_Map.GetMapRectOnMap
+    computes it (after OpenMap's tools/uimap.py, MIT): the map's region is placed through the world map's
+    assignment on the same game map."""
+    if mapid == "947":
+        return (0.0, 1.0, 0.0, 1.0)
+    rows = region.get(mapid)
+    if not rows:
+        return None
+    a = rows[0]
+    w = next((r for r in region.get("947", []) if r["MapID"] == a["MapID"]), None)
+    if not w:
+        return None
+    f = lambda r, k: float(r[k])  # noqa: E731
+    U = lambda y: f(w, "UiMin_0") + (f(w, "Region_4") - y) / (f(w, "Region_4") - f(w, "Region_1")) * (f(w, "UiMax_0") - f(w, "UiMin_0"))  # noqa: E731
+    V = lambda x: f(w, "UiMin_1") + (f(w, "Region_3") - x) / (f(w, "Region_3") - f(w, "Region_0")) * (f(w, "UiMax_1") - f(w, "UiMin_1"))  # noqa: E731
+    l, r = U(f(a, "Region_4")), U(f(a, "Region_1"))
+    t, b = V(f(a, "Region_3")), V(f(a, "Region_0"))
+    um0, um1, uM0, uM1 = f(a, "UiMin_0"), f(a, "UiMin_1"), f(a, "UiMax_0"), f(a, "UiMax_1")
+    w_, h_ = (r - l) / (uM0 - um0), (b - t) / (uM1 - um1)
+    return (l - um0 * w_, l - um0 * w_ + w_, t - um1 * h_, t - um1 * h_ + h_)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--build", default="1.60.1.70938")
@@ -85,6 +108,12 @@ def main() -> None:
             ov_tiles.setdefault(r["WorldMapOverlayID"], []).append(r)
     region = {r["UiMapID"]: r for r in t["UiMapAssignment"] if r["OrderIndex"] == "0" and r["UiMin_0"] == "0"
               and r["UiMax_0"] == "1"}
+    # every assignment row of each map, the biggest part first (the one GetMapRectOnMap goes by)
+    rows_of: dict[str, list[dict]] = {}
+    for r in t["UiMapAssignment"]:
+        rows_of.setdefault(r["UiMapID"], []).append(r)
+    for rows in rows_of.values():
+        rows.sort(key=lambda r: (int(r["OrderIndex"]), -(float(r["UiMax_0"]) - float(r["UiMin_0"])) * (float(r["UiMax_1"]) - float(r["UiMin_1"]))))
 
     # the maps worth drawing: the world, continents, zones, cities, battlegrounds; one art style (1002×668)
     wanted = [m for m, r in maps.items() if r["Type"] in ("1", "2", "3", "6") and m in art_of
@@ -127,6 +156,9 @@ def main() -> None:
                 "x": round((cy1 - zy1) / (cy1 - cy0), 5), "y": round((cx1 - zx1) / (cx1 - cx0), 5),
                 "sx": round((zy1 - zy0) / (cy1 - cy0), 5), "sy": round((zx1 - zx0) / (cx1 - cx0), 5),
             }
+        wr = world_rect(m, rows_of)
+        if wr:
+            entry["onWorld"] = [round(v, 6) for v in wr]  # l, r, t, b on Azeroth's map (947), 0..1
         meta.append(entry)
         print("drew", m, r["Name_lang"])
     OUT_JSON.write_text(json.dumps({"build": b, "maps": meta}, ensure_ascii=False, indent=1), "utf-8")

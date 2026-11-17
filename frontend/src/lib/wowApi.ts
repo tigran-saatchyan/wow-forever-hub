@@ -84,6 +84,8 @@ export const wowApi = {
   collection: <T,>(kind: string, lang: Lang) => req<T[]>(`/api/collections/${kind}?lang=${lang}`),
   profCategories: (line: number, lang: Lang) => req<{ order: string[]; of: Record<string, number> }>(`/api/professions/${line}/categories?lang=${lang}`),
   craft: <T,>(lang: Lang) => req<T>(`/api/craft?lang=${lang}`),
+  signals: <T,>(lang: Lang) => req<T>(`/api/craft/signals?lang=${lang}`),
+  setSignalCfg: (b: { minCraft: number; minFlip: number }) => req<{ minCraft: number; minFlip: number }>("/api/craft/signals/settings", { method: "PUT", body: JSON.stringify(b) }),
   craftPlan: <T,>(cid: number, prof: number, target: number, resale: boolean, lang: Lang) =>
     req<T>(`/api/craft/plan?cid=${cid}&prof=${prof}&target=${target}&resale=${resale}&lang=${lang}`),
   quest: (id: number, lang: Lang) => req<QuestInfo>(`/api/quests/${id}?lang=${lang}`),
