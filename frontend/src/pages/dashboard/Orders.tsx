@@ -75,9 +75,9 @@ export function Orders() {
   const { t } = useI18n();
   const nav = useNavigate();
   const chars = useCharacters();
-  const watch = useQuery({ queryKey: ["watch", "orders"], queryFn: () => wowApi.watch("ru"), staleTime: 5 * 60e3, retry: false });
+  const watch = useQuery({ queryKey: ["ah-lists", "orders"], queryFn: () => wowApi.lists("ru"), staleTime: 5 * 60e3, retry: false });
   const servants = (chars.data || []).filter((c) => !c.error).slice(0, 3);
-  const alerts = (watch.data || []).filter((w) => w.alert).length;
+  const alerts = (watch.data || []).flatMap((l) => l.items).filter((w) => w.alert).length;
   const newSignals = useNewSignals();
   const ms = nextReset("eu") - Date.now();
   const d = Math.floor(ms / 864e5), h = Math.floor(ms / 36e5) % 24;

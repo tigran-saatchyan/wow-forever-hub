@@ -70,6 +70,12 @@ export interface WatchCard {
   latest: { min: number; median: number; quantity: number; auctions: number; ts: string } | null;
   history: PricePoint[];
 }
+export interface AhList { id: number; name: string; items: WatchCard[] }
+export interface BisSale {
+  status: string; level?: number; spec?: string; specs?: string[]; customSet?: boolean; checked?: number; configured?: boolean;
+  rows?: { slot: string; rank: number; id: number; name: string; q: number; ilvl: number; req: number; worn: boolean; better: boolean;
+    latest: { min: number; median: number; quantity: number; ts: string } }[];
+}
 export interface MarketConfig {
   configured: boolean; selected: { region: Region; ruleset: number; house: number } | null;
   state: { at?: string; ok?: boolean; items?: number; auctions?: number; error?: string };
@@ -121,10 +127,15 @@ export const wowApi = {
     req<{ id: number; name: string; lots: number; items: number; error?: string | null; itemMin?: number | null; itemQty?: number | null }[]>(
       `/api/market/compare?ruleset=${ruleset}&region=${region}&item=${item}&lang=${lang}`),
   refreshMarket: () => req<MarketConfig["state"]>("/api/market/refresh", { method: "POST" }),
-  watch: (lang: Lang) => req<WatchCard[]>(`/api/market/watch?lang=${lang}`),
-  addWatch: (b: { item_id: number; below: number | null }, lang: Lang) =>
-    req<WatchCard>(`/api/market/watch?lang=${lang}`, { method: "POST", body: JSON.stringify(b) }),
-  deleteWatch: (id: number) => req<void>(`/api/market/watch/${id}`, { method: "DELETE" }),
+  lists: (lang: Lang) => req<AhList[]>(`/api/market/lists?lang=${lang}`),
+  addList: (name: string) => req<AhList>("/api/market/lists", { method: "POST", body: JSON.stringify({ name }) }),
+  renameList: (id: number, name: string) => req<AhList>(`/api/market/lists/${id}`, { method: "PATCH", body: JSON.stringify({ name }) }),
+  deleteList: (id: number) => req<void>(`/api/market/lists/${id}`, { method: "DELETE" }),
+  addToList: (id: number, b: { item_id: number; below: number | null }, lang: Lang) =>
+    req<WatchCard>(`/api/market/lists/${id}/items?lang=${lang}`, { method: "POST", body: JSON.stringify(b) }),
+  removeFromList: (id: number, iid: number) => req<void>(`/api/market/lists/${id}/items/${iid}`, { method: "DELETE" }),
+  bisSale: (cid: number, spec: string | null, lang: Lang) =>
+    req<BisSale>(`/api/market/bis/${cid}?lang=${lang}${spec ? `&spec=${spec}` : ""}`),
 };
 
 export const useApiStatus = (lang: Lang) =>

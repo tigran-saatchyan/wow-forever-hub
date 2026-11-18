@@ -1,7 +1,7 @@
 /** Slide-over from the right (half the screen, full on a phone): where an item drops, who sells it, which quest gives it. */
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { fmtDate, useI18n, type Key } from "../lib/i18n";
 import { qColor, wowApi } from "../lib/wowApi";
@@ -53,6 +53,7 @@ function Body({ id, fallbackName, onClose }: { id: number; fallbackName?: string
           <div className="eyebrow">{t("so_title")}</div>
           <h2 className="truncate font-display text-xl" style={{ color: qColor(it?.quality) }}>{it?.name || fallbackName || `#${id}`}</h2>
         </div>
+        <AddToList id={id} />
         <button className="btn px-2.5" onClick={onClose} aria-label={t("so_close")} title={t("so_close")}>×</button>
       </header>
       <div className="flex-1 space-y-5 overflow-y-auto p-4 text-sm">
@@ -214,5 +215,38 @@ function Body({ id, fallbackName, onClose }: { id: number; fallbackName?: string
         <span className="ml-auto">{t("so_credit")}{d?.dataAsOf ? ` · ${fmtDate(lang, d.dataAsOf)}` : ""}</span>
       </footer>
     </>
+  );
+}
+
+/** Puts the item into one of the user's auction lists (any item: gear, potions, herbs); a mark on the lists that hold it. */
+function AddToList({ id }: { id: number }) {
+  const { t, lang } = useI18n();
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const lists = useQuery({ queryKey: ["ah-lists", lang], queryFn: () => wowApi.lists(lang), staleTime: 60e3 });
+  const add = useMutation({
+    mutationFn: (lid: number) => wowApi.addToList(lid, { item_id: id, below: null }, lang),
+    onSuccess: () => (qc.invalidateQueries({ queryKey: ["ah-lists"] }), setOpen(false)),
+  });
+  if (!lists.data?.length) return null;
+  return (
+    <div className="relative">
+      <button className="btn px-2.5 text-sm" onClick={() => setOpen(!open)} aria-expanded={open}>☆ {t("mk_add_to")} ▾</button>
+      {open && (
+        <ul className="panel absolute right-0 top-full z-10 mt-1 min-w-48 p-1 text-sm">
+          {lists.data.map((l) => {
+            const has = l.items.some((x) => x.itemId === id);
+            return (
+              <li key={l.id}>
+                <button className="w-full rounded px-2 py-1.5 text-left hover:bg-white/5 disabled:opacity-60" disabled={has || add.isPending}
+                  onClick={() => add.mutate(l.id)}>
+                  {has ? "✓ " : ""}{l.name}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 }
