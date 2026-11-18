@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
-import { fmtDate, useI18n } from "../lib/i18n";
+import { fmtDate, useI18n, type Key } from "../lib/i18n";
 import { qColor, wowApi } from "../lib/wowApi";
 import { ItemIcon, ItemTip, Money } from "./Wow";
 
@@ -105,7 +105,24 @@ function Body({ id, fallbackName, onClose }: { id: number; fallbackName?: string
                 </ul>
               </section>
             )}
-            {empty && <p className="rounded-md border border-edge/60 bg-bg/50 p-2.5 text-muted">{t("so_none")}</p>}
+            {d.errors.length > 0 && <p className="rounded-md border border-[#ff9a3c]/40 bg-[#ff9a3c]/10 p-2.5 text-[#ffb070]">{t("so_down")}</p>}
+            {d.local && (d.local.crafted.length > 0 || d.local.auction || d.local.bind) && (
+              <section>
+                <h3 className="panel-title mb-2">{t("so_local")}</h3>
+                <ul className="space-y-1.5">
+                  {d.local.crafted.map((c) => (
+                    <li key={c.recipe} className="rounded-md border border-edge/50 bg-bg/40 p-2">{t("so_crafted", { p: c.profession, r: c.recipe })}{c.skill ? ` · ${c.skill}` : ""}</li>
+                  ))}
+                  {d.local.auction && (
+                    <li className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-edge/50 bg-bg/40 p-2">
+                      <span>{t("so_on_ah", { n: d.local.auction.qty })}</span><Money c={d.local.auction.min} />
+                    </li>
+                  )}
+                  {d.local.bind && <li className="text-xs text-muted">{t(`so_bind_${d.local.bind}` as Key)}</li>}
+                </ul>
+              </section>
+            )}
+            {empty && !d.local?.crafted.length && !d.local?.auction && <p className="rounded-md border border-edge/60 bg-bg/50 p-2.5 text-muted">{t("so_none")}</p>}
             {d.wiki.length > 0 && (
               <section>
                 <h3 className="panel-title mb-1">{t("so_wiki")}</h3>

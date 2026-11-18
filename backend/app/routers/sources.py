@@ -23,6 +23,7 @@ router = APIRouter(prefix="/api/sources", tags=["sources"])
 log = logging.getLogger("uvicorn.error")
 Session = Annotated[AsyncSession, Depends(get_session)]
 TTL = 24 * 3600  # an answer older than this is refreshed in the background
+RETRY = 15 * 60  # an answer Everloot failed in part: asked again this soon
 _cache: dict[tuple[int, str], tuple[float, dict]] = {}
 _http: httpx.AsyncClient | None = None
 
@@ -130,9 +131,14 @@ async def refresh(item_id: int, lang: str) -> dict | None:
         out = await build(item_id, lang, session)
         if out["errors"] and not (out["sold"] or out["drops"] or out["quests"] or out["wiki"]):
             return None
-        await session.merge(Setting(key=f"src:{item_id}:{lang}", value={"_t": time.time(), "data": out}))
+        # a partial answer (Everloot failed in part): add what the hub knows, and ask again in a quarter of an hour
+        stamp, ttl = time.time(), TTL
+        if out["errors"]:
+            out["local"] = (await local(item_id, lang, session))["local"]
+            stamp, ttl = time.time() - TTL + RETRY, RETRY
+        await session.merge(Setting(key=f"src:{item_id}:{lang}", value={"_t": stamp, "data": out}))
         await session.commit()
-    _cache[(item_id, lang)] = (time.time() + TTL, out)
+    _cache[(item_id, lang)] = (time.time() + ttl, out)
     return out
 
 
@@ -164,8 +170,45 @@ async def item_sources(item_id: int, _: CurrentUser, session: Session, lang: str
         return row.value["data"]
     out = await refresh(item_id, lang)
     if out is None:
-        raise HTTPException(502, "Everloot did not answer")
+        # Everloot is down: what the hub knows itself, and Everloot again later
+        return await local(item_id, lang, session)
     return out
+
+
+BIND = {1: "pickup", 2: "equip", 3: "use", 4: "quest"}
+
+
+async def local(item_id: int, lang: str, session: AsyncSession) -> dict:
+    """Where to get an item from the hub's own data, for when Everloot does not answer: the recipes that make it,
+    what it costs on the auction house now, and how it binds (only items that bind on equip can be bought)."""
+    from . import bis as bis_routes
+    from . import professions
+    from .craft import _prices
+
+    try:
+        info = await get_item(session, item_id, lang)
+    except BnetError:
+        info = None
+    crafted = []
+    try:
+        ds = await professions._load(professions._build())
+    except HTTPException:
+        ds = None
+    for p in (ds or {}).get("professions", {}).values():
+        for r in p["recipes"]:
+            if r.get("item") == item_id:
+                crafted.append({"profession": (p.get("name") or {}).get(lang) or (p.get("name") or {}).get("en"),
+                                "recipe": r["name"].get(lang) or r["name"]["en"], "skill": r.get("skill") or r.get("yellow")})
+    prices, market = await _prices(session)
+    ah = prices.get(item_id)
+    g = bis_routes.gear().get(str(item_id)) or {}
+    return {
+        "item": info, "sold": [], "drops": [], "quests": [], "wiki": [],
+        "everloot": f"https://everloot.app/database/items/{item_id}", "dataAsOf": None,
+        "errors": ["everloot"], "at": utcnow().isoformat(),
+        "local": {"crafted": crafted, "bind": BIND.get(g.get("bind")),
+                  "auction": {"min": ah["ah"], "qty": ah["qty"], "at": market.get("at")} if ah else None},
+    }
 
 
 # ---------- prefetch: every recipe-related item, so the panel opens without waiting ----------
@@ -195,9 +238,13 @@ async def _recipe_items() -> list[int]:
 
 
 async def prefetcher(lang: str = "ru") -> None:
-    """Walk all recipe items forever: fetch the missing and the stale ones, one every few seconds."""
+    """Walk the items forever: fetch the missing and the stale ones, one every few seconds. The BiS lists of every
+    character for their level and the next go first (a level up brings the next level's into the next round),
+    then every recipe item."""
+    from . import bis as bis_routes
+
     while True:
-        ids = await _recipe_items()
+        ids = list(dict.fromkeys(await bis_routes.upcoming_items() + await _recipe_items()))
         if not ids:
             await asyncio.sleep(300)  # the recipe reference is not built yet
             continue

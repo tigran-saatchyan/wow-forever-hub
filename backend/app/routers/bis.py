@@ -20,7 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import bis
 from ..auth import CurrentUser
-from ..db import Character, Setting, get_session
+from ..db import Character, SessionLocal, Setting, get_session
 
 router = APIRouter(prefix="/api/bis", tags=["bis"])
 Session = Annotated[AsyncSession, Depends(get_session)]
@@ -160,3 +160,28 @@ async def set_spec(cid: int, body: SpecIn, user: CurrentUser, session: Session):
     await session.merge(Setting(key=f"bis:{cid}", value=st))
     await session.commit()
     return {"ok": True}
+
+
+async def upcoming_items() -> list[int]:
+    """Every item in the BiS lists of every character for their level and the next one, in their chosen
+    specialization (all of the class's before one is chosen): what the "where to get it" panel will be asked
+    about, fetched ahead (app/routers/sources.py prefetcher)."""
+    from sqlalchemy import select
+
+    if not gear():
+        return []
+    out: list[int] = []
+    async with SessionLocal() as session:
+        chars = (await session.execute(select(Character))).scalars().all()
+        for c in chars:
+            s = ((c.profile or {}).get("summary") or {}).get("en") or {}
+            cls, level = s.get("classId"), s.get("level") or 1
+            if cls not in bis.CLASSES:
+                continue
+            st = await _state(session, c.id)
+            specs = [st["spec"]] if st.get("spec") in bis.CLASSES[cls]["specs"] else bis.CLASSES[cls]["specs"]
+            for lv in {level, min(60, level + 1)}:
+                for sp in specs:
+                    for cands in bis.choose(gear(), cls, sp, lv, s.get("faction"))["slots"].values():
+                        out += [x["id"] for x in cands]
+    return list(dict.fromkeys(out))

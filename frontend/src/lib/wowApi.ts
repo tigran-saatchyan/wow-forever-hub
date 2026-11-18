@@ -190,6 +190,9 @@ export interface ItemSources {
   quests: { quest: number; title: string | null; installs: number | null }[];
   wiki: { text: string; url: string | null; asOf: string | null }[];
   everloot: string; dataAsOf?: string; errors: string[]; at: string;
+  /** what the hub knows itself, when Everloot did not answer (in full or in part) */
+  local?: { crafted: { profession: string; recipe: string; skill: number | null }[]; bind: "pickup" | "equip" | "use" | "quest" | null;
+    auction: { min: number; qty: number; at?: string } | null };
 }
 
 /**
