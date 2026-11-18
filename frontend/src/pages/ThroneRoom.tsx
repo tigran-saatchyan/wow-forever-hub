@@ -20,6 +20,8 @@ import { sylvanasLine } from "../theme/music";
 import { Professions } from "./characters/CharacterSheet";
 import { WORDS } from "./dashboard/Throne";
 import { Orders } from "./dashboard/Orders";
+import { SourcePanel } from "../components/SourcePanel";
+import { BisBar, BisGear, useBis, useBisActions, useTrees, type BisItem } from "./throne/Bis";
 
 // the armory's order: the left and right columns of the character window, weapons below
 const LEFT = ["HEAD", "NECK", "SHOULDER", "BACK", "CHEST", "SHIRT", "TABARD", "WRIST"];
@@ -230,9 +232,36 @@ export function ThroneRoom() {
   const pick = (id: number) => (setSel(id), store.set("throneSel", id));
   const gi = useGearSize();
 
+  // BiS mode: one switch for the hall; the specialization is the character's own (most talent points) until
+  // chosen; the picks and the choice are kept on the server
+  const [bisOn, setBisOnRaw] = useState(() => store.get("bisOn", false));
+  const setBisOn = (v: boolean) => (store.set("bisOn", v), setBisOnRaw(v));
+  const trees = useTrees(c);
+  const [specPick, setSpecPick] = useState<string | null>(null);
+  useEffect(() => setSpecPick(null), [mainId]);
+  const bisQ = useBis(mainId, specPick, bisOn);
+  const bis = bisQ.data?.status === "ready" ? bisQ.data : undefined;
+  const acts = useBisActions(mainId);
+  const [open, setOpen] = useState<BisItem | null>(null);
+  // nothing chosen yet on any device: start from the tree with the most points
+  useEffect(() => {
+    if (bis && !bis.specSaved && !specPick && trees.main != null && bis.specs[trees.main] && bis.specs[trees.main] !== bis.spec) {
+      setSpecPick(bis.specs[trees.main]);
+      void acts.spec(bis.specs[trees.main]);
+    }
+  }, [bis, trees.main]); // eslint-disable-line react-hooks/exhaustive-deps
+  // a complete set: the Dark Lady says so, once a day
+  useEffect(() => { if (bis?.cheer) speak("sylvanas"); }, [bis?.cheer]); // eslint-disable-line react-hooks/exhaustive-deps
+  const chooseSpec = (k: string) => { setSpecPick(k); void acts.spec(k); };
+  const slotOf = (sl: string, i: number, side: "left" | "right" | "none") =>
+    bisOn && bis && !["SHIRT", "TABARD"].includes(sl)
+      ? <BisGear key={sl} slot={sl} s={bis.slots[sl]} i={i} side={side} size={gi} empty={sl === "OFF_HAND" && bis.twoHand}
+          onPick={(slot, n) => void acts.pick(bis.spec, slot, n)} onOpen={setOpen} />
+      : <Gear key={sl} slot={sl} x={eq.get(sl)} i={i} side={side} size={gi} />;
+
   return (
     <div className="space-y-5">
-      <section className="tr-stage" onMouseMove={move} onMouseLeave={() => (mx.set(0), my.set(0))}>
+      <section className={`tr-stage ${bisOn ? "bis-on" : ""} ${bisOn && bis?.complete ? "bis-full" : ""}`} onMouseMove={move} onMouseLeave={() => (mx.set(0), my.set(0))}>
         {/* the hall, from the far wall forward */}
         <Layer mx={mx} my={my} depth={8} className="tr-bg" />
         <Layer mx={mx} my={my} depth={12} className="tr-clouds"><i /><i /></Layer>
@@ -268,10 +297,10 @@ export function ThroneRoom() {
         </div>
         {c && box && (
           <>
-            <div className="tr-gear-col left">{LEFT.map((sl, i) => <Gear key={sl} slot={sl} x={eq.get(sl)} i={i} side="right" size={gi} />)}</div>
-            <div className="tr-gear-col right">{RIGHT.map((sl, i) => <Gear key={sl} slot={sl} x={eq.get(sl)} i={i} side="left" size={gi} />)}</div>
+            <div className="tr-gear-col left">{LEFT.map((sl, i) => slotOf(sl, i, "right"))}</div>
+            <div className="tr-gear-col right">{RIGHT.map((sl, i) => slotOf(sl, i, "left"))}</div>
             <div className="tr-gear-row">
-              {BOTTOM.map((sl, i) => <Gear key={sl} slot={sl} x={eq.get(sl)} i={8 + i} side={i === 0 ? "right" : i === 2 ? "left" : "none"} size={gi} />)}
+              {BOTTOM.map((sl, i) => slotOf(sl, 8 + i, i === 0 ? "right" : i === 2 ? "left" : "none"))}
             </div>
           </>
         )}
@@ -295,7 +324,7 @@ export function ThroneRoom() {
           {c ? (
             <AnimatePresence mode="wait">
               <motion.div key={c.id} initial={{ opacity: 0, y: 16, filter: "blur(8px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.8, delay: 0.5 }}>
-                <div className="brand-sub">{t("tr_servant")}</div>
+                <div className="brand-sub">{bisOn && bis?.complete ? t("bis_title", { l: bis.level }) : t("tr_servant")}</div>
                 <h1 className="tr-name">{fullName(c, lang)}</h1>
                 <div className="mt-1 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm">
                   <span className="flex items-center gap-1.5">
@@ -321,9 +350,12 @@ export function ThroneRoom() {
               </motion.p>
             </AnimatePresence>
           </div>
+          {c && <BisBar on={bisOn} setOn={setBisOn} data={bis} spec={bis?.spec ?? specPick} setSpec={chooseSpec} tabs={trees.tabs} />}
+          {c && bisOn && bisQ.data?.status === "nodata" && <p className="text-xs text-muted">{t("bis_nodata")}</p>}
           {c && <Progress c={c} />}
         </div>
       </section>
+      <SourcePanel item={open} onClose={() => setOpen(null)} />
 
       {c && (
         <div className="grid gap-4 lg:grid-cols-3">

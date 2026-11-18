@@ -11,6 +11,7 @@ from . import auth, bnet, gamedata
 from .config import get_settings
 from .db import init_db
 from .routers import bnet as bnet_routes
+from .routers import bis as bis_routes
 from .routers import builds, characters, collections, craft, items, live, market, media, professions, quests, sources
 
 
@@ -61,6 +62,7 @@ def create_app() -> FastAPI:
     app.include_router(quests.router)
     app.include_router(collections.router)
     app.include_router(craft.router)
+    app.include_router(bis_routes.router)
 
     @app.get("/api/health")
     async def health():

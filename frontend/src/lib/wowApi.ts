@@ -89,6 +89,9 @@ export const wowApi = {
   craftPlan: <T,>(cid: number, prof: number, target: number, resale: boolean, lang: Lang) =>
     req<T>(`/api/craft/plan?cid=${cid}&prof=${prof}&target=${target}&resale=${resale}&lang=${lang}`),
   quest: (id: number, lang: Lang) => req<QuestInfo>(`/api/quests/${id}?lang=${lang}`),
+  bis: <T,>(cid: number, spec: string | null, lang: Lang) => req<T>(`/api/bis/${cid}?lang=${lang}${spec ? `&spec=${spec}` : ""}`),
+  bisPick: (cid: number, b: { spec: string; slot: string; pick: number }) => req<{ ok: boolean }>(`/api/bis/${cid}/pick`, { method: "PUT", body: JSON.stringify(b) }),
+  bisSpec: (cid: number, spec: string) => req<{ ok: boolean }>(`/api/bis/${cid}/spec`, { method: "PUT", body: JSON.stringify({ spec }) }),
   character: (id: number) => req<Character>(`/api/characters/${id}`),
   addCharacter: (b: { name: string; region: Region }) => req<Character>("/api/characters", { method: "POST", body: JSON.stringify(b) }),
   refreshCharacter: (id: number) => req<Character>(`/api/characters/${id}/refresh`, { method: "POST" }),
