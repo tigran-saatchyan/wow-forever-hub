@@ -94,12 +94,18 @@ async def get_bis(cid: int, user: CurrentUser, session: Session, spec: str | Non
     cls, level, faction = s["classId"], s.get("level") or 1, s.get("faction")
     specs = bis.CLASSES[cls]["specs"]
     st = await _state(session, cid)
-    if st.get("level") != level:  # a new level: new best gear, the picks start over
-        st = {"level": level, "spec": st.get("spec"), "picks": {}, "cheer": st.get("cheer")}
-    spec = spec if spec in specs else (st.get("spec") if st.get("spec") in specs else None)
+    if st.get("level") != level:  # a new level: new best gear, the picks start over (own weights stay)
+        st = {"level": level, "spec": st.get("spec"), "picks": {}, "cheer": st.get("cheer"), "custom": st.get("custom")}
+    allowed = [*specs, bis.CUSTOM]
+    spec = spec if spec in allowed else (st.get("spec") if st.get("spec") in allowed else None)
     if not gear():
         return {"status": "nodata"}
-    out = bis.choose(gear(), cls, spec or specs[0], level, faction)
+    custom = st.get("custom") or {}
+    base = custom.get("base") if custom.get("base") in specs else specs[0]
+    if spec == bis.CUSTOM:  # the player's own weights over the specialization they started from
+        out = bis.choose(gear(), cls, base, level, faction, w={**bis.weights(cls, base), **(custom.get("w") or {})})
+    else:
+        out = bis.choose(gear(), cls, spec or specs[0], level, faction)
     w = out["weights"]
     picks = (st.get("picks") or {}).get(spec or specs[0]) or {}
     eq = {x["slot"]: x for x in (((c.profile or {}).get("equipment") or {}).get(lang) or [])}
@@ -145,7 +151,7 @@ async def get_bis(cid: int, user: CurrentUser, session: Session, spec: str | Non
         cheer, st["cheer"] = True, date.today().isoformat()
     await session.merge(Setting(key=f"bis:{cid}", value=st))
     await session.commit()
-    return {"status": "ready", "class": bis.CLASSES[cls]["key"], "specs": specs, "spec": spec or specs[0], "specSaved": bool(st.get("spec")), "level": level,
+    return {"status": "ready", "class": bis.CLASSES[cls]["key"], "specs": specs, "spec": spec or specs[0], "customBase": base, "customSet": bool(custom.get("w")), "specSaved": bool(st.get("spec")), "level": level,
             "twoHand": two_hand, "slots": slots, "have": have, "total": total, "complete": complete, "cheer": cheer,
             "weights": w, "maxIlvl": bis.MAX_ILVL}
 
@@ -163,12 +169,12 @@ class SpecIn(BaseModel):
 @router.put("/{cid}/pick")
 async def set_pick(cid: int, body: Pick, user: CurrentUser, session: Session):
     _, s = await _char(session, user, cid)
-    if body.spec not in bis.CLASSES[s["classId"]]["specs"] or body.slot not in bis.SLOTS:
+    if body.spec not in [*bis.CLASSES[s["classId"]]["specs"], bis.CUSTOM] or body.slot not in bis.SLOTS:
         raise HTTPException(422, "unknown specialization or slot")
     st = await _state(session, cid)
     level = s.get("level") or 1
     if st.get("level") != level:
-        st = {"level": level, "spec": st.get("spec"), "picks": {}, "cheer": st.get("cheer")}
+        st = {"level": level, "spec": st.get("spec"), "picks": {}, "cheer": st.get("cheer"), "custom": st.get("custom")}
     picks = dict(st.get("picks") or {})
     picks[body.spec] = {**(picks.get(body.spec) or {}), body.slot: body.pick}
     st["picks"] = picks
@@ -181,10 +187,29 @@ async def set_pick(cid: int, body: Pick, user: CurrentUser, session: Session):
 async def set_spec(cid: int, body: SpecIn, user: CurrentUser, session: Session):
     """The specialization the BiS mode shows for this character (kept across levels)."""
     _, s = await _char(session, user, cid)
-    if body.spec not in bis.CLASSES[s["classId"]]["specs"]:
+    if body.spec not in [*bis.CLASSES[s["classId"]]["specs"], bis.CUSTOM]:
         raise HTTPException(422, "unknown specialization")
     st = await _state(session, cid)
     st["spec"] = body.spec
+    await session.merge(Setting(key=f"bis:{cid}", value=st))
+    await session.commit()
+    return {"ok": True}
+
+
+class CustomIn(BaseModel):
+    base: str
+    weights: dict[str, float] = Field(max_length=60)
+
+
+@router.put("/{cid}/custom")
+async def set_custom(cid: int, body: CustomIn, user: CurrentUser, session: Session):
+    """The player's own weights: the specialization they start from and their numbers (kept across levels)."""
+    _, s = await _char(session, user, cid)
+    if body.base not in bis.CLASSES[s["classId"]]["specs"]:
+        raise HTTPException(422, "unknown specialization")
+    w = {k[:48]: max(-10.0, min(20.0, float(v))) for k, v in body.weights.items()}
+    st = await _state(session, cid)
+    st["custom"], st["spec"] = {"base": body.base, "w": w}, bis.CUSTOM
     await session.merge(Setting(key=f"bis:{cid}", value=st))
     await session.commit()
     return {"ok": True}

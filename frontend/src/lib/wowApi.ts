@@ -91,6 +91,7 @@ export const wowApi = {
   quest: (id: number, lang: Lang) => req<QuestInfo>(`/api/quests/${id}?lang=${lang}`),
   bis: <T,>(cid: number, spec: string | null, lang: Lang) => req<T>(`/api/bis/${cid}?lang=${lang}${spec ? `&spec=${spec}` : ""}`),
   bisPick: (cid: number, b: { spec: string; slot: string; pick: number }) => req<{ ok: boolean }>(`/api/bis/${cid}/pick`, { method: "PUT", body: JSON.stringify(b) }),
+  bisCustom: (cid: number, b: { base: string; weights: Record<string, number> }) => req<{ ok: boolean }>(`/api/bis/${cid}/custom`, { method: "PUT", body: JSON.stringify(b) }),
   bisSpec: (cid: number, spec: string) => req<{ ok: boolean }>(`/api/bis/${cid}/spec`, { method: "PUT", body: JSON.stringify({ spec }) }),
   character: (id: number) => req<Character>(`/api/characters/${id}`),
   addCharacter: (b: { name: string; region: Region }) => req<Character>("/api/characters", { method: "POST", body: JSON.stringify(b) }),

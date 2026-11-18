@@ -37,6 +37,7 @@ export function SrcLine({ s }: { s?: Src | null }) {
 export interface BisSlot { options: BisItem[]; pick: number; worn: BisItem | null; wornId: number | null; wornRank: number | null; ok: boolean }
 export interface BisData {
   status: "ready" | "nodata"; class: string; specs: string[]; spec: string; specSaved?: boolean; level: number;
+  customBase?: string; customSet?: boolean; weights?: Record<string, number>; classId?: number;
   twoHand: boolean; slots: Record<string, BisSlot>; have: number; total: number; complete: boolean; cheer: boolean;
   maxIlvl: number;
 }
@@ -69,12 +70,14 @@ export function useTrees(c: Character | undefined) {
 }
 
 /** The one switch of the throne room, the specialization and how much of the set is worn. */
-export function BisBar({ on, setOn, data, spec, setSpec, tabs }: {
+export function BisBar({ on, setOn, data, spec, setSpec, tabs, cid }: {
   on: boolean; setOn: (v: boolean) => void; data?: BisData; spec: string | null; setSpec: (s: string) => void;
-  tabs: { name: string; icon: string }[];
+  tabs: { name: string; icon: string }[]; cid: number | null;
 }) {
   const { t } = useI18n();
   const icons = useIcons();
+  const [edit, setEdit] = useState(false);
+  const label = (k: string, i: number) => tabs[i]?.name ?? t(`bis_spec_${k}` as Key);
   return (
     <div className="bis-bar">
       {/* the switch stays in the middle: the count to its left, the specializations open to its right */}
@@ -92,17 +95,88 @@ export function BisBar({ on, setOn, data, spec, setSpec, tabs }: {
           {on && data?.specs && (
             <motion.div className="bis-specs" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }}>
               {data.specs.map((k, i) => (
-                <button key={k} className={`bis-spec ${k === spec ? "on" : ""}`} onClick={() => setSpec(k)} title={tabs[i]?.name ?? k}>
+                <button key={k} className={`bis-spec ${k === spec ? "on" : ""}`} onClick={() => setSpec(k)} title={label(k, i)}>
                   {tabs[i] && <span className="bis-spec-ico" style={iconStyle(icons.data, tabs[i].icon)} />}
-                  <span>{tabs[i]?.name ?? k}</span>
+                  <span>{label(k, i)}</span>
                 </button>
               ))}
+              <button className={`bis-spec ${spec === "custom" ? "on" : ""}`} onClick={() => (data.customSet ? setSpec("custom") : setEdit(true))} title={t("bis_custom_h")}>
+                <span>{t("bis_custom")}</span>
+              </button>
+              <button className="bis-spec px-2" onClick={() => setEdit(true)} title={t("bis_custom_edit")} aria-label={t("bis_custom_edit")}>⚙</button>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+      {edit && data && cid && <WeightEditor data={data} cid={cid} label={label} onClose={() => setEdit(false)} onSaved={() => (setEdit(false), setSpec("custom"))} />}
     </div>
   );
+}
+
+// stat groups the weights use (app/bis.py GROUPS) and single stats worth offering
+const W_KEYS = ["sp", "heal", "INTELLECT", "SPIRIT", "STAMINA", "STRENGTH", "AGILITY", "ap", "rap", "crit", "hit", "haste",
+  "mp5", "exp", "tank", "armor", "dps", "dps_off", "dps_ranged", "dps_wand", "BONUS_STAT_SHADOW_DAMAGE_DONE",
+  "BONUS_STAT_HOLY_DAMAGE_DONE", "BONUS_STAT_FIRE_DAMAGE_DONE", "BONUS_STAT_FROST_DAMAGE_DONE",
+  "BONUS_STAT_ARCANE_DAMAGE_DONE", "BONUS_STAT_NATURE_DAMAGE_DONE"];
+
+/** The player's own weights: start from a specialization, change any number, save; the BiS mode then uses them. */
+function WeightEditor({ data, cid, label, onClose, onSaved }: { data: BisData; cid: number; label: (k: string, i: number) => string; onClose: () => void; onSaved: () => void }) {
+  const { t } = useI18n();
+  const qc = useQueryClient();
+  const [base, setBase] = useState(data.customBase ?? data.specs[0]);
+  const [w, setW] = useState<Record<string, string>>(() => Object.fromEntries(Object.entries(data.weights || {}).map(([k, v]) => [k, String(v)])));
+  const [busy, setBusy] = useState(false);
+  // a new starting specialization: its own numbers as the start
+  const loadBase = async (b: string) => {
+    setBase(b);
+    const d = await wowApi.bis<BisData>(cid, b, "en");
+    setW(Object.fromEntries(Object.entries(d.weights || {}).map(([k, v]) => [k, String(v)])));
+  };
+  const save = async () => {
+    setBusy(true);
+    const weights = Object.fromEntries(Object.entries(w).filter(([, v]) => v.trim() !== "" && !Number.isNaN(Number(v))).map(([k, v]) => [k, Number(v)]));
+    await wowApi.bisCustom(cid, { base, weights });
+    await qc.invalidateQueries({ queryKey: ["bis", cid] });
+    setBusy(false);
+    onSaved();
+  };
+  const keys = [...new Set([...W_KEYS.filter((k) => k in w), ...Object.keys(w), ...W_KEYS])];
+  return createPortal(
+    <div className="fixed inset-0 z-[95] grid place-items-center bg-black/60 p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="bis-weights panel w-full max-w-lg p-4">
+        <h2 className="panel-title">{t("bis_custom_t")}</h2>
+        <p className="mt-1 text-xs text-muted">{t("bis_custom_p")}</p>
+        <label className="mt-3 flex items-center gap-2 text-sm">{t("bis_custom_base")}
+          <select className="input w-auto py-1" value={base} onChange={(e) => void loadBase(e.target.value)}>
+            {data.specs.map((k, i) => <option key={k} value={k}>{label(k, i)}</option>)}
+          </select>
+        </label>
+        <div className="mt-3 grid max-h-[50vh] grid-cols-2 gap-x-4 gap-y-1.5 overflow-y-auto pr-1 text-sm">
+          {keys.map((k) => (
+            <label key={k} className="flex items-center justify-between gap-2">
+              <span className="truncate">{weightName(t, k)}</span>
+              <input className="input w-20 py-0.5 text-right" inputMode="decimal" value={w[k] ?? ""} placeholder="0"
+                onChange={(e) => setW({ ...w, [k]: e.target.value.replace(",", ".") })} />
+            </label>
+          ))}
+        </div>
+        <div className="mt-4 flex justify-between gap-2">
+          <button className="btn text-sm" onClick={() => void loadBase(base)}>{t("bis_custom_reset")}</button>
+          <span className="flex gap-2">
+            <button className="btn text-sm" onClick={onClose}>{t("so_close")}</button>
+            <button className="btn-primary text-sm" disabled={busy} onClick={() => void save()}>{t("bis_custom_save")}</button>
+          </span>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+function weightName(t: (k: Key) => string, k: string): string {
+  const own = `bis_w_${k}` as Key;
+  const s = t(own);
+  return s === own ? statName(t, k).replace(/^к /, "") : s;
 }
 
 /** One slot in BiS mode: the picked item, a small arrow under it for the other two, a comparison on hover. */

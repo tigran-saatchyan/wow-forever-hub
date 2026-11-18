@@ -24,16 +24,18 @@ MAX_ILVL = 65  # no raid loot yet (see above)
 
 # ---- classes and specializations (talent trees, in the game's order) ----
 CLASSES: dict[int, dict[str, Any]] = {
+    # the talent trees in the game's order, then the roles a tree plays two ways (as GearQuest Forever splits them)
     1: {"key": "warrior", "specs": ["arms", "fury", "protection"]},
     2: {"key": "paladin", "specs": ["holy", "protection", "retribution"]},
     3: {"key": "hunter", "specs": ["beastmastery", "marksmanship", "survival"]},
     4: {"key": "rogue", "specs": ["assassination", "combat", "subtlety"]},
     5: {"key": "priest", "specs": ["discipline", "holy", "shadow"]},
-    7: {"key": "shaman", "specs": ["elemental", "enhancement", "restoration"]},
+    7: {"key": "shaman", "specs": ["elemental", "enhancement", "restoration", "enhancement_tank"]},
     8: {"key": "mage", "specs": ["arcane", "fire", "frost"]},
     9: {"key": "warlock", "specs": ["affliction", "demonology", "destruction"]},
-    11: {"key": "druid", "specs": ["balance", "feral", "restoration"]},
+    11: {"key": "druid", "specs": ["balance", "feral", "restoration", "feral_bear"]},
 }
+CUSTOM = "custom"  # the player's own weights, starting from one of the class's specializations
 
 # stat names as the API gives them, grouped: one weight for a group
 GROUPS = {
@@ -50,39 +52,47 @@ GROUPS = {
     "exp": ["EXPERTISE_RATING"],
 }
 
-CASTER = {"INTELLECT": 0.8, "SPIRIT": 0.3, "STAMINA": 0.35, "sp": 1.2, "hit": 1.1, "crit": 0.8, "haste": 0.8}
-HEALER = {"INTELLECT": 1.0, "SPIRIT": 0.8, "STAMINA": 0.3, "sp": 1.1, "heal": 1.1, "mp5": 1.5, "crit": 0.6, "haste": 0.6}
-MELEE = {"STRENGTH": 1.0, "AGILITY": 0.8, "STAMINA": 0.3, "ap": 0.45, "crit": 0.9, "hit": 1.1, "exp": 0.8, "haste": 0.6,
-         "dps": 3.0}
-TANK = {"STAMINA": 1.0, "tank": 0.9, "STRENGTH": 0.5, "AGILITY": 0.5, "armor": 0.04, "hit": 0.4, "exp": 0.4, "dps": 1.0}
-
-
+# Weights per point of each stat, the main stat of the role worth 1.0 (classic's usual values for leveling and
+# pre-raid: a rating point is a fourteenth of a percent of crit or a tenth of a percent of hit). They are meant to
+# be tuned; the player can set their own ("custom").
 def _w(base: dict, **over: float) -> dict:
     return {**base, **over}
 
 
+CASTER = {"sp": 1.0, "INTELLECT": 0.4, "SPIRIT": 0.25, "STAMINA": 0.2, "hit": 1.2, "crit": 0.6, "haste": 0.7,
+          "mp5": 0.6, "dps_wand": 0.8}
+HEALER = {"heal": 1.0, "sp": 1.0, "INTELLECT": 0.65, "SPIRIT": 0.5, "STAMINA": 0.15, "mp5": 1.7, "crit": 0.5,
+          "haste": 0.5}
+MELEE = {"STRENGTH": 1.0, "AGILITY": 0.7, "STAMINA": 0.25, "ap": 0.5, "crit": 0.9, "hit": 1.1, "exp": 0.8,
+         "haste": 0.6, "dps": 3.0}
+TANK = {"STAMINA": 1.0, "armor": 0.06, "tank": 0.9, "STRENGTH": 0.5, "AGILITY": 0.6, "hit": 0.4, "exp": 0.4,
+        "dps": 1.0}
+
 WEIGHTS: dict[tuple[int, str], dict[str, float]] = {
-    (1, "arms"): _w(MELEE), (1, "fury"): _w(MELEE, dps=2.5, dps_off=1.8), (1, "protection"): _w(TANK),
-    (2, "holy"): _w(HEALER, SPIRIT=0.3, mp5=1.3, crit=0.8), (2, "protection"): _w(TANK, sp=0.3, INTELLECT=0.2),
-    (2, "retribution"): _w(MELEE, AGILITY=0.6, INTELLECT=0.15),
-    (3, "beastmastery"): {"AGILITY": 1.0, "INTELLECT": 0.3, "STAMINA": 0.35, "ap": 0.2, "rap": 0.45, "crit": 0.9,
+    (1, "arms"): _w(MELEE, dps=3.5), (1, "fury"): _w(MELEE, dps=2.8, dps_off=2.0), (1, "protection"): _w(TANK),
+    (2, "holy"): _w(HEALER, INTELLECT=0.75, SPIRIT=0.25, mp5=1.5, crit=0.7),
+    (2, "protection"): _w(TANK, tank=1.0, sp=0.4, INTELLECT=0.2),
+    (2, "retribution"): _w(MELEE, AGILITY=0.65, INTELLECT=0.15, ap=0.5, dps=3.5),
+    (3, "beastmastery"): {"AGILITY": 1.0, "rap": 0.5, "ap": 0.15, "INTELLECT": 0.25, "STAMINA": 0.3, "crit": 0.9,
                           "hit": 1.1, "haste": 0.6, "dps_ranged": 3.0, "dps": 0.3},
-    (4, "assassination"): _w(MELEE, STRENGTH=0.5, AGILITY=1.0, dps_off=2.0),
-    (5, "discipline"): _w(HEALER, SPIRIT=0.7, crit=0.7), (5, "holy"): _w(HEALER),
-    (5, "shadow"): _w(CASTER, INTELLECT=0.6, SPIRIT=0.4, STAMINA=0.4, BONUS_STAT_SHADOW_DAMAGE_DONE=1.1),
-    (7, "elemental"): _w(CASTER, BONUS_STAT_NATURE_DAMAGE_DONE=1.1), (7, "enhancement"): _w(MELEE, INTELLECT=0.2),
-    (7, "restoration"): _w(HEALER, SPIRIT=0.4, mp5=1.6),
-    (8, "arcane"): _w(CASTER, BONUS_STAT_ARCANE_DAMAGE_DONE=1.1), (8, "fire"): _w(CASTER, BONUS_STAT_FIRE_DAMAGE_DONE=1.1),
-    (8, "frost"): _w(CASTER, BONUS_STAT_FROST_DAMAGE_DONE=1.1),
-    (9, "affliction"): _w(CASTER, STAMINA=0.6, INTELLECT=0.5, SPIRIT=0.2, BONUS_STAT_SHADOW_DAMAGE_DONE=1.1),
-    (11, "balance"): _w(CASTER, BONUS_STAT_ARCANE_DAMAGE_DONE=0.6, BONUS_STAT_NATURE_DAMAGE_DONE=0.6),
-    (11, "feral"): _w(MELEE, STRENGTH=0.9, AGILITY=1.0, STAMINA=0.6, armor=0.02, dps=0.0),
-    (11, "restoration"): _w(HEALER),
+    (4, "assassination"): _w(MELEE, AGILITY=1.0, STRENGTH=0.55, hit=1.2, dps_off=2.0),
+    (5, "discipline"): _w(HEALER, heal=0.9, INTELLECT=0.65, SPIRIT=0.5, mp5=1.6, STAMINA=0.2, dps_wand=0.6),
+    (5, "holy"): _w(HEALER, SPIRIT=0.55, mp5=1.8, crit=0.45, dps_wand=0.5),
+    (5, "shadow"): _w(CASTER, INTELLECT=0.35, SPIRIT=0.4, STAMINA=0.25, crit=0.55, BONUS_STAT_SHADOW_DAMAGE_DONE=0.95,
+                      dps_wand=1.0),
+    (7, "elemental"): _w(CASTER, mp5=0.8, BONUS_STAT_NATURE_DAMAGE_DONE=0.9, dps_wand=0.0),
+    (7, "enhancement"): _w(MELEE, AGILITY=0.8, ap=0.5, INTELLECT=0.15),
+    (7, "restoration"): _w(HEALER, SPIRIT=0.35, mp5=1.8),
+    (7, "enhancement_tank"): _w(TANK, armor=0.05, STRENGTH=0.5, AGILITY=0.6, tank=0.85, dps=1.5),
+    (8, "arcane"): _w(CASTER, INTELLECT=0.5, BONUS_STAT_ARCANE_DAMAGE_DONE=0.9),
+    (8, "fire"): _w(CASTER, crit=0.75, BONUS_STAT_FIRE_DAMAGE_DONE=0.9),
+    (8, "frost"): _w(CASTER, BONUS_STAT_FROST_DAMAGE_DONE=0.9),
+    (9, "affliction"): _w(CASTER, STAMINA=0.4, INTELLECT=0.3, SPIRIT=0.2, crit=0.5, BONUS_STAT_SHADOW_DAMAGE_DONE=0.9),
+    (11, "balance"): _w(CASTER, BONUS_STAT_ARCANE_DAMAGE_DONE=0.5, BONUS_STAT_NATURE_DAMAGE_DONE=0.5, dps_wand=0.0),
+    (11, "feral"): _w(MELEE, STRENGTH=1.0, AGILITY=1.0, ap=0.5, STAMINA=0.25, dps=0.0),
+    (11, "restoration"): _w(HEALER, SPIRIT=0.6),
+    (11, "feral_bear"): _w(TANK, armor=0.08, AGILITY=0.7, STRENGTH=0.5, tank=0.9, dps=0.0),
 }
-# priests, mages and warlocks kill with their wand while leveling: its damage counts (healers' less)
-for (_c, _s), _v in list(WEIGHTS.items()):
-    if _c in (5, 8, 9):
-        WEIGHTS[(_c, _s)] = {**_v, "dps_wand": 0.6 if _s in ("holy", "discipline") else 1.0}
 for _c, _s in ((3, "marksmanship"), (3, "survival")):
     WEIGHTS[(_c, _s)] = WEIGHTS[(3, "beastmastery")]
 for _s in ("combat", "subtlety"):
@@ -187,10 +197,15 @@ def score(it: dict, w: dict[str, float], slot: str = "") -> float:
     return round(s, 2)
 
 
-def choose(gear: dict[str, dict], cls: int, spec: str, level: int, faction: str | None, top: int = 3) -> dict:
+def weights(cls: int, spec: str) -> dict[str, float]:
+    return dict(WEIGHTS.get((cls, spec)) or WEIGHTS[(cls, CLASSES[cls]["specs"][0])])
+
+
+def choose(gear: dict[str, dict], cls: int, spec: str, level: int, faction: str | None, top: int = 3,
+           w: dict[str, float] | None = None) -> dict:
     """For every slot, the best `top` items (ids, best first) with their scores; and whether a two-hand weapon
     beats a main hand plus an off hand."""
-    w = WEIGHTS.get((cls, spec)) or WEIGHTS[(cls, CLASSES[cls]["specs"][0])]
+    w = w or weights(cls, spec)
     pool = [(int(i), it) for i, it in gear.items() if usable(it, cls, level, faction)]
     out: dict[str, list[dict]] = {}
     for slot, types in SLOTS.items():

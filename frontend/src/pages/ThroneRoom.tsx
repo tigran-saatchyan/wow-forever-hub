@@ -266,7 +266,7 @@ export function ThroneRoom() {
   useEffect(() => { if (bis?.cheer) speak("sylvanas"); }, [bis?.cheer]); // eslint-disable-line react-hooks/exhaustive-deps
   const chooseSpec = (k: string) => { setSpecPick(k); void acts.spec(k); };
   // the specialization the hall shows: the BiS one when it is on, else the tree with the most points
-  const specIndex = bis ? bis.specs.indexOf(bis.spec) : (trees.main ?? 0);
+  const specIndex = bis ? bis.specs.indexOf(bis.spec === "custom" ? bis.customBase ?? bis.specs[0] : bis.spec) : (trees.main ?? 0);
   const slotOf = (sl: string, i: number, side: "left" | "right" | "none") =>
     bisOn && bis && !["SHIRT", "TABARD"].includes(sl)
       ? <BisGear key={sl} slot={sl} s={bis.slots[sl]} i={i} side={side} size={gi} empty={sl === "OFF_HAND" && bis.twoHand}
@@ -359,7 +359,7 @@ export function ThroneRoom() {
               <button className="text-muted hover:text-gold" onClick={() => nav("/characters")}>{t("tr_none")}</button>
             )
           )}
-          {c && <BisBar on={bisOn} setOn={setBisOn} data={bis} spec={bis?.spec ?? specPick} setSpec={chooseSpec} tabs={trees.tabs} />}
+          {c && <BisBar on={bisOn} setOn={setBisOn} data={bis} spec={bis?.spec ?? specPick} setSpec={chooseSpec} tabs={trees.tabs} cid={mainId} />}
           {c && bisOn && bisQ.data?.status === "nodata" && <p className="text-xs text-muted">{t("bis_nodata")}</p>}
           {c && <Progress c={c} />}
         </div>
