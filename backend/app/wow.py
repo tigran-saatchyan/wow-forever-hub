@@ -129,6 +129,7 @@ def equipment(eq: dict, lang: str | None = None) -> list[dict]:
                       if isinstance(x, dict) and _get(x, "type", "type") and not x.get("is_negated")},
             "armor": _get(it, "armor", "value"),
             "dps": _get(it, "weapon", "dps", "value"),
+            "inv": _get(it, "inventory_type", "type"),  # TWOHWEAPON, WEAPON, HOLDABLE…: tells a two-hander apart
         })
     return out
 

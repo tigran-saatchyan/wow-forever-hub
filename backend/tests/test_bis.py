@@ -93,3 +93,11 @@ def test_wand_damage_counts_for_casters():
     told = {"stats": {}, "armor": None, "dps": 30.0, "cls": 2, "sub": 0}  # a worn wand known only by its dps
     assert bis.score(told, w, "RANGED") == 30.0
     assert bis.score(wand, bis.WEIGHTS[(1, "arms")], "RANGED") == 0.0
+
+
+def test_worn_two_hander_known_from_equipment():
+    from app.routers.bis import _worn
+    w = bis.WEIGHTS[(5, "holy")]
+    x = {"id": 1, "name": "Staff", "quality": "RARE", "ilvl": 26, "statv": {"INTELLECT": 8}, "dps": 12.0, "inv": "TWOHWEAPON"}
+    assert _worn(x, w, "MAIN_HAND")["two"] is True
+    assert _worn({**x, "inv": "WEAPON"}, w, "MAIN_HAND")["two"] is False

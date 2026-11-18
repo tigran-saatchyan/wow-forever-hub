@@ -69,7 +69,7 @@ def _worn(x: dict, w: dict, slot: str) -> dict:
           "cls": 2 if x.get("dps") else 4, "sub": 0}
     return {"id": x["id"], "name": x.get("name") or f"#{x['id']}", "q": QUALITY.get(x.get("quality") or "", 1),
             "ilvl": x.get("ilvl") or 0, "req": 0, "stats": it["stats"], "armor": it["armor"], "dps": it["dps"],
-            "speed": None, "spells": [], "two": False, "score": bis.score(it, w, slot)}
+            "speed": None, "spells": [], "two": x.get("inv") == "TWOHWEAPON", "score": bis.score(it, w, slot)}
 
 
 async def _char(session: AsyncSession, user, cid: int) -> tuple[Character, dict]:
@@ -127,6 +127,8 @@ async def get_bis(cid: int, user: CurrentUser, session: Session, spec: str | Non
                 (len(options) < 3 or mine["score"] > options[-1]["score"]):
             options = sorted([*options, {**mine, "wornOnly": True}], key=lambda o: -o["score"])[:3]
             pick = min(pick, len(options) - 1)
+        if slot == "MAIN_HAND" and options:  # the main hand decides whether the off hand is free (after the worn joined)
+            two_hand = options[pick]["two"]
         rank = next((n for n, o in enumerate(options) if o["id"] == wid), None) if wid else None
         slots[slot] = {"options": options, "pick": pick, "worn": mine, "wornId": wid, "wornRank": rank}
     for slot, x in slots.items():
