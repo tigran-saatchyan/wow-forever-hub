@@ -22,6 +22,18 @@ from typing import Any
 
 MAX_ILVL = 65  # no raid loot yet (see above)
 
+
+def plausible_dps(it: dict) -> dict:
+    """The item with its damage per second dropped when it cannot be right for its item level.
+
+    Blizzard's API gives Forever's "Restored" starter weapons (item level 1, 3-6 damage in the game) the damage of a
+    much higher item: a wand of 44.7 dps beat every real wand. No weapon of the game reaches 1.15 dps per item level
+    (+5); above that the number is the API's, not the item's, and the weapon counts for its stats only."""
+    d = it.get("dps")
+    if d and d > 1.15 * ((it.get("ilvl") or 0) + 5):
+        return {**it, "dps": None}
+    return it
+
 # ---- classes and specializations (talent trees, in the game's order) ----
 CLASSES: dict[int, dict[str, Any]] = {
     # the talent trees in the game's order, then the roles a tree plays two ways (as GearQuest Forever splits them)

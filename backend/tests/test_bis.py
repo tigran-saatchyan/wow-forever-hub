@@ -109,3 +109,11 @@ def test_own_sources_classic_drop():
     assert d and d["top"][0]["name"] == "Псарь Локси" and d["top"][0]["instance"] == "Монастырь Алого ордена"
     b = item_sources.brief(3456, "en")
     assert b["kind"] == "drop" and b["where"] == "Scarlet Monastery" and abs(b["rate"] - 0.3) < 1e-6
+
+
+def test_restored_wand_damage_not_believed():
+    from app.routers.bis import base_gear
+    wand = base_gear()["281733"]  # Restored Wand: 3-6 damage in the game, 44.7 dps in Blizzard's API
+    assert wand["dps"] is None and bis.score(wand, bis.WEIGHTS[(5, "holy")], "RANGED") == 0.0
+    real = {"ilvl": 63, "dps": 64.0}
+    assert bis.plausible_dps(real)["dps"] == 64.0

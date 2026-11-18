@@ -32,7 +32,7 @@ def base_gear() -> dict[str, dict]:
     """The reference built from Blizzard's item API (tools/build_gear.py)."""
     if not GEAR.is_file():
         return {}
-    return json.loads(GEAR.read_text("utf-8"))["items"]
+    return {k: bis.plausible_dps(v) for k, v in json.loads(GEAR.read_text("utf-8"))["items"].items()}
 
 
 def gear() -> dict[str, dict]:
@@ -42,7 +42,7 @@ def gear() -> dict[str, dict]:
     extra, flags = fdb_gear.extra(), fdb_gear._flags
     stamp = (len(extra), len(flags))
     if _merged[0] != stamp:  # rebuilt only when the ForeverDB half changed
-        merged = {**base_gear(), **extra}
+        merged = {**base_gear(), **{k: bis.plausible_dps(v) for k, v in extra.items()}}
         _merged = (stamp, {k: v for k, v in merged.items() if not flags.get(k)})
     return _merged[1]
 
