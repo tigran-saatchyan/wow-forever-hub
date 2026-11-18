@@ -64,3 +64,32 @@ async def quest(qid: int, _: CurrentUser):
 @router.get("/vendors")
 async def vendors_on_map(_: CurrentUser):
     return fdb_sources.vendors()
+
+
+@router.get("/news")
+async def news(_: CurrentUser):
+    """Blizzard's posts about Forever and ForeverDB's articles, newest first (kept a couple of hours)."""
+    posts = (await _ask("posts", {"limit": 15}, ttl=0.1)).get("data") or []
+    arts = (await _ask("articles", {"limit": 10}, ttl=0.1)).get("data") or []
+    return {
+        "posts": [{"title": p.get("title"), "author": p.get("author"), "role": p.get("authorTitle"), "date": p.get("date"),
+                   "source": p.get("source"), "url": p.get("url"), "page": p.get("page")} for p in posts],
+        "articles": [{"title": a.get("title"), "summary": a.get("summary"), "date": a.get("date"), "type": a.get("type"),
+                      "url": a.get("url")} for a in arts],
+    }
+
+
+CLASSES = {1: "warrior", 2: "paladin", 3: "hunter", 4: "rogue", 5: "priest", 7: "shaman", 8: "mage", 9: "warlock", 11: "druid"}
+
+
+@router.get("/changes/{class_id}")
+async def class_changes(class_id: int, _: CurrentUser):
+    """A class's buffs, nerfs and changes in each build, newest first."""
+    name = CLASSES.get(class_id)
+    if not name:
+        raise HTTPException(404, "no such class")
+    d = await _ask("buffs-nerfs", {"class": name, "limit": 40}, ttl=0.25)
+    return [{"build": x.get("build"), "date": x.get("date"), "name": x.get("name"), "about": x.get("about"),
+             "icon": x.get("icon"), "direction": x.get("direction"), "text": x.get("text"), "url": x.get("url"),
+             "changes": x.get("changes") or [], "type": x.get("type")}
+            for x in d.get("data") or [] if not x.get("dataOnly")]

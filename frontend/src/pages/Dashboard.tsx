@@ -4,6 +4,7 @@ import { useIndex, useLive } from "../lib/gameData";
 import { fmtDate, useI18n, type Key } from "../lib/i18n";
 import { computeState, launchMs, nextReset, type ServerState } from "../lib/status";
 import { ApiPanel, MyCharacters } from "./dashboard/ApiPanel";
+import { FdbNews } from "./dashboard/FdbNews";
 
 function useNow(ms = 30e3) {
   const [now, setNow] = useState(Date.now());
@@ -114,6 +115,9 @@ export function Dashboard() {
       </Panel>
 
       <div className="space-y-4">
+        <Panel title={t("fn_title")} delay={0.12}>
+          <FdbNews />
+        </Panel>
         <Panel title={t("maint_title")} delay={0.15}>
           {st.maintenance.length ? (
             st.maintenance.map((m) => (
