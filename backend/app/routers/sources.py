@@ -168,12 +168,33 @@ def with_fdb(out: dict, item_id: int) -> dict:
     recipe makes it (app/fdb_sources.py)."""
     from .. import fdb_sources
 
-    return {**out, "fdb": {"sold": fdb_sources.sold_by(item_id)[:8], "made": fdb_sources.made_by(item_id)[:4]}}
+    from .. import item_sources
+
+    lang = "ru" if (out.get("_lang") or "ru") == "ru" else "en"
+    return {**out, "fdb": {"sold": fdb_sources.sold_by(item_id)[:8], "made": fdb_sources.made_by(item_id)[:4]},
+            "own": {"quests": item_sources.quests(item_id, lang), "drops": item_sources.drops(item_id, lang)}}
 
 
 @router.get("/item/{item_id}")
 async def item_sources(item_id: int, _: CurrentUser, session: Session, lang: str = "ru"):
-    return with_fdb(await _item_sources(item_id, session, lang), item_id)
+    lang = "ru" if lang == "ru" else "en"
+    if known_here(item_id):  # the hub's own references know it: Everloot (often down) is not asked at all
+        try:
+            info = await get_item(session, item_id, lang)
+        except BnetError:
+            info = None
+        base = {"item": info, "sold": [], "drops": [], "quests": [], "wiki": [], "errors": [], "dataAsOf": None,
+                "everloot": f"https://everloot.app/database/items/{item_id}", "at": utcnow().isoformat()}
+        return with_fdb({**base, "_lang": lang}, item_id)
+    return with_fdb({**await _item_sources(item_id, session, lang), "_lang": lang}, item_id)
+
+
+def known_here(item_id: int) -> bool:
+    """Whether the hub's own references (quests, drops, ForeverDB's vendors and recipes) say where the item comes from."""
+    from .. import fdb_sources, item_sources
+
+    return bool(item_sources.quests(item_id, "en") or item_sources.drops(item_id, "en")
+                or fdb_sources.sold_by(item_id) or fdb_sources.made_by(item_id))
 
 
 async def _item_sources(item_id: int, session: AsyncSession, lang: str) -> dict:
@@ -265,7 +286,8 @@ async def prefetcher(lang: str = "ru") -> None:
     from . import bis as bis_routes
 
     while True:
-        ids = list(dict.fromkeys(await bis_routes.upcoming_items() + await _recipe_items()))
+        # Everloot only for what the hub's own references don't know (it is the last resort, and often down)
+        ids = [i for i in dict.fromkeys(await bis_routes.upcoming_items() + await _recipe_items()) if not known_here(i)]
         if not ids:
             await asyncio.sleep(300)  # the recipe reference is not built yet
             continue
@@ -294,13 +316,27 @@ async def prefetch_state(_: CurrentUser, session: Session):
     return row.value if row else None
 
 
-def brief(d: dict | None, item_id: int | None = None) -> dict | None:
-    """One line of where an item comes from, for the BiS comparison: the quest (and whether it is a chain), the
-    creature that drops it most often (where, how often, how many other kinds of creature drop it too), or a
-    vendor, or a recipe; None when nothing is known."""
-    from .. import fdb_sources
+def brief(d: dict | None, item_id: int | None = None, lang: str = "ru") -> dict | None:
+    """One line of where an item comes from, for the BiS comparison. The hub's own references first — a quest
+    (Blizzard's data, "chain" when it has quests around it), then a drop (a boss or rare in its dungeon or zone, or a
+    world drop with its likeliest creature and how many kinds drop it; the original game's data) —, then ForeverDB's
+    vendors and recipes, and Everloot's stored answer only when none of these knows the item."""
+    from .. import fdb_sources, item_sources
 
-    d = d or {}
+    if item_id:
+        own = item_sources.brief(item_id, lang)
+        if own:
+            return own
+        fdb_sold = fdb_sources.sold_by(item_id)
+        if fdb_sold:  # ForeverDB's vendors: seen in Forever first
+            v = fdb_sold[0]
+            return {"kind": "vendor", "name": v.get("name") or f"NPC #{v['npc']}", "where": v.get("zone"),
+                    "copper": v.get("price"), "more": len(fdb_sold) - 1}
+        made = fdb_sources.made_by(item_id)
+        if made:
+            m = made[0]
+            return {"kind": "craft", "name": m["recipe"], "where": m["profession"], "more": len(made) - 1}
+    d = d or {}  # Everloot, the last resort
     if d.get("quests"):
         q = d["quests"][0]
         return {"kind": "quest", "name": q.get("title") or f"#{q['quest']}", "chain": bool(q.get("chain")),
@@ -308,22 +344,13 @@ def brief(d: dict | None, item_id: int | None = None) -> dict | None:
     if d.get("drops"):
         top = max(d["drops"], key=lambda x: x.get("rate") or 0)
         n = d.get("dropCount") or len(d["drops"])
-        world = n >= 8 and (top.get("rate") or 0) < 0.01  # many kinds of creature, none often: a world drop
+        world = n >= 8 and (top.get("rate") or 0) < 0.01
         return {"kind": "world" if world else "drop", "name": top.get("name") or f"NPC #{top['npc']}",
                 "where": top.get("where"), "rate": top.get("rate"), "more": n - 1}
-    fdb_sold = fdb_sources.sold_by(item_id) if item_id else []
-    if fdb_sold:  # ForeverDB's vendors: where they stand, and seen in Forever first
-        v = fdb_sold[0]
-        return {"kind": "vendor", "name": v.get("name") or f"NPC #{v['npc']}", "where": v.get("zone"),
-                "copper": v.get("price"), "more": len(fdb_sold) - 1}
     if d.get("sold"):
         v = d["sold"][0]
         return {"kind": "vendor", "name": v.get("name") or f"NPC #{v['npc']}", "copper": v.get("copper"),
                 "more": len(d["sold"]) - 1}
-    made = fdb_sources.made_by(item_id) if item_id else []
-    if made:
-        m = made[0]
-        return {"kind": "craft", "name": m["recipe"], "where": m["profession"], "more": len(made) - 1}
     loc = d.get("local") or {}
     if loc.get("crafted"):
         c = loc["crafted"][0]
@@ -340,7 +367,7 @@ async def briefs(session: AsyncSession, ids: list[int], lang: str) -> dict[int, 
     stored = {int(r.key.split(":")[1]): (r.value or {}).get("data") for r in rows}
     out = {}
     for i in ids:  # ForeverDB's index answers even for items Everloot was never asked about
-        b = brief(stored.get(i), i)
+        b = brief(stored.get(i), i, lang)
         if b:
             out[i] = b
     return out

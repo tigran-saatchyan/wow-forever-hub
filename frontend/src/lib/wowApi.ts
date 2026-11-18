@@ -195,6 +195,9 @@ export interface ItemSources {
   fdb?: { sold: { npc: number; name: string | null; title: string | null; side: string | null; zone: string | null; x: number | null; y: number | null;
     price: number | null; stack: number | null; limited: boolean | null; seen: boolean; rep: string | null }[];
     made: { profession: string; recipe: string; skill: number | null; ways: string[] }[] };
+  /** the hub's own references: quests that reward it (Blizzard's data) and creatures that drop it (the original game's data) */
+  own?: { quests: { id: number; name: string; area: string | null; chain: boolean }[];
+    drops: { top: { id: number; name: string; rank: string | null; level: number[] | null; instance: string | null; zone: string | null; x: number | null; y: number | null; chance: number }[]; count: number; world: boolean } | null };
   /** what the hub knows itself, when Everloot did not answer (in full or in part) */
   local?: { crafted: { profession: string; recipe: string; skill: number | null }[]; bind: "pickup" | "equip" | "use" | "quest" | null;
     auction: { min: number; qty: number; at?: string } | null };

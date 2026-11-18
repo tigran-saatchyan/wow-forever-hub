@@ -20,7 +20,7 @@ export interface BisItem {
   src?: Src | null;
 }
 /** Where it comes from, in one line (app/routers/sources.py brief). */
-export interface Src { kind: "quest" | "drop" | "world" | "vendor" | "craft"; name: string; where?: string | null; rate?: number | null; chain?: boolean; copper?: number | null; more: number }
+export interface Src { kind: "quest" | "drop" | "world" | "vendor" | "craft"; name: string; where?: string | null; rate?: number | null; chain?: boolean; copper?: number | null; more: number; classic?: boolean }
 
 export function SrcLine({ s }: { s?: Src | null }) {
   const { t } = useI18n();
@@ -29,10 +29,10 @@ export function SrcLine({ s }: { s?: Src | null }) {
   const more = s.more > 0 ? <span className="bis-src-more"> +{s.more}</span> : null;
   const txt = s.kind === "quest" ? t(s.chain ? "bis_src_chain" : "bis_src_quest", { n: s.name })
     : s.kind === "drop" ? `${s.name}${s.where ? ` · ${s.where}` : ""}${pct}`
-    : s.kind === "world" ? t("bis_src_world", { n: s.name }) + pct
+    : s.kind === "world" ? t("bis_src_world", { n: s.name }) + (s.where ? ` · ${s.where}` : "") + pct
     : s.kind === "vendor" ? t("bis_src_vendor", { n: s.name })
     : t("bis_src_craft", { p: s.where ?? "", n: s.name });
-  return <div className={`bis-src ${s.kind}`}>{txt}{more}</div>;
+  return <div className={`bis-src ${s.kind}`} title={s.classic ? t("so_classic_note") : undefined}>{txt}{more}</div>;
 }
 export interface BisSlot { options: BisItem[]; pick: number; worn: BisItem | null; wornId: number | null; wornRank: number | null; ok: boolean }
 export interface BisData {

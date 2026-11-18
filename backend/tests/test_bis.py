@@ -76,12 +76,12 @@ def test_foreverdb_item_converted():
 def test_foreverdb_sources_brief():
     from app import fdb_sources
     from app.routers import sources
-    fdb_sources._index = {"sold": {"777": [{"npc": 1, "name": "Corina Steele", "zone": "Elwynn Forest", "price": 536, "seen": True}]},
-                          "made": {"888": [{"profession": "Tailoring", "recipe": "Bolt", "skill": 1, "ways": ["auto"]}]}}
+    fdb_sources._index = {"sold": {"99999997": [{"npc": 1, "name": "Corina Steele", "zone": "Elwynn Forest", "price": 536, "seen": True}]},
+                          "made": {"99999998": [{"profession": "Tailoring", "recipe": "Bolt", "skill": 1, "ways": ["auto"]}]}}
     try:
-        assert sources.brief(None, 777) == {"kind": "vendor", "name": "Corina Steele", "where": "Elwynn Forest", "copper": 536, "more": 0}
-        assert sources.brief({}, 888)["kind"] == "craft"
-        assert sources.brief(None, 999) is None
+        assert sources.brief(None, 99999997) == {"kind": "vendor", "name": "Corina Steele", "where": "Elwynn Forest", "copper": 536, "more": 0}
+        assert sources.brief({}, 99999998)["kind"] == "craft"
+        assert sources.brief(None, 99999999) is None
     finally:
         fdb_sources._index = {"sold": {}, "made": {}}
 
@@ -101,3 +101,11 @@ def test_worn_two_hander_known_from_equipment():
     x = {"id": 1, "name": "Staff", "quality": "RARE", "ilvl": 26, "statv": {"INTELLECT": 8}, "dps": 12.0, "inv": "TWOHWEAPON"}
     assert _worn(x, w, "MAIN_HAND")["two"] is True
     assert _worn({**x, "inv": "WEAPON"}, w, "MAIN_HAND")["two"] is False
+
+
+def test_own_sources_classic_drop():
+    from app import item_sources
+    d = item_sources.drops(3456, "ru")  # Dog Whistle: Houndmaster Loksey, Scarlet Monastery, 30%
+    assert d and d["top"][0]["name"] == "Псарь Локси" and d["top"][0]["instance"] == "Монастырь Алого ордена"
+    b = item_sources.brief(3456, "en")
+    assert b["kind"] == "drop" and b["where"] == "Scarlet Monastery" and abs(b["rate"] - 0.3) < 1e-6

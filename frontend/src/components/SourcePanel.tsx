@@ -44,7 +44,7 @@ function Body({ id, fallbackName, onClose }: { id: number; fallbackName?: string
   const npc = (n: { npc: number; name: string | null }) => (
     <a className="hover:text-gold hover:underline" href={wh(lang, "npc", n.npc)} target="_blank" rel="noopener noreferrer">{n.name || `NPC #${n.npc}`}</a>
   );
-  const empty = d && !d.sold.length && !d.drops.length && !d.quests.length && !d.fdb?.sold.length && !d.fdb?.made.length;
+  const empty = d && !d.sold.length && !d.drops.length && !d.quests.length && !d.fdb?.sold.length && !d.fdb?.made.length && !d.own?.quests.length && !d.own?.drops;
   return (
     <>
       <header className="flex items-center gap-3 border-b border-edge/60 p-4">
@@ -60,6 +60,40 @@ function Body({ id, fallbackName, onClose }: { id: number; fallbackName?: string
         {q.isError && <p className="text-bad">{String(q.error)}</p>}
         {d && (
           <>
+            {d.own && d.own.quests.length > 0 && (
+              <section>
+                <h3 className="panel-title mb-2">{t("so_quests")}</h3>
+                <ul className="space-y-1">
+                  {d.own.quests.map((q) => (
+                    <li key={q.id}>
+                      <a className="hover:text-gold hover:underline" href={wh(lang, "quest", q.id)} target="_blank" rel="noopener noreferrer">{q.name}</a>
+                      {q.chain && <span className="ml-2 text-xs text-[#ffd100]">{t("so_chain")}</span>}
+                      {q.area && <span className="ml-2 text-xs text-muted">{q.area}</span>}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+            {d.own?.drops && d.own.drops.top.length > 0 && (
+              <section>
+                <h3 className="panel-title mb-1">{d.own.drops.world ? t("so_world") : t("so_drops")}</h3>
+                <p className="mb-2 text-xs text-muted">{t("so_classic_note")}{d.own.drops.count > d.own.drops.top.length ? ` · ${t("so_kinds", { n: d.own.drops.count })}` : ""}</p>
+                <table className="w-full">
+                  <tbody>
+                    {d.own.drops.top.map((x) => (
+                      <tr key={x.id} className="border-t border-edge/40">
+                        <td className="py-1.5 pr-2">
+                          {npc({ npc: x.id, name: x.name })}
+                          {x.rank && <span className="ml-1.5 text-[10px] uppercase text-[#ff9a3c]">{t(`so_rank_${x.rank}` as Key)}</span>}
+                          <div className="text-[11px] text-muted">{x.instance ?? x.zone ?? ""}{x.x != null && !x.instance ? ` ${x.x.toFixed(0)}, ${x.y?.toFixed(0)}` : ""}{x.level ? ` · ${x.level[0] === x.level[1] ? x.level[0] : `${x.level[0]}–${x.level[1]}`} ${t("so_lvl")}` : ""}</div>
+                        </td>
+                        <td className="py-1.5 text-right font-mono">{x.chance >= 10 ? x.chance.toFixed(0) : x.chance.toFixed(x.chance < 1 ? 2 : 1)}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </section>
+            )}
             {d.fdb && d.fdb.sold.length > 0 && (
               <section>
                 <h3 className="panel-title mb-2">{t("so_sold")} <span className="text-[10px] font-normal normal-case tracking-normal text-muted">ForeverDB</span></h3>
@@ -107,7 +141,7 @@ function Body({ id, fallbackName, onClose }: { id: number; fallbackName?: string
                 </ul>
               </section>
             )}
-            {d.drops.length > 0 && (
+            {d.drops.length > 0 && !d.own?.drops && (
               <section>
                 <h3 className="panel-title mb-2">{t("so_drops")}</h3>
                 <table className="w-full">
@@ -123,7 +157,7 @@ function Body({ id, fallbackName, onClose }: { id: number; fallbackName?: string
                 </table>
               </section>
             )}
-            {d.quests.length > 0 && (
+            {d.quests.length > 0 && !d.own?.quests.length && (
               <section>
                 <h3 className="panel-title mb-2">{t("so_quests")}</h3>
                 <ul className="space-y-1">
@@ -136,7 +170,7 @@ function Body({ id, fallbackName, onClose }: { id: number; fallbackName?: string
                 </ul>
               </section>
             )}
-            {d.errors.length > 0 && <p className="rounded-md border border-[#ff9a3c]/40 bg-[#ff9a3c]/10 p-2.5 text-[#ffb070]">{t("so_down")}</p>}
+            {d.errors.length > 0 && empty && <p className="rounded-md border border-[#ff9a3c]/40 bg-[#ff9a3c]/10 p-2.5 text-[#ffb070]">{t("so_down")}</p>}
             {d.local && (d.local.crafted.length > 0 || d.local.auction || d.local.bind) && (
               <section>
                 <h3 className="panel-title mb-2">{t("so_local")}</h3>
