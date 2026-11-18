@@ -60,23 +60,30 @@ export function BisBar({ on, setOn, data, spec, setSpec, tabs }: {
   const icons = useIcons();
   return (
     <div className="bis-bar">
+      {/* the switch stays in the middle: the count to its left, the specializations open to its right */}
+      <div className="bis-bar-left">
+        {data?.status === "ready" && (
+          <span className={`bis-count ${data.complete ? "full" : ""}`} title={t("bis_count_h")}>BiS: {data.have}/{data.total}</span>
+        )}
+      </div>
       <div className="bis-switch" role="tablist">
         <button role="tab" aria-selected={!on} className={!on ? "on" : ""} onClick={() => setOn(false)}>{t("bis_worn")}</button>
         <button role="tab" aria-selected={on} className={on ? "on" : ""} onClick={() => setOn(true)}>BiS</button>
       </div>
-      {on && data?.specs && (
-        <div className="bis-specs">
-          {data.specs.map((k, i) => (
-            <button key={k} className={`bis-spec ${k === spec ? "on" : ""}`} onClick={() => setSpec(k)} title={tabs[i]?.name ?? k}>
-              {tabs[i] && <span className="bis-spec-ico" style={iconStyle(icons.data, tabs[i].icon)} />}
-              <span>{tabs[i]?.name ?? k}</span>
-            </button>
-          ))}
-        </div>
-      )}
-      {on && data?.status === "ready" && (
-        <span className={`bis-count ${data.complete ? "full" : ""}`}>BiS: {data.have}/{data.total}</span>
-      )}
+      <div className="bis-bar-right">
+        <AnimatePresence>
+          {on && data?.specs && (
+            <motion.div className="bis-specs" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }}>
+              {data.specs.map((k, i) => (
+                <button key={k} className={`bis-spec ${k === spec ? "on" : ""}`} onClick={() => setSpec(k)} title={tabs[i]?.name ?? k}>
+                  {tabs[i] && <span className="bis-spec-ico" style={iconStyle(icons.data, tabs[i].icon)} />}
+                  <span>{tabs[i]?.name ?? k}</span>
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
