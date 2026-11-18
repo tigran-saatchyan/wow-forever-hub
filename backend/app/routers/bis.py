@@ -97,12 +97,9 @@ async def get_bis(cid: int, user: CurrentUser, session: Session, spec: str | Non
             two_hand = options[pick]["two"]
         wid = worn.get(slot)
         mine = (_item(wid, lang, w, slot) or _worn(eq[slot], w, slot)) if wid else None
-        # what is worn, placed among the three: its own place when it is one of them, else the place its score
-        # earns (better than all three: the first); worse than the third: no place (0 = the best)
+        # what is worn is BiS only when it is one of the three items of the list for this level, and then its place
+        # in it (0 = the first); a new level brings a new list, and the item is checked against that one
         rank = next((n for n, o in enumerate(options) if o["id"] == wid), None) if wid else None
-        if rank is None and mine and options:
-            above = sum(1 for o in options if o["score"] > mine["score"])
-            rank = above if above < len(options) else None
         slots[slot] = {"options": options, "pick": pick, "worn": mine, "wornId": wid, "wornRank": rank}
     for slot, x in slots.items():
         if slot == "OFF_HAND" and two_hand:
@@ -111,7 +108,6 @@ async def get_bis(cid: int, user: CurrentUser, session: Session, spec: str | Non
             x["ok"] = True
             continue
         total += 1
-        # as good as the pick: the same item, or one that scores at least as much
         # worn is BiS when it takes one of the three places
         x["ok"] = x["wornRank"] is not None
         have += x["ok"]
