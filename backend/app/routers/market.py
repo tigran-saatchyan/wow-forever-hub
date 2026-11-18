@@ -333,12 +333,31 @@ async def _list_card(session: AsyncSession, cfg: dict, x: AhList, lang: str) -> 
     return {"id": x.id, "name": x.name, "items": [await _item_card(session, cfg, w, lang) for w in items]}
 
 
+async def _pins(session: AsyncSession, user) -> list[int]:
+    return list((await _setting(session, f"ah_pins:{user.id}")).get("ids") or [])
+
+
 @router.get("/lists")
 async def lists(user: CurrentUser, session: Session, lang: str = "ru"):
     await _first_lists(session, user)
     cfg = await _setting(session, "market")
+    pins = await _pins(session, user)
     xs = (await session.execute(select(AhList).where(AhList.user_id == user.id).order_by(AhList.created, AhList.id))).scalars().all()
-    return [await _list_card(session, cfg, x, lang) for x in xs]
+    return [{**await _list_card(session, cfg, x, lang), "pinned": x.id in pins} for x in xs]
+
+
+class PinIn(BaseModel):
+    pinned: bool
+
+
+@router.put("/lists/{lid}/pin")
+async def list_pin(lid: int, body: PinIn, user: CurrentUser, session: Session):
+    """A pinned list stands at the top of the auction page, above everything else."""
+    x = await _own_list(session, user, lid)
+    pins = [i for i in await _pins(session, user) if i != x.id] + ([x.id] if body.pinned else [])
+    await _put_setting(session, f"ah_pins:{user.id}", {"ids": pins})
+    await session.commit()
+    return {"id": x.id, "pinned": body.pinned}
 
 
 @router.post("/lists")

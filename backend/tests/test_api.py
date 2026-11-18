@@ -114,6 +114,8 @@ def test_market_lists(client):
     it = client.post(f"/api/market/lists/{herbs['id']}/items", json={"item_id": 2447, "below": 500}).json()
     assert it["itemId"] == 2447 and it["below"] == 500
     assert client.patch(f"/api/market/lists/{herbs['id']}", json={"name": "Травы и поты"}).json()["name"] == "Травы и поты"
+    client.put(f"/api/market/lists/{herbs['id']}/pin", json={"pinned": True})
+    assert [x["pinned"] for x in client.get("/api/market/lists").json()] == [False, True]
     ls = client.get("/api/market/lists").json()
     assert [x["name"] for x in ls][1] == "Травы и поты" and ls[1]["items"][0]["itemId"] == 2447
     assert client.delete(f"/api/market/lists/{herbs['id']}/items/{it['id']}").status_code == 204

@@ -29,35 +29,18 @@ export function Market() {
   const admin = me.data?.role === "superadmin";
   const cfg = useQuery({ queryKey: ["market", lang], queryFn: () => wowApi.market(lang) });
   const lists = useQuery({ queryKey: ["ah-lists", lang], queryFn: () => wowApi.lists(lang), refetchInterval: 5 * 60e3 });
+  const pinned = (lists.data || []).filter((x) => x.pinned);
+  const rest = (lists.data || []).filter((x) => !x.pinned);
   const [cur, setCur] = useState<number | null>(() => store.get<number | null>("ahList", null));
-  const list: AhList | undefined = lists.data?.find((x) => x.id === cur) ?? lists.data?.[0];
+  const list: AhList | undefined = rest.find((x) => x.id === cur) ?? rest[0];
   const pickList = (id: number) => (setCur(id), store.set("ahList", id));
-  const [q, setQ] = useState("");
-  const [below, setBelow] = useState("");
-  const [msg, setMsg] = useState<string | null>(null);
-
-  const search = useQuery({
-    queryKey: ["item-search", q, lang],
-    queryFn: () => wowApi.searchItems(q.trim(), lang),
-    enabled: q.trim().length >= 2,
-    staleTime: 60e3,
-    retry: false,
-  });
+  const target = pinned[0] ?? list;  // where a BiS item's ☆ puts it
 
   const inv = () => (qc.invalidateQueries({ queryKey: ["market"] }), qc.invalidateQueries({ queryKey: ["ah-lists"] }),
     qc.invalidateQueries({ queryKey: ["bis-sale"] }));
   const save = useMutation({ mutationFn: wowApi.setMarket, onSuccess: () => wowApi.refreshMarket().then(inv) });
   const poll = useMutation({ mutationFn: wowApi.refreshMarket, onSuccess: inv });
-  const add = useMutation({
-    mutationFn: (id: number) => wowApi.addToList(list!.id, { item_id: id, below: parseMoney(below) }, lang),
-    onSuccess: () => (setQ(""), setBelow(""), inv()),
-    onError: (e) => setMsg(String(e)),
-  });
-  const del = useMutation({ mutationFn: (iid: number) => wowApi.removeFromList(list!.id, iid), onSuccess: inv });
   const newList = useMutation({ mutationFn: wowApi.addList, onSuccess: (x) => (pickList(x.id), inv()) });
-  const rename = useMutation({ mutationFn: (name: string) => wowApi.renameList(list!.id, name), onSuccess: inv });
-  const ask = (q: string, v = "") => prompt(q, v)?.trim().slice(0, 60) || null;
-  const drop = useMutation({ mutationFn: () => wowApi.deleteList(list!.id), onSuccess: inv });
 
   const st = cfg.data?.state;
   const sel = cfg.data?.selected;
@@ -92,59 +75,146 @@ export function Market() {
         </div>
       )}
 
-      <BisOnSale onAdd={(id) => list && wowApi.addToList(list.id, { item_id: id, below: null }, lang).then(inv)} listName={list?.name} />
+      {/* pinned lists stand above everything */}
+      {pinned.map((l) => (
+        <Fold key={l.id} id={`list:${l.id}`} title={<>📌 {l.name} <span className="text-sm text-muted">{l.items.length}</span></>}>
+          <ListBlock list={l} canDelete={(lists.data?.length ?? 0) > 1} onChanged={inv} />
+        </Fold>
+      ))}
 
-      <div className="flex flex-wrap items-center gap-2">
-        <h2 className="font-display text-xl text-gold">{t("mk_lists")}</h2>
-        {(lists.data || []).map((x) => (
-          <button key={x.id} className={x.id === list?.id ? "btn-primary" : "btn"} onClick={() => pickList(x.id)}>
-            {x.name} <span className="text-xs opacity-70">{x.items.length}</span>
-          </button>
-        ))}
-        <button className="btn" onClick={() => { const n = ask(t("mk_list_new_q")); if (n) newList.mutate(n); }} title={t("mk_list_new")}>＋ {t("mk_list_new")}</button>
-        {list && <button className="btn px-2" onClick={() => { const n = ask(t("mk_list_rename_q"), list.name); if (n) rename.mutate(n); }} title={t("mk_list_rename")} aria-label={t("mk_list_rename")}>✎</button>}
-        {list && (lists.data?.length ?? 0) > 1 && (
-          <button className="btn px-2" title={t("mk_list_delete")} aria-label={t("mk_list_delete")}
-            onClick={() => confirm(t("mk_list_delete_q", { n: list.name })) && drop.mutate()}>🗑</button>
-        )}
-      </div>
-      <div className="panel space-y-2 p-3">
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <input className="input w-64" placeholder={t("mk_search")} value={q} onChange={(e) => setQ(e.target.value)} />
-          <input className="input w-52" placeholder={t("mk_below") + ": 1g 20s"} value={below} onChange={(e) => setBelow(e.target.value)} />
-          {msg && <span className="text-bad" onClick={() => setMsg(null)}>{msg}</span>}
+      <BisOnSale onAdd={(id) => target && wowApi.addToList(target.id, { item_id: id, below: null }, lang).then(inv)} listName={target?.name} />
+
+      <Fold id="lists" title={t("mk_lists")}>
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          {rest.map((x) => (
+            <button key={x.id} className={x.id === list?.id ? "btn-primary" : "btn"} onClick={() => pickList(x.id)}>
+              {x.name} <span className="text-xs opacity-70">{x.items.length}</span>
+            </button>
+          ))}
+          <button className="btn" onClick={() => { const n = ask(t("mk_list_new_q")); if (n) newList.mutate(n); }} title={t("mk_list_new")}>＋ {t("mk_list_new")}</button>
         </div>
-        {q.trim().length >= 2 && (
-          <ul className="flex flex-wrap gap-1.5">
-            {(search.data || []).map((r) => (
-              <li key={r.id}>
-                <ItemHover id={r.id}>
-                  <button className="btn px-2 py-1 text-xs" onClick={() => add.mutate(r.id)}>
-                    <span style={{ color: qColor(r.quality) }}>{r.name || `#${r.id}`}</span> · {t("mk_add")}
-                  </button>
-                </ItemHover>
-              </li>
-            ))}
-            {search.isError && <li className="text-sm text-bad">{String(search.error)}</li>}
-          </ul>
-        )}
-      </div>
+        {list ? <ListBlock list={list} canDelete={(lists.data?.length ?? 0) > 1} onChanged={inv} />
+          : <p className="text-sm text-muted">{lists.isLoading ? "…" : t("mk_lists_all_pinned")}</p>}
+      </Fold>
+    </div>
+  );
+}
 
-      {!list?.items.length ? <p className="text-muted">{lists.isLoading ? "…" : t("mk_empty")}</p> : (
-        <div className="panel overflow-x-auto">
+const ask = (q: string, v = "") => prompt(q, v)?.trim().slice(0, 60) || null;
+
+/** A block that folds; open or closed is remembered. `extra` sits in the header beside the title. */
+function Fold({ id, title, extra, children }: { id: string; title: React.ReactNode; extra?: React.ReactNode; children: React.ReactNode }) {
+  const [open, setOpen] = useState(() => store.get(`mkOpen:${id}`, true));
+  const toggle = () => { store.set(`mkOpen:${id}`, !open); setOpen(!open); };
+  return (
+    <section className="panel space-y-3 p-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <button type="button" className="flex items-center gap-2" aria-expanded={open} onClick={toggle}>
+          <span className={`text-gold transition-transform ${open ? "" : "-rotate-90"}`} aria-hidden>▾</span>
+          <h2 className="font-display text-xl text-gold">{title}</h2>
+        </button>
+        {extra}
+      </div>
+      {open && children}
+    </section>
+  );
+}
+
+type Dir = 1 | -1;
+/** Sorting by any column: a click picks the column, a second click turns the order around. */
+function useSort<K extends string>(key: string, first: K) {
+  const [s, setS] = useState<{ k: K; d: Dir }>(() => store.get(`mkSort:${key}`, { k: first, d: 1 as Dir }));
+  const by = (k: K) => {
+    const n = { k, d: (s.k === k ? -s.d : k === "gain" ? -1 : 1) as Dir };  // the biggest upgrade first
+    setS(n);
+    store.set(`mkSort:${key}`, n);
+  };
+  return { s, by };
+}
+
+function Th({ k, s, by, children, right }: { k: string; s: { k: string; d: Dir }; by: (k: never) => void; children: React.ReactNode; right?: boolean }) {
+  return (
+    <th className={`p-2 font-normal ${right ? "text-right" : ""}`}>
+      <button className={`hover:text-gold ${s.k === k ? "text-gold" : ""}`} onClick={() => by(k as never)}>
+        {children}{s.k === k ? (s.d === 1 ? " ▲" : " ▼") : ""}
+      </button>
+    </th>
+  );
+}
+
+const cmp = (a: number | string | null | undefined, b: number | string | null | undefined) =>
+  a == null && b == null ? 0 : a == null ? 1 : b == null ? -1 : typeof a === "string" ? a.localeCompare(String(b)) : (a as number) - (b as number);
+
+/** One list: adding items (any: gear, potions, herbs), renaming, pinning, and its items sortable by any column. */
+function ListBlock({ list, canDelete, onChanged }: { list: AhList; canDelete: boolean; onChanged: () => void }) {
+  const { t, lang } = useI18n();
+  const [q, setQ] = useState("");
+  const [below, setBelow] = useState("");
+  const [msg, setMsg] = useState<string | null>(null);
+  const { s, by } = useSort<"name" | "min" | "median" | "qty">("list", "name");
+  const search = useQuery({
+    queryKey: ["item-search", q, lang], queryFn: () => wowApi.searchItems(q.trim(), lang),
+    enabled: q.trim().length >= 2, staleTime: 60e3, retry: false,
+  });
+  const add = useMutation({
+    mutationFn: (id: number) => wowApi.addToList(list.id, { item_id: id, below: parseMoney(below) }, lang),
+    onSuccess: () => (setQ(""), setBelow(""), onChanged()),
+    onError: (e) => setMsg(String(e)),
+  });
+  const del = useMutation({ mutationFn: (iid: number) => wowApi.removeFromList(list.id, iid), onSuccess: onChanged });
+  const rename = useMutation({ mutationFn: (name: string) => wowApi.renameList(list.id, name), onSuccess: onChanged });
+  const pin = useMutation({ mutationFn: () => wowApi.pinList(list.id, !list.pinned), onSuccess: onChanged });
+  const drop = useMutation({ mutationFn: () => wowApi.deleteList(list.id), onSuccess: onChanged });
+  const val = (w: AhList["items"][number]) => ({
+    name: w.item?.name ?? `#${w.itemId}`, min: w.latest?.min, median: w.latest?.median, qty: w.latest?.quantity,
+  })[s.k];
+  const items = [...list.items].sort((a, b) => cmp(val(a), val(b)) * s.d);
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <input className="input w-64" placeholder={t("mk_search")} value={q} onChange={(e) => setQ(e.target.value)} />
+        <input className="input w-52" placeholder={t("mk_below") + ": 1g 20s"} value={below} onChange={(e) => setBelow(e.target.value)} />
+        {msg && <span className="text-bad" onClick={() => setMsg(null)}>{msg}</span>}
+        <span className="ml-auto flex gap-1.5">
+          <button className={list.pinned ? "btn-primary px-2" : "btn px-2"} onClick={() => pin.mutate()}
+            title={t(list.pinned ? "mk_unpin" : "mk_pin")} aria-label={t(list.pinned ? "mk_unpin" : "mk_pin")}>📌</button>
+          <button className="btn px-2" onClick={() => { const n = ask(t("mk_list_rename_q"), list.name); if (n) rename.mutate(n); }}
+            title={t("mk_list_rename")} aria-label={t("mk_list_rename")}>✎</button>
+          {canDelete && (
+            <button className="btn px-2" title={t("mk_list_delete")} aria-label={t("mk_list_delete")}
+              onClick={() => confirm(t("mk_list_delete_q", { n: list.name })) && drop.mutate()}>🗑</button>
+          )}
+        </span>
+      </div>
+      {q.trim().length >= 2 && (
+        <ul className="flex flex-wrap gap-1.5">
+          {(search.data || []).map((r) => (
+            <li key={r.id}>
+              <ItemHover id={r.id}>
+                <button className="btn px-2 py-1 text-xs" onClick={() => add.mutate(r.id)}>
+                  <span style={{ color: qColor(r.quality) }}>{r.name || `#${r.id}`}</span> · {t("mk_add")}
+                </button>
+              </ItemHover>
+            </li>
+          ))}
+          {search.isError && <li className="text-sm text-bad">{String(search.error)}</li>}
+        </ul>
+      )}
+      {!items.length ? <p className="text-sm text-muted">{t("mk_empty")}</p> : (
+        <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
             <thead className="text-left text-xs text-muted">
               <tr>
-                <th className="p-2 font-normal" />
-                <th className="p-2 text-right font-normal">{t("mk_min")}</th>
-                <th className="p-2 text-right font-normal">{t("mk_median")}</th>
-                <th className="p-2 text-right font-normal">{t("mk_qty")}</th>
+                <Th k="name" s={s} by={by}>{t("mk_item")}</Th>
+                <Th k="min" s={s} by={by} right>{t("mk_min")}</Th>
+                <Th k="median" s={s} by={by} right>{t("mk_median")}</Th>
+                <Th k="qty" s={s} by={by} right>{t("mk_qty")}</Th>
                 <th className="p-2 font-normal">{t("mk_trend")}</th>
                 <th />
               </tr>
             </thead>
             <tbody>
-              {list.items.map((w) => {
+              {items.map((w) => {
                 const week = w.history.filter((p) => Date.now() - Date.parse(p.t) < 7 * 864e5).map((p) => p.min);
                 return (
                   <tr key={w.id} className={`border-t border-edge/40 ${w.alert ? "bg-good/10" : ""}`}>
@@ -212,12 +282,13 @@ function BisOnSale({ onAdd, listName }: { onAdd: (id: number) => void; listName?
   });
   const d = q.data;
   const label = (k: string, i: number) => trees.tabs[i]?.name ?? t(`bis_spec_${k}` as Key);
-  const rows = [...(d?.rows || [])].sort((a, b) => SLOT_ORDER.indexOf(a.slot) - SLOT_ORDER.indexOf(b.slot) || a.rank - b.rank);
+  const { s, by } = useSort<"slot" | "rank" | "name" | "gain" | "min" | "qty">("bis", "slot");
+  const bySlot = (a: Row, b: Row) => SLOT_ORDER.indexOf(a.slot) - SLOT_ORDER.indexOf(b.slot) || a.rank - b.rank;
+  const val = (r: Row) => ({ slot: SLOT_ORDER.indexOf(r.slot), rank: r.rank, name: r.name, gain: gainOf(r), min: r.latest.min, qty: r.latest.quantity })[s.k];
+  const rows = [...(d?.rows || [])].sort((a, b) => cmp(val(a), val(b)) * s.d || bySlot(a, b));
   if (!all.length) return null;
   return (
-    <section className="panel space-y-3 p-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <h2 className="font-display text-xl text-gold">{t("mk_bis")}</h2>
+    <Fold id="bis" title={t("mk_bis")} extra={<>
         <select className="input w-auto" value={cid ?? ""} onChange={(e) => (setSel(+e.target.value), store.set("ahBisChar", +e.target.value), setSpec(null))}>
           {all.map((x) => <option key={x.id} value={x.id}>{x.summary?.[lang]?.name ?? x.name} · {x.summary?.[lang]?.level ?? "?"}</option>)}
         </select>
@@ -225,7 +296,7 @@ function BisOnSale({ onAdd, listName }: { onAdd: (id: number) => void; listName?
         <button className="btn ml-auto" disabled={refresh.isPending} onClick={() => refresh.mutate()} title={t("mk_bis_refresh_h")}>
           {refresh.isPending ? "…" : t("mk_bis_refresh")}
         </button>
-      </div>
+      </>}>
       {d?.specs && (
         <div className="flex flex-wrap gap-1.5">
           {d.specs.map((k, i) => (
@@ -248,10 +319,16 @@ function BisOnSale({ onAdd, listName }: { onAdd: (id: number) => void; listName?
             <table className="w-full min-w-[600px] text-sm">
               <thead className="text-left text-xs text-muted">
                 <tr>
-                  <th className="p-2 font-normal">{t("mk_bis_slot")}</th>
-                  <th className="p-2 font-normal" />
-                  <th className="p-2 text-right font-normal">{t("mk_min")}</th>
-                  <th className="p-2 text-right font-normal">{t("mk_qty")}</th>
+                  <Th k="slot" s={s} by={by}>{t("mk_bis_slot")}</Th>
+                  <th className="p-2 font-normal">
+                    <span className="flex gap-3">
+                      <button className={`hover:text-gold ${s.k === "rank" ? "text-gold" : ""}`} onClick={() => by("rank")}>№{s.k === "rank" ? (s.d === 1 ? " ▲" : " ▼") : ""}</button>
+                      <button className={`hover:text-gold ${s.k === "name" ? "text-gold" : ""}`} onClick={() => by("name")}>{t("mk_item")}{s.k === "name" ? (s.d === 1 ? " ▲" : " ▼") : ""}</button>
+                    </span>
+                  </th>
+                  <Th k="gain" s={s} by={by} right>{t("mk_bis_gain")}</Th>
+                  <Th k="min" s={s} by={by} right>{t("mk_min")}</Th>
+                  <Th k="qty" s={s} by={by} right>{t("mk_qty")}</Th>
                   <th />
                 </tr>
               </thead>
@@ -262,6 +339,7 @@ function BisOnSale({ onAdd, listName }: { onAdd: (id: number) => void; listName?
                     <td className="p-2">
                       <BisRowItem r={r} onOpen={() => setOpen({ id: r.id, name: r.name })} />
                     </td>
+                    <td className="p-2 text-right font-mono"><Gain r={r} /></td>
                     <td className="p-2 text-right"><Money c={r.latest.min} /></td>
                     <td className="p-2 text-right font-mono">{r.latest.quantity}</td>
                     <td className="p-2 text-right">
@@ -278,8 +356,28 @@ function BisOnSale({ onAdd, listName }: { onAdd: (id: number) => void; listName?
         ))}
       {d?.status === "ready" && <p className="text-xs text-muted">{t("mk_bis_note", { n: d.checked ?? 0 })}</p>}
       <SourcePanel item={open} onClose={() => setOpen(null)} />
-    </section>
+    </Fold>
   );
+}
+
+type Row = NonNullable<BisSale["rows"]>[number];
+
+/** How much better the item is than what is worn in its slot, by the spec's weights: % of the worn item's score;
+ *  an empty slot gains everything (Infinity), the worn item itself nothing. */
+const gainOf = (r: Row): number | null => {
+  if (r.worn) return 0;
+  const w = r.wornItem?.score ?? 0;
+  if (!r.wornItem || w <= 0) return r.full.score > 0 ? Infinity : null;
+  return ((r.full.score - w) / w) * 100;
+};
+
+function Gain({ r }: { r: Row }) {
+  const { t } = useI18n();
+  const g = gainOf(r);
+  if (g == null) return <span className="text-muted">—</span>;
+  if (g === Infinity) return <span className="text-good" title={t("mk_bis_empty_slot")}>{t("mk_bis_new")}</span>;
+  const v = Math.round(g);
+  return <span className={v > 0 ? "text-good" : v < 0 ? "text-bad" : "text-muted"}>{v > 0 ? "+" : ""}{v}%</span>;
 }
 
 /** A BiS item of the block: hovering shows the throne room's comparison with what is worn in that slot. */

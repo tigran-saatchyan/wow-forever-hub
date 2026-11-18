@@ -70,7 +70,7 @@ export interface WatchCard {
   latest: { min: number; median: number; quantity: number; auctions: number; ts: string } | null;
   history: PricePoint[];
 }
-export interface AhList { id: number; name: string; items: WatchCard[] }
+export interface AhList { id: number; name: string; items: WatchCard[]; pinned?: boolean }
 export interface BisSale {
   status: string; level?: number; spec?: string; specs?: string[]; customSet?: boolean; checked?: number; configured?: boolean;
   rows?: { slot: string; rank: number; id: number; name: string; q: number; ilvl: number; req: number; worn: boolean; better: boolean;
@@ -131,6 +131,7 @@ export const wowApi = {
   lists: (lang: Lang) => req<AhList[]>(`/api/market/lists?lang=${lang}`),
   addList: (name: string) => req<AhList>("/api/market/lists", { method: "POST", body: JSON.stringify({ name }) }),
   renameList: (id: number, name: string) => req<AhList>(`/api/market/lists/${id}`, { method: "PATCH", body: JSON.stringify({ name }) }),
+  pinList: (id: number, pinned: boolean) => req<unknown>(`/api/market/lists/${id}/pin`, { method: "PUT", body: JSON.stringify({ pinned }) }),
   deleteList: (id: number) => req<void>(`/api/market/lists/${id}`, { method: "DELETE" }),
   addToList: (id: number, b: { item_id: number; below: number | null }, lang: Lang) =>
     req<WatchCard>(`/api/market/lists/${id}/items?lang=${lang}`, { method: "POST", body: JSON.stringify(b) }),
