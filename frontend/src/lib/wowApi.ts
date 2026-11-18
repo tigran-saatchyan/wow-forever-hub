@@ -30,7 +30,7 @@ export interface ApiStatus {
 export interface ProbeRow { name: string; path: string; namespace: string; status: number; ms: number; sample: string }
 
 export interface CharSummary {
-  name: string; surname?: string | null; level: number | null; classId: number | null; className: string; race: string; gender?: string;
+  name: string; surname?: string | null; level: number | null; classId: number | null; className: string; race: string; raceId?: number | null; gender?: string;
   faction?: string; guild: { name: string; href?: string } | null; ruleset: string | null; ilvl?: number;
   lastLogin?: number; xp?: number | null;
 }

@@ -141,6 +141,20 @@ function Gear({ x, slot, i, side, size }: { x?: EquipItem; slot: string; i: numb
   );
 }
 
+/**
+ * The hall's backdrops (tools/build_backdrops.py, all from the client): the race's home behind everything (the
+ * Undead keep the Ruins of Lordaeron), the class's order hall over it, the specialization's talent art behind
+ * the servant, the class colour in the light.
+ */
+function backdrop(race: number | null | undefined, cls: string | undefined, spec: string | undefined, color: string | undefined): React.CSSProperties {
+  const v: Record<string, string> = {};
+  if (race && race !== 5) v["--bg-race"] = `url("/throne/race/${race}.webp")`;
+  if (cls) v["--bg-class"] = `url("/throne/class/${cls.toLowerCase()}.webp")`;
+  if (spec) v["--bg-spec"] = `url("/throne/spec/${spec}.webp")`;
+  if (color) v["--cls"] = color;
+  return v as React.CSSProperties;
+}
+
 /** Slot icons a little smaller on short screens, so a whole column fits the hall. */
 function useGearSize() {
   const pick = () => (window.innerHeight < 820 ? 40 : window.innerHeight < 980 ? 46 : 54);
@@ -253,6 +267,8 @@ export function ThroneRoom() {
   // a complete set: the Dark Lady says so, once a day
   useEffect(() => { if (bis?.cheer) speak("sylvanas"); }, [bis?.cheer]); // eslint-disable-line react-hooks/exhaustive-deps
   const chooseSpec = (k: string) => { setSpecPick(k); void acts.spec(k); };
+  // the specialization the hall shows: the BiS one when it is on, else the tree with the most points
+  const specIndex = bis ? bis.specs.indexOf(bis.spec) : (trees.main ?? 0);
   const slotOf = (sl: string, i: number, side: "left" | "right" | "none") =>
     bisOn && bis && !["SHIRT", "TABARD"].includes(sl)
       ? <BisGear key={sl} slot={sl} s={bis.slots[sl]} i={i} side={side} size={gi} empty={sl === "OFF_HAND" && bis.twoHand}
@@ -261,9 +277,12 @@ export function ThroneRoom() {
 
   return (
     <div className="space-y-5">
-      <section className={`tr-stage ${bisOn ? "bis-on" : ""} ${bisOn && bis?.complete ? "bis-full" : ""}`} onMouseMove={move} onMouseLeave={() => (mx.set(0), my.set(0))}>
+      <section className={`tr-stage ${bisOn ? "bis-on" : ""} ${bisOn && bis?.complete ? "bis-full" : ""}`} onMouseMove={move}
+        style={backdrop(s?.raceId, k?.token, trees.tabs[specIndex]?.background, k?.color)} onMouseLeave={() => (mx.set(0), my.set(0))}>
         {/* the hall, from the far wall forward */}
         <Layer mx={mx} my={my} depth={8} className="tr-bg" />
+        <Layer mx={mx} my={my} depth={8} className="tr-bisbg" />
+        <Layer mx={mx} my={my} depth={10} className="tr-classbg" />
         <Layer mx={mx} my={my} depth={12} className="tr-clouds"><i /><i /></Layer>
         <div className="tr-shafts" aria-hidden><i /><i /><i /></div>
         <Layer mx={mx} my={my} depth={16} className="tr-throne-glow" />
@@ -284,6 +303,7 @@ export function ThroneRoom() {
         {/* the dais and the servant stay put: only the hall behind them drifts with the mouse */}
         {/* the scene: the dais and the servant fill what the name plate below leaves */}
         <div className="tr-scene">
+        <div className="tr-specbg" aria-hidden />
         <div className="tr-dais" aria-hidden>
           <div className="tr-sigil"><img src="/undercity/crest.webp" alt="" draggable={false} /></div>
           <div className="tr-pillar" />

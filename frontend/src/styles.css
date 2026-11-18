@@ -1004,8 +1004,9 @@ button.order-line:hover { @apply text-gold; }
 .tr-scene .tr-gear-col, .tr-scene .tr-gear-row { pointer-events: auto; }
 .tr-bg {
   inset: -30px;
-  background: url("/undercity/lordaeron.webp") center 30% / cover no-repeat;
+  background: var(--bg-race, url("/undercity/lordaeron.webp")) center 30% / cover no-repeat;
   filter: brightness(0.38) saturate(0.7) hue-rotate(-10deg) blur(1.5px);
+  transition: opacity 1.2s ease;
 }
 .tr-bg::after {
   content: ""; position: absolute; inset: 0;
@@ -1511,3 +1512,34 @@ button.order-line:hover { @apply text-gold; }
 .bis-cmp-diff { margin-top: 8px; padding-top: 6px; border-top: 1px solid rgb(var(--gold) / 0.2); font-size: 12px; }
 .bis-cmp-total { margin-top: 4px; font: 600 13px var(--font-display, inherit); color: #e4c873; }
 @media (max-width: 900px) { .bis-compare { width: 300px; } .bis-cmp-cols { grid-template-columns: 1fr; } }
+
+/* the hall's backdrops: race (.tr-bg), class order hall, specialization art; BiS swaps the race for Naxxramas */
+.tr-classbg { inset: -30px; z-index: 0; background: var(--bg-class) center 40% / cover no-repeat; opacity: 0.42;
+  mix-blend-mode: screen; filter: saturate(1) brightness(0.9) blur(0.5px);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 45%, transparent 85%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 45%, transparent 85%); }
+.tr-specbg { position: absolute; left: 50%; top: 2%; width: min(46%, 640px); height: 82%; transform: translateX(-50%); z-index: 0; pointer-events: none;
+  background: var(--bg-spec) center / cover no-repeat; opacity: 0.6; mix-blend-mode: screen; filter: saturate(1.3) brightness(1.15);
+  -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 35%, transparent 75%);
+  mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 35%, transparent 75%); transition: opacity 1s, filter 1s; }
+.tr-bisbg { inset: -30px; background: url("/throne/bis.webp") center 40% / cover no-repeat; opacity: 0;
+  filter: brightness(0.62) saturate(1) blur(1px); transition: opacity 1.2s ease; }
+.tr-stage.bis-on .tr-bisbg { opacity: 1; }
+.tr-stage.bis-on .tr-bg { opacity: 0; }
+.tr-stage.bis-on .tr-classbg { opacity: 0.3; filter: saturate(0.5) hue-rotate(50deg) brightness(0.9); }
+.tr-stage.bis-on .tr-specbg { opacity: 0.7; filter: saturate(0.8) hue-rotate(40deg) brightness(1.25); }
+.tr-stage.bis-on .tr-mist i { filter: hue-rotate(60deg) saturate(1.6); opacity: 0.9; }
+.tr-stage.bis-on::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background: radial-gradient(ellipse 70% 60% at 50% 60%, rgb(43 255 106 / 0.08), transparent 70%),
+    linear-gradient(0deg, rgb(20 60 30 / 0.35), transparent 40%); }
+.tr-throne-glow { background:
+    radial-gradient(ellipse 36% 46% at 50% 52%, rgb(116 214 84 / 0.22), transparent 70%),
+    radial-gradient(ellipse 22% 30% at 50% 40%, color-mix(in srgb, var(--cls, #a86ce8) 30%, transparent), transparent 70%); }
+/* a complete BiS set: the sigil and the light under the servant burn brighter and breathe */
+.tr-stage.bis-full .tr-pillar { background: linear-gradient(0deg, rgb(140 255 120 / 0.34), rgb(140 255 120 / 0.08) 55%, transparent);
+  animation: bis-breathe 4s ease-in-out infinite; }
+.tr-stage.bis-full .tr-sigil { filter: drop-shadow(0 0 40px rgb(116 255 84 / 1)) brightness(1.4); animation: bis-breathe 4s ease-in-out infinite; }
+.tr-stage.bis-full .bis-icon { box-shadow: 0 0 0 1px #000, 0 0 0 2px #7dff9a, 0 0 22px 0 #3dff7a; }
+@keyframes bis-breathe { 0%, 100% { opacity: 0.85; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .tr-stage.bis-full .tr-pillar, .tr-stage.bis-full .tr-sigil { animation: none; } }
+.tr-stage .tr-gear-name, .tr-stage .tr-gear-sub { text-shadow: 0 0 4px #000, 0 1px 3px #000, 0 0 10px #000; }
