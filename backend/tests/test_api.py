@@ -152,6 +152,7 @@ def test_market_bis_on_sale(client):
     asyncio.run(put_lot())
     rows = client.get(f"/api/market/bis/{cid}?spec=shadow").json()["rows"]
     assert rows == [r for r in rows if r["slot"] == "HEAD"] and rows[0]["rank"] == 1 and rows[0]["latest"]["min"] == 12345
+    assert rows[0]["full"]["stats"] is not None and "wornItem" in rows[0]
 
     async def clean():  # the other test files share this database
         async with SessionLocal() as s:

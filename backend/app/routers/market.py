@@ -430,6 +430,7 @@ async def bis_on_sale(cid: int, user: CurrentUser, session: Session, spec: str |
             rows.append({"slot": slot, "rank": rank + 1, "id": o["id"], "name": o["name"], "q": o["q"],
                          "ilvl": o["ilvl"], "req": o["req"], "worn": o["id"] == x.get("wornId"),
                          "better": x.get("wornRank") is None or rank < x["wornRank"],
+                         "full": o, "wornItem": x.get("worn"),  # both sides of the throne room's comparison
                          "latest": {"min": latest.min_price, "median": latest.median_price,
                                     "quantity": latest.quantity, "ts": latest.ts}})
     return {"status": "ready", "level": out["level"], "spec": out["spec"], "specs": out["specs"],

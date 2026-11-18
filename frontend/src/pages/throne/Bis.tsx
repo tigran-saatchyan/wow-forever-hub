@@ -255,7 +255,7 @@ function Delta({ v, base }: { v: number; base: number }) {
 }
 
 /** The game's two-column comparison: the BiS item, what is worn, and the difference in every stat. */
-function Compare({ a, b, side, anchor }: { a: BisItem; b: BisItem | null; side: string; anchor: HTMLElement }) {
+export function Compare({ a, b, side, anchor }: { a: BisItem; b: BisItem | null; side: string; anchor: HTMLElement }) {
   const { t } = useI18n();
   // drawn over the whole page (a portal), beside the slot: the hall's name plate and the other slots can't cover it
   const r = anchor.getBoundingClientRect();

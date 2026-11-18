@@ -1,13 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { AnimatePresence } from "framer-motion";
 import { SourcePanel } from "../components/SourcePanel";
 import { ItemHover, ItemIcon, Money, parseMoney, Sparkline } from "../components/Wow";
 import { useMe } from "../lib/auth";
 import { iconStyle, useIcons } from "../lib/gameData";
 import { fmtDate, useI18n, type Key } from "../lib/i18n";
 import { store } from "../lib/store";
-import { qColor, useCharacter, useCharacters, wowApi, type AhList, type Region } from "../lib/wowApi";
-import { qCol, useTrees } from "./throne/Bis";
+import { qColor, useCharacter, useCharacters, wowApi, type AhList, type BisSale, type Region } from "../lib/wowApi";
+import { Compare, qCol, useTrees } from "./throne/Bis";
 
 /**
  * Forever has no realms: its auction houses come as five worlds of three (Alliance, Horde, Blackwater), the
@@ -259,19 +260,7 @@ function BisOnSale({ onAdd, listName }: { onAdd: (id: number) => void; listName?
                   <tr key={`${r.slot}-${r.id}`} className="border-t border-edge/40">
                     <td className="p-2 text-muted">{t(`slot_${r.slot}` as Key)}</td>
                     <td className="p-2">
-                      <ItemHover id={r.id}>
-                        <button className="flex items-center gap-2 text-left" onClick={() => setOpen({ id: r.id, name: r.name })}>
-                          <span className="bis-rank" title={t("bis_rank", { n: r.rank })}>{r.rank}</span>
-                          <ItemIcon itemId={r.id} quality={["POOR", "COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY"][r.q]} size={28} />
-                          <span className="grid leading-tight">
-                            <b className="font-medium" style={{ color: qCol(r.q) }}>{r.name}</b>
-                            <span className="text-[11px] text-muted">
-                              {t("bis_ilvl", { i: r.ilvl })}{r.req ? ` · ${t("mk_bis_req", { n: r.req })}` : ""}
-                              {r.worn ? <span className="ml-1 text-good">· {t("bis_worn_tag")}</span> : !r.better ? <span className="ml-1">· {t("mk_bis_worse")}</span> : null}
-                            </span>
-                          </span>
-                        </button>
-                      </ItemHover>
+                      <BisRowItem r={r} onOpen={() => setOpen({ id: r.id, name: r.name })} />
                     </td>
                     <td className="p-2 text-right"><Money c={r.latest.min} /></td>
                     <td className="p-2 text-right font-mono">{r.latest.quantity}</td>
@@ -290,5 +279,29 @@ function BisOnSale({ onAdd, listName }: { onAdd: (id: number) => void; listName?
       {d?.status === "ready" && <p className="text-xs text-muted">{t("mk_bis_note", { n: d.checked ?? 0 })}</p>}
       <SourcePanel item={open} onClose={() => setOpen(null)} />
     </section>
+  );
+}
+
+/** A BiS item of the block: hovering shows the throne room's comparison with what is worn in that slot. */
+function BisRowItem({ r, onOpen }: { r: NonNullable<BisSale["rows"]>[number]; onOpen: () => void }) {
+  const { t } = useI18n();
+  const [hover, setHover] = useState(false);
+  const anchor = useRef<HTMLButtonElement>(null);
+  return (
+    <button ref={anchor} className="flex items-center gap-2 text-left" onClick={onOpen}
+      onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} onFocus={() => setHover(true)} onBlur={() => setHover(false)}>
+      <span className="bis-rank" title={t("bis_rank", { n: r.rank })}>{r.rank}</span>
+      <ItemIcon itemId={r.id} quality={["POOR", "COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY"][r.q]} size={28} />
+      <span className="grid leading-tight">
+        <b className="font-medium" style={{ color: qCol(r.q) }}>{r.name}</b>
+        <span className="text-[11px] text-muted">
+          {t("bis_ilvl", { i: r.ilvl })}{r.req ? ` · ${t("mk_bis_req", { n: r.req })}` : ""}
+          {r.worn ? <span className="ml-1 text-good">· {t("bis_worn_tag")}</span> : !r.better ? <span className="ml-1">· {t("mk_bis_worse")}</span> : null}
+        </span>
+      </span>
+      <AnimatePresence>
+        {hover && anchor.current && <Compare a={r.full} b={r.wornItem} side="right" anchor={anchor.current} />}
+      </AnimatePresence>
+    </button>
   );
 }
