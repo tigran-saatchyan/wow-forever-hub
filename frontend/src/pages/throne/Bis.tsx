@@ -136,9 +136,9 @@ export function BisGear({ slot, s, side, size, i, onPick, onOpen, empty }: {
         ) : (
           <span className="slot-empty tr-gear-icon" style={{ width: size, height: size }} title={empty ? t("bis_two_hand") : t("bis_none")}>{empty ? "—" : name.slice(0, 1)}</span>
         )}
-        {s && s.options.length > 1 && (
-          <button className="bis-arrow" onClick={() => setMenu(!menu)} aria-label={t("bis_other")}>▾</button>
-        )}
+        {s && s.options.length > 1
+          ? <button className="bis-arrow" onClick={() => setMenu(!menu)} aria-label={t("bis_other")}>▾</button>
+          : <span className="bis-arrow-space" aria-hidden />}
         <AnimatePresence>
           {hover && x && !menu && anchor.current && <Compare a={x} b={s?.worn ?? null} side={side} anchor={anchor.current} />}
         </AnimatePresence>

@@ -18,7 +18,6 @@ import { REP_COLORS, useTab, type Rep } from "./characters/ArmoryTabs";
 import { CONTENT, loadViewer, type Viewer } from "../theme/Lamenters";
 import { sylvanasLine } from "../theme/music";
 import { Professions } from "./characters/CharacterSheet";
-import { WORDS } from "./dashboard/Throne";
 import { Orders } from "./dashboard/Orders";
 import { SourcePanel } from "../components/SourcePanel";
 import { BisBar, BisGear, WornRank, useBis, useBisActions, useTrees, type BisItem, type BisSlot } from "./throne/Bis";
@@ -115,6 +114,7 @@ function Gear({ x, slot, i, side, size, bis }: { x?: EquipItem; slot: string; i:
       transition={{ delay: 0.6 + i * 0.05, duration: 0.5 }}
       className={`tr-gear ${side}`}
     >
+      <span className="bis-icon-wrap">
       {x ? (
         <ItemHover
           id={x.id}
@@ -129,6 +129,8 @@ function Gear({ x, slot, i, side, size, bis }: { x?: EquipItem; slot: string; i:
       ) : (
         <span className="slot-empty tr-gear-icon" style={{ width: size, height: size }} title={name} aria-label={name}>{name.slice(0, 1)}</span>
       )}
+        <span className="bis-arrow-space" aria-hidden />
+      </span>
       {x && side !== "none" && (
         <span className="tr-gear-text">
           <span className="tr-gear-name" style={{ color: qColor(x.quality) }}>{x.name}</span>
@@ -206,7 +208,6 @@ export function ThroneRoom() {
   const q = useCharacter(mainId);
   const c = q.data;
   const box = useFigure(media(c?.model) ?? null);
-  const [w, setW] = useState(() => Math.floor(Math.random() * WORDS.length));
   // a click on Sylvanas or Nathanos: their line plays and the model talks until it ends, then stands again
   const queen = useRef<Viewer | null>(null);
   const champion = useRef<Viewer | null>(null);
@@ -227,10 +228,6 @@ export function ThroneRoom() {
     a.addEventListener("pause", stop);
     setTimeout(stop, 12000); // in case the sound never starts
   };
-  useEffect(() => {
-    const id = setInterval(() => setW((x) => (x + 1) % WORDS.length), 9000);
-    return () => clearInterval(id);
-  }, []);
 
   const mx = useSpring(useMotionValue(0), { stiffness: 40, damping: 18 });
   const my = useSpring(useMotionValue(0), { stiffness: 40, damping: 18 });
@@ -362,15 +359,6 @@ export function ThroneRoom() {
               <button className="text-muted hover:text-gold" onClick={() => nav("/characters")}>{t("tr_none")}</button>
             )
           )}
-          <div className="tr-words">
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.p key={w} className="throne-quote text-base sm:text-lg"
-                initial={{ opacity: 0, y: 6, filter: "blur(4px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, y: -6, filter: "blur(4px)" }} transition={{ duration: 0.6 }}>
-                «{WORDS[w][lang]}» <span className="not-italic text-muted">— {t("uc_sylvanas")}</span>
-              </motion.p>
-            </AnimatePresence>
-          </div>
           {c && <BisBar on={bisOn} setOn={setBisOn} data={bis} spec={bis?.spec ?? specPick} setSpec={chooseSpec} tabs={trees.tabs} />}
           {c && bisOn && bisQ.data?.status === "nodata" && <p className="text-xs text-muted">{t("bis_nodata")}</p>}
           {c && <Progress c={c} />}
