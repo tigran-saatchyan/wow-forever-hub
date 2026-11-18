@@ -76,45 +76,45 @@ const BRM = (note: L): Place => ({ who: { ru: "Черная гора", en: "Blac
 const GORETOOTH: Place = { who: { ru: "Полководец Клинозуб", en: "Warlord Goretooth" }, map: BADLANDS, x: 5.8, y: 47.6, note: { ru: "Каргат, на башне", en: "Kargath, up the tower" } };
 const THRALL: Place = { who: { ru: "Тралл", en: "Thrall" }, map: ORGRIMMAR, x: 31.6, y: 37.8, note: { ru: "Крепость Громмаш", en: "Grommash Hold" } };
 const EITRIGG: Place = { who: { ru: "Эйтригг", en: "Eitrigg" }, map: ORGRIMMAR, x: 34.6, y: 38.6, note: { ru: "Крепость Громмаш, рядом с Траллом", en: "Grommash Hold, by Thrall" } };
-const REXXAR: Place = { who: { ru: "Рексар", en: "Rexxar" }, map: DESOLACE, x: 26, y: 70, note: { ru: "ходит по дороге через Пустоши, с юга на север и обратно", en: "walks the road across Desolace, south to north and back" } };
+const REXXAR: Place = { who: { ru: "Рексар", en: "Rexxar" }, map: DESOLACE, x: 46.4, y: 18.2, note: { ru: "ходит по дороге через Пустоши, с севера на юг и обратно; точка — где он начинает", en: "walks the road across Desolace, north to south and back; the point is where he starts" } };
 const MYRANDA: Place = { who: { ru: "Myranda the Hag", en: "Myranda the Hag" }, map: WPL, x: 50.8, y: 77.8, note: { ru: "Холм Печали", en: "Sorrow Hill" } };
-const EMBERSTRIFE: Place = { who: { ru: "Огнебор", en: "Emberstrife" }, map: DUSTWALLOW, x: 58, y: 76, note: { ru: "логово в Драконьей топи; войти в обличье дракона", en: "his den in the Wyrmbog; go in disguised" } };
+const EMBERSTRIFE: Place = { who: { ru: "Огнебор", en: "Emberstrife" }, map: DUSTWALLOW, x: 56.7, y: 87.7, note: { ru: "логово в Драконьей топи; войти в обличье дракона", en: "his den in the Wyrmbog; go in disguised" } };
 
 const HELENDIS: Place = { who: { ru: "Хелендис", en: "Helendis Riverhorn" }, map: STEPPES, x: 85.8, y: 68.9, note: { ru: "Застава Моргана", en: "Morgan's Vigil" } };
-const SOLOMON: Place = { who: { ru: "Мировой судья Соломон", en: "Magistrate Solomon" }, map: REDRIDGE, x: 29.8, y: 44.4, note: { ru: "Озёрное, ратуша", en: "Lakeshire town hall" } };
-const BOLVAR: Place = { who: { ru: "Болвар Фордрагон", en: "Highlord Bolvar Fordragon" }, map: STORMWIND, x: 78.2, y: 17.6, note: { ru: "Крепость Штормграда", en: "Stormwind Keep" } };
-const PRESTOR: Place = { who: { ru: "Леди Катрана Престор", en: "Lady Katrana Prestor" }, map: STORMWIND, x: 78.0, y: 18.4, note: { ru: "рядом с Болваром", en: "beside Bolvar" } };
+const SOLOMON: Place = { who: { ru: "Мировой судья Соломон", en: "Magistrate Solomon" }, map: REDRIDGE, x: 24.9, y: 44.5, note: { ru: "Озёрное, ратуша", en: "Lakeshire town hall" } };
+const BOLVAR: Place = { who: { ru: "Болвар Фордрагон", en: "Highlord Bolvar Fordragon" }, map: STORMWIND, x: 80.2, y: 38.3, note: { ru: "Крепость Штормграда", en: "Stormwind Keep" } };
+const PRESTOR: Place = { who: { ru: "Леди Катрана Престор", en: "Lady Katrana Prestor" }, map: STORMWIND, x: 79.6, y: 38.9, note: { ru: "рядом с Болваром", en: "beside Bolvar" } };
 const MAXWELL: Place = { who: { ru: "Маршал Максвелл", en: "Marshal Maxwell" }, map: STEPPES, x: 84.6, y: 68.6, note: { ru: "Застава Моргана", en: "Morgan's Vigil" } };
 const WINDSOR = BRM({ ru: "маршал Виндзор — в тюрьме Глубин Черной горы", en: "Marshal Windsor — in the Detention Block of Blackrock Depths" });
-const HALEH: Place = { who: { ru: "Haleh", en: "Haleh" }, map: WINTERSPRING, x: 54.8, y: 51.4, note: { ru: "Мазтарил: в пещеру и через портал наверх", en: "Mazthoril: into the cave, up through the portal" } };
+const HALEH: Place = { who: { ru: "Haleh", en: "Haleh" }, map: WINTERSPRING, x: 54.5, y: 51.2, note: { ru: "Мазтарил: в пещеру и через портал наверх", en: "Mazthoril: into the cave, up through the portal" } };
 
 const DRAKKISATH = BRM({ ru: "Верхняя часть пика Черной горы, последний босс — генерал Драккисат", en: "Upper Blackrock Spire, the last boss: General Drakkisath" });
 
 
-const AZSHARA = 1447, EPL = 1423, SILITHUS = 1451, TIRISFAL = 1420, UNGORO = 1449, BLASTED = 1419;
-const HYDRAXIS: Place = { who: { ru: "Герцог Гидраксис", en: "Duke Hydraxis" }, map: AZSHARA, x: 79, y: 73, note: { ru: "островок у юго-восточного берега", en: "a small island off the south-east coast" } };
-const LOTHOS: Place = BRM({ ru: "Lothos Riftwaker — на скале в лавовом зале Черной горы, у окна в Огненные Недра", en: "Lothos Riftwaker — on the rock in the lava hall of Blackrock Mountain, by the Molten Core window" });
+const AZSHARA = 1447, EPL = 1423, SILITHUS = 1451, UNGORO = 1449, BLASTED = 1419;
+const HYDRAXIS: Place = { who: { ru: "Герцог Гидраксис", en: "Duke Hydraxis" }, map: AZSHARA, x: 79.3, y: 73.7, note: { ru: "островок у юго-восточного берега", en: "a small island off the south-east coast" } };
+const LOTHOS: Place = { who: { ru: "Lothos Riftwaker", en: "Lothos Riftwaker" }, map: STEPPES, x: 26.4, y: 24.5, note: { ru: "внутри Черной горы, на скале в лавовом зале, у окна в Огненные Недра", en: "inside Blackrock Mountain, on the rock in the lava hall, by the Molten Core window" } };
 const LOTHOS_MC: Place = BRM({ ru: "Огненные Недра — вход через Глубины или от Lothos", en: "Molten Core — in through the Depths or from Lothos" });
-const ERIS: Place = { who: { ru: "Эрис Огненный Приют", en: "Eris Havenfire" }, map: EPL, x: 18, y: 47, note: { ru: "≈ северо-запад; видна только с надетым Оком Божественности", en: "≈ the north-west; seen only wearing the Eye of Divinity" } };
+const ERIS: Place = { who: { ru: "Эрис Огненный Приют", en: "Eris Havenfire" }, map: EPL, x: 17.2, y: 12.8, note: { ru: "северо-запад, у Терродейла; видна только с надетым Оком Божественности", en: "the north-west, by Terrordale; seen only wearing the Eye of Divinity" } };
 const KAZZAK: Place = { who: { ru: "Владыка Каззак", en: "Lord Kazzak" }, map: BLASTED, x: 32, y: 45, note: { ru: "≈ Порченый шрам; мировой босс — рейд", en: "≈ the Tainted Scar; a world boss — a raid" } };
-const DERRINGTON: Place = { who: { ru: "High Executor Derrington", en: "High Executor Derrington" }, map: TIRISFAL, x: 83, y: 68, note: { ru: "≈ Бастион", en: "≈ the Bulwark" } };
-const DITHERS: Place = { who: { ru: "Apothecary Dithers", en: "Apothecary Dithers" }, map: TIRISFAL, x: 83.2, y: 69.2, note: { ru: "Бастион", en: "the Bulwark" } };
+const DERRINGTON: Place = { who: { ru: "High Executor Derrington", en: "High Executor Derrington" }, map: WPL, x: 26.5, y: 56.0, note: { ru: "Бастион, на границе с Тирисфалем", en: "the Bulwark, on the Tirisfal border" } };
+const DITHERS: Place = { who: { ru: "Apothecary Dithers", en: "Apothecary Dithers" }, map: WPL, x: 26.7, y: 56.3, note: { ru: "Бастион", en: "the Bulwark" } };
 const KRINKLE: Place = { who: { ru: "Krinkle Goodsteel", en: "Krinkle Goodsteel" }, map: TANARIS, x: 51.5, y: 28.8, note: { ru: "Прибамбасск, кузнец", en: "Gadgetzan, the blacksmith" } };
 const ANACHRONOS: Place = { who: { ru: "Анахронос", en: "Anachronos" }, map: TANARIS, x: 65, y: 50, note: { ru: "≈ у входа в Пещеры Времени", en: "≈ by the Caverns of Time entrance" } };
 
 export const CHAINS: Chain[] = [
   {
-    key: "onyxia-horde", faction: "HORDE", stage: 2, category: "attune", minLevel: 58,
+    key: "onyxia-horde", faction: "HORDE", stage: 2, category: "attune", minLevel: 55,
     about: { ru: "Допуск в Логово Ониксии: без Амулета Пламени дракона в сумке в рейд не пустят. Цепочка длинная — Нижняя и Верхняя части пика, четыре дракона по всему миру и Драккисат, — её стоит начать заранее, до 9 декабря.", en: "The attunement to Onyxia's Lair: without the Drakefire Amulet in your bags the raid won't let you in. A long chain — Lower and Upper Blackrock Spire, four dragons around the world and Drakkisath — worth starting well before 9 December." },
     reward: { item: 16309, text: { ru: "Амулет Пламени дракона — вход в Логово Ониксии", en: "Drakefire Amulet — entry to Onyxia's Lair" } },
     classic: { ru: "классика: фаза 1", en: "original game: phase 1" }, group: { ru: "группы на 5–10: пик и драконы", en: "groups of 5–10: the Spire and the dragons" },
     needs: [
       { text: { ru: "Печать Вознесения — ключ Верхней части пика (цепочка «Ключи Черной горы»)", en: "The Seal of Ascension — the Upper Spire key (the Keys of Blackrock Mountain chain)" }, quest: 4743 },
-      { text: { ru: "58 уровень", en: "level 58" }, level: 58 },
+      { text: { ru: "55 уровень", en: "level 55" }, level: 55 },
       { text: { ru: "группа на Нижнюю и Верхнюю части пика и на трёх драконов", en: "a group for the Lower and Upper Spire and three dragons" } },
     ],
     name: { ru: "Амулет Пламени дракона (Орда)", en: "Drakefire Amulet (Horde)" },
-    level: { ru: "задания 60 уровня; первое — с 58 по Warcraft Wiki для классики (там же сказано «с 55»; в Forever не проверено); нужны Нижняя и Верхняя части пика Черной горы", en: "level 60 quests; the first from 58 per the Warcraft Wiki for the original game (the same Wiki also says 55; not checked in Forever); Lower and Upper Blackrock Spire" },
+    level: { ru: "задания 60 уровня, берутся с 55 (ForeverDB); нужны Нижняя и Верхняя части пика Черной горы", en: "level 60 quests, taken from 55 (ForeverDB); Lower and Upper Blackrock Spire" },
     steps: [
       { id: 4903, giver: GORETOOTH, dungeon: "lbrs",
         todo: { ru: "В Нижней части пика Черной горы убить вождя Омокка, воеводу Вуна и Повелителя Змейталака; доставить найденные при них документы.", en: "In Lower Blackrock Spire kill Highlord Omokk, War Master Voone and Overlord Wyrmthalak; find the Important Blackrock Documents (they lie somewhere in the Lower Spire)." },
@@ -217,7 +217,7 @@ export const CHAINS: Chain[] = [
     ],
     level: { ru: "задания 53–60 уровня; с какого уровня берутся — источники не сходятся", en: "quests of level 53–60; the sources disagree on the level they open at" },
     classic: { ru: "классика: фаза 1", en: "original game: phase 1" }, group: { ru: "соло, Арадж — 5 человек", en: "solo, Araj — 5 players" },
-    unverified: { ru: "номера 5096, 5098, 838, 964 и координаты лагерей и башен — по памяти, не сверены", en: "ids 5096, 5098, 838, 964 and the camp and tower spots are from memory, not checked" },
+    unverified: { ru: "номера, порядок и кто выдаёт — сверены с ForeverDB; места лагерей, башен и скелетов — примерные", en: "ids, order and who gives them are checked against ForeverDB; the camps', towers' and skeletons' spots are approximate" },
     steps: [
       { id: 5096, giver: DERRINGTON, todo: { ru: "Сжечь командный шатёр Алого ордена и поставить знамя Орды в их лагере в Западных Чумных землях.", en: "Burn a Scarlet Crusade command tent and plant the Horde standard at their camp in the Western Plaguelands." },
         at: [{ who: { ru: "лагерь Алого ордена", en: "the Scarlet camp" }, map: WPL, x: 40, y: 52, note: { ru: "≈ место по памяти", en: "≈ the spot is from memory" } }], turnin: DERRINGTON },
@@ -231,7 +231,7 @@ export const CHAINS: Chain[] = [
         at: [{ who: { ru: "Огненный Венец, лавовое озеро на вершине", en: "Fire Plume Ridge, the lava lake on top" }, map: UNGORO, x: 50, y: 47 }], turnin: DITHERS },
       { id: 5804, giver: DITHERS, size: 5, todo: { ru: "Убить Араджа Призывателя в центре Андорала и принести Скарабея Араджа.", en: "Kill Araj the Summoner in the middle of Andorhal and bring Araj's Scarab." },
         at: [{ who: { ru: "Арадж Призыватель", en: "Araj the Summoner" }, map: WPL, x: 45, y: 69, note: { ru: "центр Андорала, элитный — нужна группа", en: "the middle of Andorhal, elite — take a group" } }], turnin: DITHERS },
-      { id: 5511, giver: DITHERS, todo: { ru: "Поговорить с Dithers ещё раз: он доделает Скелетный ключ.", en: "Speak to Dithers once more: he finishes the Skeleton Key." }, turnin: DITHERS },
+      { id: 5511, giver: DERRINGTON, todo: { ru: "Вернуться к верховному палачу Деррингтону: Скелетный ключ готов.", en: "Go back to High Executor Derrington: the Skeleton Key is ready." }, turnin: DERRINGTON },
     ],
   },
   {
@@ -242,9 +242,9 @@ export const CHAINS: Chain[] = [
     needs: [{ text: { ru: "группа на 5 в Глубины Черной горы, до самого входа в Недра", en: "a group of 5 into Blackrock Depths, all the way to the Core's entrance" } }],
     level: { ru: "задание 60 уровня, берётся с 55", en: "a level 60 quest, taken from 55" },
     classic: { ru: "классика: фаза 1", en: "original game: phase 1" }, group: { ru: "5 человек", en: "5 players" },
-    unverified: { ru: "есть и задание 7487 с тем же названием — засчитываются оба; место Lothos внутри горы — по описанию", en: "quest 7487 has the same name — both count; Lothos's spot inside the mountain is from descriptions" },
+    unverified: { ru: "сверено с ForeverDB (данные классики, задание есть в Forever)", en: "checked against ForeverDB (the original game's data; the quest is in Forever)" },
     steps: [
-      { id: 7848, alt: [7487], giver: LOTHOS, dungeon: "brd", size: 5, todo: { ru: "Пройти Глубины Черной горы до входа в Огненные Недра и взять осколок ядра; вернуться к Lothos.", en: "Go through Blackrock Depths to the Molten Core entrance and take a Core Fragment; go back to Lothos." },
+      { id: 7848, giver: LOTHOS, dungeon: "brd", size: 5, todo: { ru: "Пройти Глубины Черной горы до входа в Огненные Недра и взять осколок ядра; вернуться к Lothos.", en: "Go through Blackrock Depths to the Molten Core entrance and take a Core Fragment; go back to Lothos." },
         at: [BRM({ ru: "Глубины Черной горы, у входа в Огненные Недра", en: "Blackrock Depths, by the Molten Core entrance" })], turnin: LOTHOS, min: { level: 55, sure: false } },
     ],
   },
@@ -260,11 +260,11 @@ export const CHAINS: Chain[] = [
     ],
     level: { ru: "задания 60 уровня, первые — с 55", en: "level 60 quests, the first from 55" },
     classic: { ru: "классика: фаза 1", en: "original game: phase 1" }, group: { ru: "соло, ВЧС 10, рейд 40", en: "solo, UBRS 10, raid 40" },
-    unverified: { ru: "номера 6805, 6821, 6822, 6824, 7486, сколько кого убить и награды — по памяти; где именно элементали в Чумных землях — не сверено", en: "ids 6805, 6821, 6822, 6824, 7486, the kill counts and rewards are from memory; where exactly the elementals are in the Plaguelands — not checked" },
+    unverified: { ru: "номера и порядок сверены с ForeverDB; сколько кого убить, награды и места элементалей — по памяти", en: "ids and order checked against ForeverDB; the kill counts, rewards and the elementals' spots are from memory" },
     steps: [
-      { id: 6804, giver: HYDRAXIS, todo: { ru: "Убить испорченных водных элементалей и чумных тварей в Восточных Чумных землях.", en: "Kill corrupted water elementals and plague beasts in the Eastern Plaguelands." },
+      { id: 6804, group: "hydra-start", giver: HYDRAXIS, todo: { ru: "Убить испорченных водных элементалей и чумных тварей в Восточных Чумных землях.", en: "Kill corrupted water elementals and plague beasts in the Eastern Plaguelands." },
         at: [{ who: { ru: "испорченные элементали", en: "corrupted elementals" }, map: EPL, x: 50, y: 50, note: { ru: "≈ место не сверено", en: "≈ the spot is not checked" } }], turnin: HYDRAXIS, min: { level: 55, sure: true } },
-      { id: 6805, giver: HYDRAXIS, todo: { ru: "Убить пылевых буревестников и пустынных громыхателей в Силитусе.", en: "Kill Dust Stormers and Desert Rumblers in Silithus." },
+      { id: 6805, group: "hydra-start", giver: HYDRAXIS, todo: { ru: "Убить пылевых буревестников и пустынных громыхателей в Силитусе.", en: "Kill Dust Stormers and Desert Rumblers in Silithus." },
         at: [{ who: { ru: "элементали пустыни", en: "desert elementals" }, map: SILITHUS, x: 40, y: 40, note: { ru: "бродят по открытой пустыне", en: "roam the open desert" } }], turnin: HYDRAXIS, min: { level: 57, sure: false } },
       { id: 6821, giver: HYDRAXIS, dungeon: "ubrs", size: 10, todo: { ru: "Убить Пиростража Огнеглаза в Верхней части пика и принести его глаз.", en: "Kill Pyroguard Emberseer in Upper Blackrock Spire and bring his eye." },
         at: [BRM({ ru: "Верхняя часть пика, первый босс", en: "Upper Blackrock Spire, the first boss" })], turnin: HYDRAXIS },
@@ -273,7 +273,8 @@ export const CHAINS: Chain[] = [
       { id: 6823, giver: HYDRAXIS, todo: { ru: "Заработать «Уважение» у Гидраксианских Повелителей Вод (убийства в Огненных Недрах) и поговорить с герцогом.", en: "Reach Honored with the Hydraxian Waterlords (kills in Molten Core) and speak to the Duke." }, turnin: HYDRAXIS, min: { level: 60, sure: false } },
       { id: 6824, giver: HYDRAXIS, size: 40, todo: { ru: "Снять руки Люцифрона, Предвестника Сульфурона, Гееннаса и Шаззраха в Огненных Недрах.", en: "Take the hands of Lucifron, Sulfuron Harbinger, Gehennas and Shazzrah in Molten Core." },
         at: [LOTHOS_MC], turnin: HYDRAXIS },
-      { id: 7486, giver: HYDRAXIS, todo: { ru: "Поговорить с герцогом и выбрать кольцо.", en: "Speak to the Duke and choose a ring." }, turnin: HYDRAXIS },
+      { id: 7486, giver: HYDRAXIS, todo: { ru: "Поговорить с герцогом; награда — в сундуке Гидраксиса рядом с ним.", en: "Speak to the Duke; the reward is in Hydraxis' Coffer beside him." },
+        turnin: { who: { ru: "сундук Гидраксиса", en: "Hydraxis' Coffer" }, map: AZSHARA, x: 79.2, y: 74.9 } },
       { id: -101, title: { ru: "Акватическая квинтэссенция", en: "Aqual Quintessence" }, giver: HYDRAXIS, size: 40,
         todo: { ru: "С «Уважения» попросить у герцога квинтэссенцию и потушить ей руну у босса в Огненных Недрах. Одноразовая, при себе только одна — за следующей снова к герцогу. На «Почтении» — многоразовая Вечная.", en: "From Honored ask the Duke for a quintessence and douse a boss rune with it in Molten Core. Single use, one at a time — back to the Duke for the next. At Revered: the reusable Eternal one." },
         at: [LOTHOS_MC], turnin: HYDRAXIS },
@@ -292,7 +293,7 @@ export const CHAINS: Chain[] = [
     ],
     level: { ru: "60 уровень", en: "level 60" },
     classic: { ru: "классика: фаза 1 (Каззак — фаза 2)", en: "original game: phase 1 (Kazzak — phase 2)" }, group: { ru: "рейд 40, испытание — соло", en: "raid 40, the trial — solo" },
-    unverified: { ru: "номер задания «Предостережение» (7621) и место Эрис — не сверены", en: "the id of “A Warning” (7621) and Eris's spot are not checked" },
+    unverified: { ru: "задания и место Эрис сверены с ForeverDB; где падает Око Тени — по памяти", en: "the quests and Eris's spot checked against ForeverDB; where the Eye of Shadow drops is from memory" },
     steps: [
       { id: -201, title: { ru: "Око Божественности", en: "The Eye of Divinity" }, giver: LOTHOS_MC, size: 40,
         todo: { ru: "Убить Мажордома Экзекутуса в Огненных Недрах: в Тайнике Повелителя Огня жрецу может выпасть Око Божественности. Надеть его (аксессуар) — тогда видна Эрис.", en: "Kill Majordomo Executus in Molten Core: a priest may get the Eye of Divinity from the Cache of the Firelord. Wear it (a trinket) to see Eris." }, turnin: LOTHOS_MC },
@@ -315,7 +316,7 @@ export const CHAINS: Chain[] = [
     ],
     level: { ru: "задание 60 уровня, с 55", en: "a level 60 quest, from 55" },
     classic: { ru: "классика: фаза 3 (задание есть с начала, Логово — с фазы 3)", en: "original game: phase 3 (the quest exists from the start, the Lair from phase 3)" }, group: { ru: "10 человек", en: "10 players" },
-    unverified: { ru: "номер предмета записки и место интенданта — не сверены", en: "the note's item id and the Quartermaster's spot are not checked" },
+    unverified: { ru: "задание сверено с ForeverDB (начинается с предмета, сдаётся Клейму Драккисата); место интенданта — по описанию", en: "the quest checked against ForeverDB (starts from an item, handed to Drakkisath's Brand); the Quartermaster's spot is from descriptions" },
     steps: [
       { id: -301, title: { ru: "Записка «Приказ Чернорука»", en: "Blackhand's Command (the note)" },
         giver: BRM({ ru: "интендант Щитоносцев — снаружи пика, к востоку от входа", en: "the Scarshield Quartermaster — outside the Spire, east of the entrance" }),
@@ -351,18 +352,11 @@ export const CHAINS: Chain[] = [
 ];
 
 /*
- * Lowest levels. The Warcraft Wiki (via Everloot) gives Warlord's Command, the Horde chain's first step,
- * as "the lowest level that you can attempt this quest is Level 58"; no step can be taken before it, so the
- * whole Horde chain opens at 58. For the other chains no source here gives the original requirement: these
- * are estimates from the zones and dungeons involved, marked as such on the page.
+ * The lowest level each quest is taken at: ForeverDB's requiredLevel (Forever's quests; where Forever's own value
+ * isn't known it gives the original game's, CMaNGOS). Steps that are not quests keep what they say.
  */
-const MIN: Record<string, { level: number; sure: boolean }> = {
-  // the Wiki's line for the original game, not checked in Forever; the same Wiki's chain page says "begins at 55"
-  "onyxia-horde": { level: 58, sure: true },
-  // no source: left blank rather than guessed, so the two factions are not compared on a guess
-};
-const KEY_MIN: Record<number, { level: number; sure: boolean }> = { 4743: { level: 55, sure: false }, 3802: { level: 50, sure: false } };
-for (const c of CHAINS) for (const st of c.steps) st.min ??= MIN[c.key] ?? KEY_MIN[st.id];
+const REQ: Record<number, number> = { 838: 55, 964: 55, 3802: 48, 4182: 48, 4183: 48, 4184: 48, 4185: 48, 4186: 48, 4223: 48, 4224: 48, 4241: 48, 4242: 48, 4264: 50, 4282: 50, 4322: 50, 4743: 57, 4903: 55, 4941: 55, 4974: 55, 5096: 50, 5098: 50, 5511: 55, 5514: 55, 5802: 55, 5804: 55, 6402: 50, 6403: 50, 6501: 50, 6502: 50, 6566: 55, 6567: 55, 6568: 55, 6569: 55, 6570: 55, 6582: 55, 6583: 55, 6584: 55, 6585: 55, 6601: 55, 6602: 55, 6804: 55, 6805: 55, 6821: 56, 6822: 57, 6823: 60, 6824: 60, 7486: 60, 7621: 60, 7622: 60, 7761: 55, 7848: 55, 9250: 60, 9251: 60, 9257: 60, 9269: 60, 9270: 60, 9271: 60 };
+for (const c of CHAINS) for (const st of c.steps) if (st.id > 0 && REQ[st.id]) st.min ??= { level: REQ[st.id], sure: true };
 
 export const chainFor = (faction: string | null | undefined) => CHAINS.find((c) => c.faction === (faction === "ALLIANCE" ? "ALLIANCE" : "HORDE"))!;
 
