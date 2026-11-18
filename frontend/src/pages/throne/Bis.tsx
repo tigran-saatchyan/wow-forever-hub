@@ -308,7 +308,7 @@ function ItemCard({ x, head }: { x: BisItem | null; head: string }) {
           <SrcLine s={x.src} />
           <div className="text-[11px] text-[#ffd100]">{t("bis_ilvl", { i: x.ilvl })}{x.req ? ` · ${t("bis_req", { l: x.req })}` : ""}</div>
           {x.armor ? <div className="text-xs">{x.armor} {statName(t, "ARMOR")}</div> : null}
-          {x.dps ? <div className="text-xs">{x.dps.toFixed(1)} {statName(t, "DPS")}{x.speed ? ` · ${x.speed.toFixed(2)}` : ""}</div> : null}
+          {x.dps ? <div className="text-xs">{x.dps.toFixed(1)} {statName(t, "DPS")}{x.speed ? ` · ${(x.speed / 1000).toFixed(2)}` : ""}</div> : null}
           {Object.entries(x.stats).map(([k, v]) => <div key={k} className="text-xs">+{v} {statName(t, k)}</div>)}
           {x.spells.map((sp, i) => <div key={i} className="text-xs text-[#1eff00]">{sp}</div>)}
         </>
