@@ -24,6 +24,9 @@ async def lifespan(_: FastAPI):
     tasks = []
     if s.ah_poll_minutes > 0 and bnet.client().configured:
         tasks.append(asyncio.create_task(market.poller()))
+    if s.foreverdb_key:
+        from . import fdb_gear
+        tasks.append(asyncio.create_task(fdb_gear.worker()))
     if s.everloot_prefetch:
         tasks.append(asyncio.create_task(sources.prefetcher()))
     if s.collector:

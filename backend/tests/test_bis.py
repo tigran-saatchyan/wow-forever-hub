@@ -58,3 +58,16 @@ def test_equipment_keeps_stat_numbers():
                               "armor": {"value": 30}}]}
     x = wow.equipment(eq, "en")[0]
     assert x["statv"] == {"INTELLECT": 12} and x["armor"] == 30
+
+
+def test_foreverdb_item_converted():
+    from app import fdb_gear
+    d = {"id": 4040, "name": "Nightsky Gloves", "qualityId": 2, "itemLevel": 34, "requiredLevel": 29, "classId": 4,
+         "subclassId": 1, "inventoryTypeId": 10, "bonding": "Binds when equipped",
+         "stats": [{"statId": 7, "stat": "Stamina", "value": 7}, {"statId": 5, "stat": "Intellect", "value": 6}],
+         "damage": None, "speed": None, "effects": []}
+    x = fdb_gear.convert(d)
+    assert x["stats"] == {"STAMINA": 7, "INTELLECT": 6} and x["slot"] == 10 and x["req"] == 29 and x["bind"] == 2
+    w = fdb_gear.convert({**d, "classId": 2, "inventoryTypeId": 13, "damage": {"min": 82, "max": 153}, "speed": 1.9})
+    assert w["dps"] == 61.8 and w["speed"] == 1900
+    assert bis.usable(x, 5, 30, "HORDE")

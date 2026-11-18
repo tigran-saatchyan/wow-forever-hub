@@ -18,7 +18,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .. import bis
+from .. import bis, fdb_gear
 from ..auth import CurrentUser
 from ..db import Character, SessionLocal, Setting, get_session
 
@@ -28,10 +28,26 @@ GEAR = Path(__file__).resolve().parent.parent / "data" / "gear.json"
 
 
 @lru_cache(maxsize=1)
-def gear() -> dict[str, dict]:
+def base_gear() -> dict[str, dict]:
+    """The reference built from Blizzard's item API (tools/build_gear.py)."""
     if not GEAR.is_file():
         return {}
     return json.loads(GEAR.read_text("utf-8"))["items"]
+
+
+def gear() -> dict[str, dict]:
+    """The whole reference: Blizzard's items and the ones only ForeverDB knows (app/fdb_gear.py), less the items
+    ForeverDB doubts are in the game."""
+    global _merged
+    extra, flags = fdb_gear.extra(), fdb_gear._flags
+    stamp = (len(extra), len(flags))
+    if _merged[0] != stamp:  # rebuilt only when the ForeverDB half changed
+        merged = {**base_gear(), **extra}
+        _merged = (stamp, {k: v for k, v in merged.items() if not flags.get(k)})
+    return _merged[1]
+
+
+_merged: tuple[tuple[int, int] | None, dict] = (None, {})
 
 
 def _item(i: int, lang: str, w: dict, slot: str) -> dict | None:
