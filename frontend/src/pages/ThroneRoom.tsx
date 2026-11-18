@@ -21,7 +21,7 @@ import { Professions } from "./characters/CharacterSheet";
 import { WORDS } from "./dashboard/Throne";
 import { Orders } from "./dashboard/Orders";
 import { SourcePanel } from "../components/SourcePanel";
-import { BisBar, BisGear, useBis, useBisActions, useTrees, type BisItem } from "./throne/Bis";
+import { BisBar, BisGear, WornRank, useBis, useBisActions, useTrees, type BisItem, type BisSlot } from "./throne/Bis";
 
 // the armory's order: the left and right columns of the character window, weapons below
 const LEFT = ["HEAD", "NECK", "SHOULDER", "BACK", "CHEST", "SHIRT", "TABARD", "WRIST"];
@@ -104,7 +104,7 @@ function Layer({ mx, my, depth, className, children }: { mx: MotionValue<number>
 }
 
 /** One slot as in the armory: the icon, and beside it the name in its quality colour, item level and enchant. */
-function Gear({ x, slot, i, side, size }: { x?: EquipItem; slot: string; i: number; side: "left" | "right" | "none"; size: number }) {
+function Gear({ x, slot, i, side, size, bis }: { x?: EquipItem; slot: string; i: number; side: "left" | "right" | "none"; size: number; bis?: BisSlot }) {
   const { t } = useI18n();
   const name = t(`slot_${slot}` as Key);
   const ench = (x?.enchants || []).find((e) => typeof e === "string");
@@ -121,8 +121,9 @@ function Gear({ x, slot, i, side, size }: { x?: EquipItem; slot: string; i: numb
           extra={<EquipExtra x={x} />}
           fallback={{ id: x.id, name: x.name, quality: x.quality, level: x.ilvl, slot: x.slotName, stats: x.stats || [], spells: [] }}
         >
-          <span tabIndex={0} className="tr-gear-icon" aria-label={`${name}: ${x.name}`}>
+          <span tabIndex={0} className="tr-gear-icon relative" aria-label={`${name}: ${x.name}`}>
             <ItemIcon src={x.icon} itemId={x.id} quality={x.quality} size={size} />
+            <WornRank s={bis} />
           </span>
         </ItemHover>
       ) : (
@@ -253,7 +254,7 @@ export function ThroneRoom() {
   const trees = useTrees(c);
   const [specPick, setSpecPick] = useState<string | null>(null);
   useEffect(() => setSpecPick(null), [mainId]);
-  const bisQ = useBis(mainId, specPick, bisOn);
+  const bisQ = useBis(mainId, specPick);
   const bis = bisQ.data?.status === "ready" ? bisQ.data : undefined;
   const acts = useBisActions(mainId);
   const [open, setOpen] = useState<BisItem | null>(null);
@@ -273,7 +274,7 @@ export function ThroneRoom() {
     bisOn && bis && !["SHIRT", "TABARD"].includes(sl)
       ? <BisGear key={sl} slot={sl} s={bis.slots[sl]} i={i} side={side} size={gi} empty={sl === "OFF_HAND" && bis.twoHand}
           onPick={(slot, n) => void acts.pick(bis.spec, slot, n)} onOpen={setOpen} />
-      : <Gear key={sl} slot={sl} x={eq.get(sl)} i={i} side={side} size={gi} />;
+      : <Gear key={sl} slot={sl} x={eq.get(sl)} i={i} side={side} size={gi} bis={bis?.slots[sl]} />;
 
   return (
     <div className="space-y-5">

@@ -97,7 +97,9 @@ async def get_bis(cid: int, user: CurrentUser, session: Session, spec: str | Non
             two_hand = options[pick]["two"]
         wid = worn.get(slot)
         mine = (_item(wid, lang, w, slot) or _worn(eq[slot], w, slot)) if wid else None
-        slots[slot] = {"options": options, "pick": pick, "worn": mine, "wornId": wid}
+        # what is worn, if it is one of the three: its place among them (0 = the best)
+        rank = next((n for n, o in enumerate(options) if o["id"] == wid), None) if wid else None
+        slots[slot] = {"options": options, "pick": pick, "worn": mine, "wornId": wid, "wornRank": rank}
     for slot, x in slots.items():
         if slot == "OFF_HAND" and two_hand:
             x["options"], x["pick"] = [], 0
@@ -107,7 +109,8 @@ async def get_bis(cid: int, user: CurrentUser, session: Session, spec: str | Non
         total += 1
         best = x["options"][x["pick"]]
         # as good as the pick: the same item, or one that scores at least as much
-        x["ok"] = bool(x["wornId"] == best["id"] or (x["worn"] and x["worn"]["score"] >= best["score"]))
+        # worn is BiS when it is one of the three, or does at least as much as the pick
+        x["ok"] = bool(x["wornRank"] is not None or (x["worn"] and x["worn"]["score"] >= best["score"]))
         have += x["ok"]
     complete = total > 0 and have == total
     cheer = False

@@ -1543,3 +1543,9 @@ button.order-line:hover { @apply text-gold; }
 @keyframes bis-breathe { 0%, 100% { opacity: 0.85; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .tr-stage.bis-full .tr-pillar, .tr-stage.bis-full .tr-sigil { animation: none; } }
 .tr-stage .tr-gear-name, .tr-stage .tr-gear-sub { text-shadow: 0 0 4px #000, 0 1px 3px #000, 0 0 10px #000; }
+
+.bis-rank-badge { position: absolute; left: -5px; top: -6px; min-width: 16px; height: 16px; padding: 0 3px; border-radius: 8px;
+  font: 700 10px/16px var(--font-display, inherit); text-align: center; color: #0c1a12; background: #7dff9a; box-shadow: 0 0 0 1px #000; }
+.bis-worn-badge { position: absolute; left: 50%; bottom: -7px; translate: -50% 0; padding: 0 4px; border-radius: 4px; white-space: nowrap;
+  font: 700 9px/13px var(--font-display, inherit); letter-spacing: 0.05em; color: #0c1a12; background: #7dff9a; box-shadow: 0 0 0 1px #000, 0 0 8px #3dff7a; pointer-events: none; }
+.bis-worn-tag { margin-left: 6px; padding: 0 4px; border-radius: 3px; font-size: 10px; color: #0c1a12; background: #7dff9a; }

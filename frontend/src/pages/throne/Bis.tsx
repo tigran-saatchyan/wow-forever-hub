@@ -17,7 +17,7 @@ export interface BisItem {
   id: number; name: string; q: number; ilvl: number; req: number; stats: Record<string, number>;
   armor: number | null; dps: number | null; speed: number | null; spells: string[]; two: boolean; score: number;
 }
-export interface BisSlot { options: BisItem[]; pick: number; worn: BisItem | null; wornId: number | null; ok: boolean }
+export interface BisSlot { options: BisItem[]; pick: number; worn: BisItem | null; wornId: number | null; wornRank: number | null; ok: boolean }
 export interface BisData {
   status: "ready" | "nodata"; class: string; specs: string[]; spec: string; specSaved?: boolean; level: number;
   twoHand: boolean; slots: Record<string, BisSlot>; have: number; total: number; complete: boolean; cheer: boolean;
@@ -27,10 +27,11 @@ export interface BisData {
 const Q = ["POOR", "COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY"];
 export const qCol = (q: number) => QUALITY[Q[q] ?? "COMMON"];
 
-export function useBis(cid: number | null, spec: string | null, on: boolean) {
+export function useBis(cid: number | null, spec: string | null) {
   const { lang } = useI18n();
   return useQuery({
-    queryKey: ["bis", cid, spec, lang], enabled: !!cid && on, staleTime: 5 * 60e3,
+    // asked even when the mode is off: worn gear that is BiS is marked in the normal view too
+    queryKey: ["bis", cid, spec, lang], enabled: !!cid, staleTime: 5 * 60e3,
     queryFn: () => wowApi.bis<BisData>(cid!, spec, lang),
   });
 }
@@ -104,6 +105,7 @@ export function BisGear({ slot, s, side, size, i, onPick, onOpen, empty }: {
         {x ? (
           <button className="tr-gear-icon bis-icon" onClick={() => onOpen(x)} aria-label={`${name}: ${x.name}`}>
             <ItemIcon itemId={x.id} quality={Q[x.q]} size={size} />
+            <span className="bis-rank-badge" title={t("bis_rank", { n: (s?.pick ?? 0) + 1 })}>{(s?.pick ?? 0) + 1}</span>
             {s?.ok && <span className="bis-tick" aria-hidden>✓</span>}
           </button>
         ) : (
@@ -119,7 +121,9 @@ export function BisGear({ slot, s, side, size, i, onPick, onOpen, empty }: {
       {x && side !== "none" && (
         <span className="tr-gear-text">
           <span className="tr-gear-name" style={{ color: qCol(x.q) }}>{x.name}</span>
-          <span className="tr-gear-sub"><span>{x.ilvl}</span>{s?.ok ? <span className="text-good">{t(s.wornId === x.id ? "bis_have" : "bis_better")}</span> : null}</span>
+          <span className="tr-gear-sub"><span>{x.ilvl}</span>{s?.wornRank != null
+            ? <span className="text-good">{t("bis_worn_rank", { n: s.wornRank + 1 })}</span>
+            : s?.ok ? <span className="text-good">{t("bis_better")}</span> : null}</span>
         </span>
       )}
       <AnimatePresence>
@@ -132,7 +136,7 @@ export function BisGear({ slot, s, side, size, i, onPick, onOpen, empty }: {
                   <span className="bis-rank">{n + 1}</span>
                   <ItemIcon itemId={o.id} quality={Q[o.q]} size={26} />
                   <span className="grid min-w-0 text-left">
-                    <span className="truncate" style={{ color: qCol(o.q) }}>{o.name}</span>
+                    <span className="truncate" style={{ color: qCol(o.q) }}>{o.name}{s.wornId === o.id ? <span className="bis-worn-tag">{t("bis_worn_tag")}</span> : null}</span>
                     <span className="text-[11px] text-muted">{t("bis_ilvl", { i: o.ilvl })}{d != null ? <> · <Delta v={d} base={s.worn!.score} /></> : null}</span>
                   </span>
                 </button>
@@ -225,4 +229,11 @@ export function useBisActions(cid: number | null) {
       await qc.invalidateQueries({ queryKey: ["bis", cid] });
     },
   };
+}
+
+/** In the normal view: a worn item that is one of the three best for the slot gets its place. */
+export function WornRank({ s }: { s?: BisSlot }) {
+  const { t } = useI18n();
+  if (s?.wornRank == null) return null;
+  return <span className="bis-worn-badge" title={t("bis_worn_rank", { n: s.wornRank + 1 })}>BiS {s.wornRank + 1}</span>;
 }
