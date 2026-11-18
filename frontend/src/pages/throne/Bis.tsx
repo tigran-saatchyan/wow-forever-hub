@@ -17,6 +17,22 @@ import { QUALITY, wowApi, type Character } from "../../lib/wowApi";
 export interface BisItem {
   id: number; name: string; q: number; ilvl: number; req: number; stats: Record<string, number>;
   armor: number | null; dps: number | null; speed: number | null; spells: string[]; two: boolean; score: number;
+  src?: Src | null;
+}
+/** Where it comes from, in one line (app/routers/sources.py brief). */
+export interface Src { kind: "quest" | "drop" | "world" | "vendor" | "craft"; name: string; where?: string | null; rate?: number | null; chain?: boolean; copper?: number | null; more: number }
+
+export function SrcLine({ s }: { s?: Src | null }) {
+  const { t } = useI18n();
+  if (!s) return null;
+  const pct = s.rate != null ? ` · ${(s.rate * 100).toFixed(s.rate < 0.1 ? 1 : 0)}%` : "";
+  const more = s.more > 0 ? <span className="bis-src-more"> +{s.more}</span> : null;
+  const txt = s.kind === "quest" ? t(s.chain ? "bis_src_chain" : "bis_src_quest", { n: s.name })
+    : s.kind === "drop" ? `${s.name}${s.where ? ` · ${s.where}` : ""}${pct}`
+    : s.kind === "world" ? t("bis_src_world", { n: s.name }) + pct
+    : s.kind === "vendor" ? t("bis_src_vendor", { n: s.name })
+    : t("bis_src_craft", { p: s.where ?? "", n: s.name });
+  return <div className={`bis-src ${s.kind}`}>{txt}{more}</div>;
 }
 export interface BisSlot { options: BisItem[]; pick: number; worn: BisItem | null; wornId: number | null; wornRank: number | null; ok: boolean }
 export interface BisData {
@@ -147,6 +163,7 @@ export function BisGear({ slot, s, side, size, i, onPick, onOpen, empty }: {
                   <span className="grid min-w-0 text-left">
                     <span className="truncate" style={{ color: qCol(o.q) }}>{o.name}{s.wornId === o.id ? <span className="bis-worn-tag">{t("bis_worn_tag")}</span> : null}</span>
                     <span className="text-[11px] text-muted">{t("bis_ilvl", { i: o.ilvl })}{d != null ? <> · <Delta v={d} base={s.worn!.score} /></> : null}</span>
+                    <SrcLine s={o.src} />
                   </span>
                 </button>
               );
@@ -214,6 +231,7 @@ function ItemCard({ x, head }: { x: BisItem | null; head: string }) {
       {!x ? <div className="text-sm text-muted">—</div> : (
         <>
           <div className="font-semibold" style={{ color: qCol(x.q) }}>{x.name}</div>
+          <SrcLine s={x.src} />
           <div className="text-[11px] text-[#ffd100]">{t("bis_ilvl", { i: x.ilvl })}{x.req ? ` · ${t("bis_req", { l: x.req })}` : ""}</div>
           {x.armor ? <div className="text-xs">{x.armor} {statName(t, "ARMOR")}</div> : null}
           {x.dps ? <div className="text-xs">{x.dps.toFixed(1)} {statName(t, "DPS")}{x.speed ? ` · ${x.speed.toFixed(2)}` : ""}</div> : null}

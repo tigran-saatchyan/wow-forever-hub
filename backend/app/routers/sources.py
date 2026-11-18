@@ -105,6 +105,11 @@ async def build(item_id: int, lang: str, session: AsyncSession) -> dict:
         return {"copper": offer.get("priceCopper"), "limited": offer.get("limitedStock"),
                 "unlimited": offer.get("unlimited")}
 
+    def chained(qp: dict) -> bool:
+        """Whether the quest is part of a chain: it needs an earlier quest, when Everloot's page says so."""
+        pg = (qp.get("data") or {}).get("page") or {}
+        return any(pg.get(k) for k in ("prevQuestId", "previousQuestId", "requiresQuestIds", "prevQuestIds", "chain"))
+
     def quest_title(qp: dict) -> str | None:
         pg = (qp.get("data") or {}).get("page") or {}
         return pg.get("title") or pg.get("name")
@@ -114,9 +119,13 @@ async def build(item_id: int, lang: str, session: AsyncSession) -> dict:
         "sold": [{"npc": e["toId"], "name": names.get(e["toId"]), "installs": e.get("installs"),
                   "lastSeen": e.get("lastSeen"), **price(vp)} for e, vp in zip(sellers, vendor_pages, strict=True)],
         "drops": [{"npc": d["sourceNpcId"], "name": names.get(d["sourceNpcId"]), "rate": d.get("rate"),
-                   "kills": d.get("kills"), "reporters": d.get("reporters")} for d in drops],
-        "quests": [{"quest": e["toId"], "title": quest_title(qp), "installs": e.get("installs")}
-                   for e, qp in zip(quests, quest_pages, strict=True)],
+                   "kills": d.get("kills"), "reporters": d.get("reporters"),
+                   # where the creature is, when Everloot says (its field names vary between tools)
+                   "where": next((d[k] for k in ("instanceName", "dungeonName", "zoneName", "zone", "areaName")
+                                  if isinstance(d.get(k), str) and d.get(k)), None)} for d in drops],
+        "dropCount": len(everloot.drops(page["data"], limit=1000)),
+        "quests": [{"quest": e["toId"], "title": quest_title(qp), "installs": e.get("installs"),
+                    "chain": chained(qp)} for e, qp in zip(quests, quest_pages, strict=True)],
         "wiki": everloot.wiki(lore["data"], name_en) if name_en else [],
         "everloot": (rel["data"] or {}).get("url") or f"https://everloot.app/database/items/{item_id}",
         "dataAsOf": (page["data"] or {}).get("dataAsOf") or (rel["data"] or {}).get("dataAsOf"),
@@ -271,3 +280,44 @@ async def prefetcher(lang: str = "ru") -> None:
 async def prefetch_state(_: CurrentUser, session: Session):
     row = await session.get(Setting, "prefetch")
     return row.value if row else None
+
+
+def brief(d: dict | None) -> dict | None:
+    """One line of where an item comes from, for the BiS comparison: the quest (and whether it is a chain), the
+    creature that drops it most often (where, how often, how many other kinds of creature drop it too), or a
+    vendor, or a recipe; None when nothing is known."""
+    if not d:
+        return None
+    if d.get("quests"):
+        q = d["quests"][0]
+        return {"kind": "quest", "name": q.get("title") or f"#{q['quest']}", "chain": bool(q.get("chain")),
+                "more": len(d["quests"]) - 1}
+    if d.get("drops"):
+        top = max(d["drops"], key=lambda x: x.get("rate") or 0)
+        n = d.get("dropCount") or len(d["drops"])
+        world = n >= 8 and (top.get("rate") or 0) < 0.01  # many kinds of creature, none often: a world drop
+        return {"kind": "world" if world else "drop", "name": top.get("name") or f"NPC #{top['npc']}",
+                "where": top.get("where"), "rate": top.get("rate"), "more": n - 1}
+    if d.get("sold"):
+        v = d["sold"][0]
+        return {"kind": "vendor", "name": v.get("name") or f"NPC #{v['npc']}", "copper": v.get("copper"),
+                "more": len(d["sold"]) - 1}
+    loc = d.get("local") or {}
+    if loc.get("crafted"):
+        c = loc["crafted"][0]
+        return {"kind": "craft", "name": c["recipe"], "where": c["profession"], "more": len(loc["crafted"]) - 1}
+    return None
+
+
+async def briefs(session: AsyncSession, ids: list[int], lang: str) -> dict[int, dict]:
+    """brief() for many items at once, from the stored answers only (nothing is asked here)."""
+    from sqlalchemy import select
+
+    keys = [f"src:{i}:{lang}" for i in ids]
+    rows = (await session.execute(select(Setting).where(Setting.key.in_(keys)))).scalars().all()
+    out = {}
+    for r in rows:
+        b = brief((r.value or {}).get("data"))
+        if b:
+            out[int(r.key.split(":")[1])] = b
+    return out

@@ -492,7 +492,8 @@ def test_item_sources(client, monkeypatch):
     assert r["sold"] == [{"npc": 5783, "name": None, "installs": 3, "lastSeen": "2026-11-09T23:17:59.000Z",
                           "copper": 120, "limited": None, "unlimited": True}]
     assert [d["npc"] for d in r["drops"]] == [3101, 3258]  # 61 kills at 31% before 2 kills at 50%
-    assert r["quests"] == [{"quest": 7, "title": "Kobold Camp Cleanup", "installs": 4}]
+    assert r["quests"] == [{"quest": 7, "title": "Kobold Camp Cleanup", "installs": 4, "chain": False}]
+    assert sources.brief(r)["kind"] == "quest" and sources.brief(r)["name"] == "Kobold Camp Cleanup"
     assert r["wiki"] == [{"text": "Linen Cloth is cheap.", "url": "w", "asOf": None}]
     assert r["item"]["name"] == "Linen Cloth"
 
