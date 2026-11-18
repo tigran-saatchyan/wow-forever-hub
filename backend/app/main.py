@@ -12,6 +12,7 @@ from .config import get_settings
 from .db import init_db
 from .routers import bnet as bnet_routes
 from .routers import bis as bis_routes
+from .routers import fdb as fdb_routes
 from .routers import builds, characters, collections, craft, items, live, market, media, professions, quests, sources
 
 
@@ -24,7 +25,7 @@ async def lifespan(_: FastAPI):
     tasks = []
     if s.ah_poll_minutes > 0 and bnet.client().configured:
         tasks.append(asyncio.create_task(market.poller()))
-    if s.foreverdb_key:
+    if s.foreverdb_key and s.foreverdb_sync:
         from . import fdb_gear
         tasks.append(asyncio.create_task(fdb_gear.worker()))
     if s.everloot_prefetch:
@@ -66,6 +67,7 @@ def create_app() -> FastAPI:
     app.include_router(collections.router)
     app.include_router(craft.router)
     app.include_router(bis_routes.router)
+    app.include_router(fdb_routes.router)
 
     @app.get("/api/health")
     async def health():

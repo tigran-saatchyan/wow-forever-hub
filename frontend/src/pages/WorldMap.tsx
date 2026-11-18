@@ -11,6 +11,7 @@ import { CHAINS, ORDERED, PLACES, fits, progress, stepDone, type Chain, type Cha
 import { ChainChars, ChainInfo, ChainPicker } from "./map/ChainPanel";
 import { useI18n, type Key } from "../lib/i18n";
 import MAPS from "../lib/maps.json";
+import { req } from "../lib/api";
 import { store } from "../lib/store";
 import { fullName, useCharacters, wowApi, type QuestInfo } from "../lib/wowApi";
 import { QuestDetails, useTab } from "./characters/ArmoryTabs";
@@ -183,7 +184,7 @@ export function WorldMap() {
       </div>
 
       {view === "world" ? (
-        <World continent={continent} setContinent={setContinent} zone={zone} setZone={setZone} />
+        <World continent={continent} setContinent={setContinent} zone={zone} setZone={setZone} faction={faction} />
       ) : (
         <div className="space-y-4">
         <ChainPicker current={chain.key} ids={ids} who={who} pick={setChain} />
@@ -287,8 +288,12 @@ function focusOf(p: Place, tick: number): Focus {
 }
 
 /** The seamless world: the places that matter, every zone named on the map; the list flies to a zone. */
-function World({ continent, setContinent, zone, setZone }: { continent: number; setContinent: (m: number) => void; zone: number | null; setZone: (m: number | null) => void }) {
+function World({ continent, setContinent, zone, setZone, faction }: { continent: number; setContinent: (m: number) => void; zone: number | null; setZone: (m: number | null) => void; faction: string }) {
   const { t, lang } = useI18n();
+  // any quest by ForeverDB: where to take it and where to hand it in; the vendors of the player's side
+  const [quest, setQuest] = useState<FdbQuest | null>(null);
+  const [showVendors, setShowVendors] = useState(() => store.get("wmVendors", false));
+  const vendors = useQuery({ queryKey: ["fdb-vendors"], queryFn: () => req<FdbVendorPin[]>("/api/fdb/vendors"), enabled: showVendors, staleTime: 3600e3 });
   const zones = ALL.filter((m) => m.parent === continent && m.type === 3).sort((a, b) => a.name[lang].localeCompare(b.name[lang]));
   const [focus, setFocus] = useState<Focus>(null);
   const pins = useMemo(() => {
@@ -297,9 +302,29 @@ function World({ continent, setContinent, zone, setZone }: { continent: number; 
       const w = toWorld(p.map, p.x, p.y);
       if (w) out.push({ ...w, kind: p.kind, glyph: GLYPH[p.kind], label: p.name[lang], onClick: () => setFocus({ ...w, zoom: 5, tick: Date.now() }) });
     }
+    if (showVendors) {
+      const mine = faction === "ALLIANCE" ? "Alliance" : "Horde";
+      for (const v of vendors.data || []) {
+        if (v.side && v.side !== mine && v.side !== "Both" && v.side !== "Neutral") continue;
+        const w = toWorld(v.map, v.x, v.y);
+        if (w) out.push({ ...w, kind: "vendor", glyph: "$", label: v.title ? `${v.name} <${v.title}>` : v.name, onClick: () => setFocus({ ...w, zoom: 5.5, tick: Date.now() }) });
+      }
+    }
+    if (quest) {
+      for (const [p, kind, g] of [[quest.starts, "giver", "!"], [quest.ends, "turnin", "?"]] as const) {
+        const w = p?.map != null && p.x != null ? toWorld(p.map, p.x, p.y!) : null;
+        if (w) out.push({ ...w, kind, glyph: g, hot: true, label: p!.name ?? "", onClick: () => setFocus({ ...w, zoom: 5, tick: Date.now() }) });
+      }
+    }
     return out;
-  }, [lang]);
+  }, [lang, showVendors, vendors.data, quest, faction]);
   const pick = (id: number) => { setZone(id); setFocus({ map: id, tick: Date.now() }); };
+  const showQuest = (q: FdbQuest) => {
+    setQuest(q);
+    const p = q.starts?.map != null && q.starts.x != null ? q.starts : q.ends;
+    const w = p?.map != null && p.x != null ? toWorld(p.map, p.x, p.y!) : null;
+    if (w) setFocus({ ...w, zoom: 5, tick: Date.now() });
+  };
   return (
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
       <Seamless pins={pins} focus={focus} onZone={setZone} />
@@ -309,6 +334,8 @@ function World({ continent, setContinent, zone, setZone }: { continent: number; 
             <button key={c} className={`chip ${continent === c && !zone ? "border-gold/60 text-gold" : ""}`} onClick={() => (setContinent(c), setZone(null), setFocus({ map: c, tick: Date.now() }))}>{BY_ID.get(c)?.name[lang]}</button>
           ))}
         </div>
+        <QuestFinder faction={faction} quest={quest} show={showQuest} clear={() => setQuest(null)} />
+        <label className="chip cursor-pointer"><input type="checkbox" className="mr-1.5" checked={showVendors} onChange={(e) => (store.set("wmVendors", e.target.checked), setShowVendors(e.target.checked))} />{t("wm_vendors")}</label>
         <div className="eyebrow pt-1">{t("wm_zones")}</div>
         <ul className="max-h-[60vh] space-y-0.5 overflow-y-auto pr-1 text-sm">
           {zones.map((z) => (
@@ -316,7 +343,53 @@ function World({ continent, setContinent, zone, setZone }: { continent: number; 
           ))}
         </ul>
         <p className="text-[11px] text-muted">{t("wm_omap_note")}</p>
+        <a className="text-[11px] text-gold hover:underline" href="https://foreverdb.net" target="_blank" rel="noopener noreferrer">{t("fdb_credit")}</a>
       </aside>
+    </div>
+  );
+}
+
+interface FdbPlace { type: string | null; id: number | null; name: string | null; map: number | null; x: number | null; y: number | null; zone: string | null; instance: string | null; source: string | null }
+interface FdbQuest { id: number; name: string; level: number | null; req: number | null; side: string | null; zone: string | null; known: boolean; url: string;
+  starts: FdbPlace | null; ends: FdbPlace | null; prev: { id: number; name: string; rel: string }[]; next: { id: number; name: string; rel: string }[] }
+interface FdbVendorPin { npc: number; name: string; title: string | null; side: string | null; map: number; x: number; y: number; seen: boolean; goods: number }
+
+/** Find any quest (ForeverDB): who gives it and where, who takes it back, the quests before and after it. */
+function QuestFinder({ faction, quest, show, clear }: { faction: string; quest: FdbQuest | null; show: (q: FdbQuest) => void; clear: () => void }) {
+  const { t } = useI18n();
+  const [q, setQ] = useState("");
+  const [term, setTerm] = useState("");
+  useEffect(() => { const h = setTimeout(() => setTerm(q.trim()), 400); return () => clearTimeout(h); }, [q]);
+  const side = faction === "ALLIANCE" ? "alliance" : "horde";
+  const found = useQuery({ queryKey: ["fdb-quests", term, side], enabled: term.length >= 3, staleTime: 3600e3,
+    queryFn: () => req<{ id: number; name: string; level: number | null; req: number | null; zone: string | null }[]>(`/api/fdb/quests?q=${encodeURIComponent(term)}&side=${side}`) });
+  const open = async (id: number) => show(await req<FdbQuest>(`/api/fdb/quests/${id}`));
+  const where = (p: FdbPlace | null) => p ? `${p.name ?? "?"}${p.zone ? ` · ${p.zone}` : p.instance ? ` · ${p.instance}` : ""}${p.x != null ? ` ${p.x.toFixed(0)}, ${p.y?.toFixed(0)}` : ""}` : "—";
+  return (
+    <div className="space-y-1.5">
+      <input className="input w-full py-1 text-sm" placeholder={t("wm_quest_find")} value={q} onChange={(e) => setQ(e.target.value)} />
+      {!quest && term.length >= 3 && (
+        <ul className="max-h-48 space-y-0.5 overflow-y-auto text-sm">
+          {(found.data || []).map((x) => (
+            <li key={x.id}><button className="w-full rounded px-2 py-0.5 text-left hover:bg-gold/10" onClick={() => void open(x.id)}>
+              {x.name} <span className="text-xs text-muted">{x.level ?? ""}{x.zone ? ` · ${x.zone}` : ""}</span></button></li>
+          ))}
+          {found.data && !found.data.length && <li className="text-xs text-muted">{t("ar_empty")}</li>}
+        </ul>
+      )}
+      {quest && (
+        <div className="char-stats space-y-1 text-sm">
+          <div className="flex items-start justify-between gap-2">
+            <b className="text-gold">{quest.name}</b>
+            <button className="text-xs text-muted hover:text-gold" onClick={clear}>✕</button>
+          </div>
+          <div className="text-xs text-muted">{t("wm_q_level", { l: quest.level ?? "?", r: quest.req ?? "?" })}{quest.zone ? ` · ${quest.zone}` : ""}</div>
+          <div className="text-xs"><span className="text-[#ffd100]">! </span>{where(quest.starts)}</div>
+          <div className="text-xs"><span className="text-[#ffd100]">? </span>{where(quest.ends)}</div>
+          {quest.prev.length > 0 && <div className="text-xs">{t("wm_q_prev")}: {quest.prev.map((p, i) => <span key={p.id}>{i ? ", " : ""}<button className="text-gold hover:underline" onClick={() => void open(p.id)}>{p.name}</button></span>)}</div>}
+          {quest.next.length > 0 && <div className="text-xs">{t("wm_q_next")}: {quest.next.map((p, i) => <span key={p.id}>{i ? ", " : ""}<button className="text-gold hover:underline" onClick={() => void open(p.id)}>{p.name}</button></span>)}</div>}
+        </div>
+      )}
     </div>
   );
 }

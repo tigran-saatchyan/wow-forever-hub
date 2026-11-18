@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     foreverdb_key: str = ""
     foreverdb_per_minute: int = 20
     foreverdb_per_day: int = 4000
+    foreverdb_sync: bool = True  # the background syncs (gear, vendors, recipes); off in tests and local runs
     # Fetch Everloot's "how to get it" for every recipe item in the background (off in tests).
     everloot_prefetch: bool = True
     # Refresh every character from Blizzard this often, in hours, so the leveling pace has points to go on

@@ -29,6 +29,11 @@ def made_by(item_id: int) -> list[dict]:
     return _index["made"].get(str(item_id), [])
 
 
+def vendors() -> list[dict]:
+    """Every vendor ForeverDB places on the map (seen in Forever or the original game's data)."""
+    return _index.get("vendors") or []
+
+
 def learn(spell_id: int) -> dict | None:
     """Where a recipe is learned (by its spell): the ways, the skill, the recipe item, the vendors of each side."""
     return (_index.get("learn") or {}).get(str(spell_id))
@@ -73,6 +78,7 @@ async def sync() -> None:
     sold: dict[str, list] = {}
     made: dict[str, list] = {}
     learn_: dict[str, dict] = {}
+    vlist: list[dict] = []
     vendors = await c.pages("vendors", ttl_days=30)
     for v in vendors:
         try:
@@ -84,6 +90,10 @@ async def sync() -> None:
             continue
         except httpx.HTTPError:
             continue
+        if d.get("mapId") and d.get("x") is not None:
+            vlist.append({"npc": d["id"], "name": d.get("name"), "title": d.get("title"), "side": d.get("side"),
+                          "map": d.get("mapId"), "x": d.get("x"), "y": d.get("y"), "seen": bool(d.get("seenInForever")),
+                          "goods": len(d.get("sells") or [])})
         for it in d.get("sells") or []:
             sold.setdefault(str(it["itemId"]), []).append({
                 "npc": d["id"], "name": d.get("name"), "title": d.get("title"), "side": d.get("side"),
@@ -133,7 +143,7 @@ async def sync() -> None:
         de = (await c.get("disenchant", ttl_days=30)).get("data") or []
     except (foreverdb.FdbError, httpx.HTTPError):
         de = _index.get("disenchant") or []
-    _index = {"sold": sold, "made": made, "learn": learn_, "disenchant": de, "at": utcnow().isoformat()}
+    _index = {"sold": sold, "made": made, "learn": learn_, "disenchant": de, "vendors": vlist, "at": utcnow().isoformat()}
     async with SessionLocal() as s:
         await s.merge(FdbCache(path=KEY, build=None, at=utcnow(), value=_index))
         await s.commit()

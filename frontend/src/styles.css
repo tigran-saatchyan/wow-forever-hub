@@ -1564,3 +1564,9 @@ button.order-line:hover { @apply text-gold; }
 /* the weapon row: fixed room for the names, so the three slots stand in the same place in both views */
 .tr-gear-row .tr-gear-text { width: 210px; min-width: 0; }
 .tr-gear-row .tr-gear-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* the map's vendor layer: small coins, the name on hover */
+.om-pin.vendor { left: -8px; top: -8px; }
+.om-pin.vendor .wm-glyph { width: 16px; height: 16px; font-size: 11px; color: #ffd76a; box-shadow: 0 0 0 1px #000, 0 0 0 2px #8a6a2c; }
+.om-pin.vendor .wm-label { display: none; }
+.om-pin.vendor:hover .wm-label { display: inline; }
