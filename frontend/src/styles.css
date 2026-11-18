@@ -1505,11 +1505,9 @@ button.order-line:hover { @apply text-gold; }
 .bis-opt.on { background: rgb(61 255 122 / 0.14); }
 .bis-rank { width: 16px; font: 700 12px var(--font-display, inherit); color: #7dff9a; }
 
-.bis-compare { position: absolute; z-index: 45; top: -8px; width: 420px; padding: 10px; border-radius: 8px; pointer-events: none;
+.bis-compare { z-index: 90; max-height: calc(100vh - 16px); overflow: hidden; padding: 10px; border-radius: 8px; pointer-events: none;
   border: 1px solid rgb(var(--gold) / 0.45); background: linear-gradient(180deg, rgb(10 12 14 / 0.97), rgb(4 6 8 / 0.97));
   box-shadow: 0 20px 50px -14px #000; }
-.bis-compare.right, .bis-compare.none { left: calc(100% + 12px); }
-.bis-compare.left { right: calc(100% + 12px); }
 .bis-cmp-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .bis-card { min-width: 0; line-height: 1.35; }
 .bis-cmp-diff { margin-top: 8px; padding-top: 6px; border-top: 1px solid rgb(var(--gold) / 0.2); font-size: 12px; }
@@ -1549,6 +1547,6 @@ button.order-line:hover { @apply text-gold; }
 
 .bis-rank-badge { position: absolute; left: -5px; top: -6px; min-width: 16px; height: 16px; padding: 0 3px; border-radius: 8px;
   font: 700 10px/16px var(--font-display, inherit); text-align: center; color: #0c1a12; background: #7dff9a; box-shadow: 0 0 0 1px #000; }
-.bis-worn-badge { position: absolute; left: 50%; bottom: -7px; translate: -50% 0; padding: 0 4px; border-radius: 4px; white-space: nowrap;
-  font: 700 9px/13px var(--font-display, inherit); letter-spacing: 0.05em; color: #0c1a12; background: #7dff9a; box-shadow: 0 0 0 1px #000, 0 0 8px #3dff7a; pointer-events: none; }
+.tr-stage .bis-worn-badge { position: absolute; left: 50%; bottom: -6px; translate: -50% 0; padding: 0 4px; border-radius: 4px; white-space: nowrap;
+  width: auto; height: auto; font: 700 9px/12px var(--font-display, inherit) !important; letter-spacing: 0.05em; color: #0c1a12; background: #7dff9a; box-shadow: 0 0 0 1px #000, 0 0 8px #3dff7a; pointer-events: none; }
 .bis-worn-tag { margin-left: 6px; padding: 0 4px; border-radius: 3px; font-size: 10px; color: #0c1a12; background: #7dff9a; }

@@ -6,6 +6,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ItemIcon } from "../../components/Wow";
 import { allTalents } from "../../engine";
 import { iconStyle, useIcons, useTalents } from "../../lib/gameData";
@@ -97,6 +98,7 @@ export function BisGear({ slot, s, side, size, i, onPick, onOpen, empty }: {
   const [menu, setMenu] = useState(false);
   const [hover, setHover] = useState(false);
   const box = useRef<HTMLDivElement>(null);
+  const anchor = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     if (!menu) return;
     const off = (e: MouseEvent) => { if (!box.current?.contains(e.target as Node)) setMenu(false); };
@@ -108,7 +110,7 @@ export function BisGear({ slot, s, side, size, i, onPick, onOpen, empty }: {
   return (
     <motion.div ref={box} className={`tr-gear ${side} bis-cell ${s?.ok ? "ok" : ""} ${menu || hover ? "raise" : ""}`}
       initial={{ opacity: 0, filter: "blur(6px)" }} animate={{ opacity: 1, filter: "blur(0px)" }} transition={{ delay: 0.1 + i * 0.03, duration: 0.4 }}>
-      <span className="bis-icon-wrap" onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+      <span ref={anchor} className="bis-icon-wrap" onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
         {x ? (
           <button className="tr-gear-icon bis-icon" onClick={() => onOpen(x)} aria-label={`${name}: ${x.name}`}>
             <ItemIcon itemId={x.id} quality={Q[x.q]} size={size} />
@@ -122,7 +124,7 @@ export function BisGear({ slot, s, side, size, i, onPick, onOpen, empty }: {
           <button className="bis-arrow" onClick={() => setMenu(!menu)} aria-label={t("bis_other")}>▾</button>
         )}
         <AnimatePresence>
-          {hover && x && !menu && <Compare a={x} b={s?.worn ?? null} side={side} />}
+          {hover && x && !menu && anchor.current && <Compare a={x} b={s?.worn ?? null} side={side} anchor={anchor.current} />}
         </AnimatePresence>
       </span>
       {x && side !== "none" && (
@@ -162,8 +164,21 @@ function Delta({ v, base }: { v: number; base: number }) {
 }
 
 /** The game's two-column comparison: the BiS item, what is worn, and the difference in every stat. */
-function Compare({ a, b, side }: { a: BisItem; b: BisItem | null; side: string }) {
+function Compare({ a, b, side, anchor }: { a: BisItem; b: BisItem | null; side: string; anchor: HTMLElement }) {
   const { t } = useI18n();
+  // drawn over the whole page (a portal), beside the slot: the hall's name plate and the other slots can't cover it
+  const r = anchor.getBoundingClientRect();
+  const vw = window.innerWidth, vh = window.innerHeight, W = Math.min(420, vw - 16);
+  const pos: React.CSSProperties = { position: "fixed", width: W };
+  if (side === "none") {
+    pos.left = r.left + r.width / 2 - W / 2;
+    pos.bottom = vh - r.top + 10;
+  } else {
+    pos.left = side === "left" ? r.left - W - 12 : r.right + 12;
+    if (r.top > vh / 2) pos.bottom = vh - r.bottom - 8;
+    else pos.top = r.top - 8;
+  }
+  pos.left = Math.max(8, Math.min(vw - W - 8, pos.left as number));
   const keys = [...new Set([...Object.keys(a.stats), ...Object.keys(b?.stats || {})])];
   const extra = (x: BisItem | null) => [
     ...(x?.armor ? [["ARMOR", x.armor] as const] : []), ...(x?.dps ? [["DPS", x.dps] as const] : []),
@@ -172,7 +187,7 @@ function Compare({ a, b, side }: { a: BisItem; b: BisItem | null; side: string }
   const all = [...keys, ...[...new Set([...ex.keys(), ...exb.keys()])]];
   const val = (x: BisItem | null, k: string) => (x ? (x.stats[k] ?? (k === "ARMOR" ? x.armor : k === "DPS" ? x.dps : 0) ?? 0) : 0);
   return (
-    <motion.div className={`bis-compare ${side}`} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+    createPortal(<motion.div className="bis-compare" style={pos} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
       <div className="bis-cmp-cols">
         <ItemCard x={a} head={t("bis_this")} />
         <ItemCard x={b} head={t("bis_worn_now")} />
@@ -187,7 +202,7 @@ function Compare({ a, b, side }: { a: BisItem; b: BisItem | null; side: string }
           {b ? <>{t("bis_total")}: <Delta v={a.score - b.score} base={b.score} /></> : t("bis_slot_empty")}
         </div>
       </div>
-    </motion.div>
+    </motion.div>, document.body)
   );
 }
 
