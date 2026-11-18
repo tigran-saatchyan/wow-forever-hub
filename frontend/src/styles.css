@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* the display face (Tailwind's font-display) for the plain-CSS rules below */
+:root { --font-display: "Cinzel", serif; }
+
 :root {
   color-scheme: dark;
   /* defaults; ThemeProvider overwrites these per theme */
@@ -1188,7 +1191,7 @@ button.order-line:hover { @apply text-gold; }
   background: linear-gradient(0deg, rgb(3 6 5 / 0.9), rgb(3 6 5 / 0.5) 70%, transparent);
 }
 .tr-name {
-  font-family: var(--font-display, inherit);
+  font-family: var(--font-display);
   font-size: clamp(1.8rem, 3.6vw, 3rem); line-height: 1.05; letter-spacing: 0.02em;
   background: linear-gradient(180deg, #fff6d2 0%, #e4c873 45%, #8a6a2c 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
@@ -1201,7 +1204,7 @@ button.order-line:hover { @apply text-gold; }
   width: 40px; height: 40px; border-radius: 8px; overflow: hidden;
   border: 1px solid rgb(var(--gold) / 0.3); background: #0b1110;
   opacity: 0.6; transition: opacity 0.2s, box-shadow 0.2s, transform 0.2s;
-  display: grid; place-items: center; font-family: var(--font-display, inherit); color: rgb(var(--gold));
+  display: grid; place-items: center; font-family: var(--font-display); color: rgb(var(--gold));
 }
 .tr-servant img { width: 100%; height: 100%; object-fit: cover; }
 .tr-servant:hover { opacity: 1; transform: translateY(-2px); }
@@ -1246,7 +1249,7 @@ button.order-line:hover { @apply text-gold; }
 
 /* a section of a profession, as Blizzard names it (Elixirs, Potions, Transmutes…) */
 .pf-section {
-  padding: 14px 6px 4px; font-family: var(--font-display, inherit); font-size: 13px; letter-spacing: 0.12em;
+  padding: 14px 6px 4px; font-family: var(--font-display); font-size: 13px; letter-spacing: 0.12em;
   text-transform: uppercase; color: rgb(var(--gold)); border-bottom: 1px solid rgb(var(--gold) / 0.25);
 }
 .tr-pace { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 16px; margin-top: 2px; font-size: 12px; }
@@ -1303,11 +1306,11 @@ button.order-line:hover { @apply text-gold; }
 .ch-portrait img, .ch-portrait > span:first-child { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; box-shadow: inset 0 0 0 2px #000; }
 .ch-portrait-lvl {
   position: absolute; right: -4px; bottom: -2px; min-width: 28px; height: 24px; padding: 0 6px; border-radius: 12px;
-  display: grid; place-items: center; font: 600 12px/1 var(--font-display, inherit); color: #ffd100;
+  display: grid; place-items: center; font: 600 12px/1 var(--font-display); color: #ffd100;
   background: linear-gradient(180deg, #2a2116, #0d0a06); box-shadow: 0 0 0 1px #000, 0 0 0 2px rgb(var(--gold) / 0.6);
 }
 .ch-name {
-  font-family: var(--font-display, inherit); font-size: clamp(1.6rem, 2.6vw, 2.2rem); line-height: 1.1;
+  font-family: var(--font-display); font-size: clamp(1.6rem, 2.6vw, 2.2rem); line-height: 1.1;
   background: linear-gradient(180deg, #fff6d2 0%, #e4c873 50%, #8a6a2c 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
   filter: drop-shadow(0 2px 0 #000);
@@ -1376,7 +1379,7 @@ button.order-line:hover { @apply text-gold; }
   box-shadow: inset 0 0 0 1px #000, inset 0 0 30px #000, 0 20px 40px -24px #000;
 }
 .wm-title { position: absolute; z-index: 3; top: 16px; left: 50%; translate: -50% 0; padding: 2px 14px; border-radius: 6px;
-  font: 600 14px var(--font-display, inherit); letter-spacing: 0.12em; text-transform: uppercase; color: #e4c873;
+  font: 600 14px var(--font-display); letter-spacing: 0.12em; text-transform: uppercase; color: #e4c873;
   background: rgb(10 8 5 / 0.8); border: 1px solid rgb(var(--gold) / 0.4); pointer-events: none; }
 .wm-box { position: relative; overflow: hidden; border-radius: 6px; cursor: grab; touch-action: none; user-select: none; overscroll-behavior: contain; }
 .wm-box:active { cursor: grabbing; }
@@ -1386,7 +1389,7 @@ button.order-line:hover { @apply text-gold; }
 .wm-zoom button { width: 30px; height: 30px; border-radius: 6px; color: #e4c873; font-weight: 700;
   background: rgb(10 8 5 / 0.85); border: 1px solid rgb(var(--gold) / 0.4); }
 .wm-pin { position: absolute; display: flex; align-items: center; gap: 4px; transform-origin: center; z-index: 2; white-space: nowrap; }
-.wm-glyph { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; font: 700 15px/1 var(--font-display, inherit);
+.wm-glyph { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; font: 700 15px/1 var(--font-display);
   color: #ffd100; background: radial-gradient(circle, #3a2a0a, #120c03); box-shadow: 0 0 0 1px #000, 0 0 0 2px #c9a24a, 0 2px 6px #000; }
 .wm-pin.do .wm-glyph { color: #ff5a3c; box-shadow: 0 0 0 1px #000, 0 0 0 2px #b8402a, 0 2px 6px #000; }
 .wm-pin.city .wm-glyph { color: #e4c873; }
@@ -1404,7 +1407,7 @@ button.order-line:hover { @apply text-gold; }
   border: 1px solid rgb(var(--gold) / 0.2); background: linear-gradient(180deg, rgb(12 18 17 / 0.85), rgb(6 9 9 / 0.9)); }
 .wm-route-item.on { border-color: rgb(var(--gold) / 0.6); box-shadow: 0 0 18px -8px rgb(255 209 0 / 0.7); }
 .wm-route-item.do .wm-glyph { color: #ff5a3c; }
-.wm-route-n { font: 600 12px var(--font-display, inherit); color: rgb(var(--muted)); }
+.wm-route-n { font: 600 12px var(--font-display); color: rgb(var(--muted)); }
 .wm-steps { max-height: 46vh; overflow-y: auto; padding-right: 4px; }
 .raid-step.cur { background: rgb(var(--gold) / 0.1); box-shadow: inset 3px 0 0 #e4c873; }
 .om-map, .om-map.leaflet-container { border-radius: 6px; background: #0b0906; font: inherit; overscroll-behavior: contain; }
@@ -1415,7 +1418,7 @@ button.order-line:hover { @apply text-gold; }
 .om-pin.hub { left: -7px; top: -7px; }
 .om-name { pointer-events: none; }
 .om-name span { position: absolute; transform: translate(-50%, -50%); white-space: nowrap; pointer-events: auto; cursor: pointer;
-  font: 600 12px var(--font-display, inherit); letter-spacing: 0.08em; color: #f3e3b0; text-shadow: 0 0 3px #000, 0 0 6px #000, 0 1px 2px #000;
+  font: 600 12px var(--font-display); letter-spacing: 0.08em; color: #f3e3b0; text-shadow: 0 0 3px #000, 0 0 6px #000, 0 1px 2px #000;
   transition: opacity 0.3s; }
 .om-name.continent span { font-size: 20px; letter-spacing: 0.2em; text-transform: uppercase; color: #ffd76a; pointer-events: none; }
 .om-name.city span { font-size: 11px; color: #ffe9a8; }
@@ -1451,7 +1454,7 @@ button.order-line:hover { @apply text-gold; }
 .cp-menu { position: absolute; z-index: 30; top: calc(100% + 4px); left: 0; min-width: 100%; max-height: 60vh; overflow-y: auto;
   padding: 4px; border-radius: 8px; border: 1px solid rgb(var(--gold) / 0.35); background: #0d0b08; box-shadow: 0 16px 40px -12px #000; }
 .cp-group + .cp-group { margin-top: 4px; padding-top: 4px; border-top: 1px solid rgb(var(--gold) / 0.15); }
-.cp-head { display: flex; align-items: center; gap: 8px; padding: 4px 6px; font: 600 13px var(--font-display, inherit); color: #e4c873; }
+.cp-head { display: flex; align-items: center; gap: 8px; padding: 4px 6px; font: 600 13px var(--font-display); color: #e4c873; }
 .cp-opt { display: flex; width: 100%; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 6px; text-align: left; font-size: 14px; white-space: nowrap; }
 .cp-opt:hover { background: rgb(var(--gold) / 0.1); }
 .cp-opt.on { background: rgb(var(--gold) / 0.16); color: #ffd76a; }
@@ -1464,7 +1467,7 @@ button.order-line:hover { @apply text-gold; }
 .cn-stage { padding: 8px 10px; border-radius: 8px; border: 1px solid rgb(var(--gold) / 0.22); background: rgb(10 14 13 / 0.6); }
 .cn-stage.later { border-style: dashed; opacity: 0.85; }
 .cn-stage-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.cn-stage-n { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; font: 700 12px var(--font-display, inherit);
+.cn-stage-n { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; font: 700 12px var(--font-display);
   color: #120c03; background: #c9a24a; }
 .cn-tag { padding: 0 6px; border-radius: 4px; font-size: 11px; color: #e4c873; border: 1px solid rgb(var(--gold) / 0.3); white-space: nowrap; }
 .cn-chip { display: inline-flex; align-items: center; gap: 6px; }
@@ -1477,7 +1480,7 @@ button.order-line:hover { @apply text-gold; }
 .bis-bar-right { display: flex; justify-content: flex-start; min-width: 0; }
 @media (max-width: 700px) { .bis-bar { grid-template-columns: auto auto; } .bis-bar-right { grid-column: 1 / -1; justify-content: center; } }
 .bis-switch { display: inline-flex; padding: 2px; border-radius: 999px; border: 1px solid rgb(var(--gold) / 0.45); background: rgb(8 10 9 / 0.75); }
-.bis-switch button { padding: 3px 14px; border-radius: 999px; font: 600 12px var(--font-display, inherit); letter-spacing: 0.12em; text-transform: uppercase; color: rgb(var(--muted)); }
+.bis-switch button { padding: 3px 14px; border-radius: 999px; font: 600 12px var(--font-display); letter-spacing: 0.12em; text-transform: uppercase; color: rgb(var(--muted)); }
 .bis-switch button.on { color: #120c03; background: linear-gradient(180deg, #f0d27a, #b8892c); box-shadow: 0 0 14px -4px #ffd100; }
 .bis-specs { display: inline-flex; gap: 4px; }
 .bis-spec { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px 2px 3px; border-radius: 999px; font-size: 12px;
@@ -1503,7 +1506,7 @@ button.order-line:hover { @apply text-gold; }
 .bis-opt { display: flex; width: 100%; align-items: center; gap: 8px; padding: 5px 6px; border-radius: 6px; font-size: 13px; }
 .bis-opt:hover { background: rgb(61 255 122 / 0.08); }
 .bis-opt.on { background: rgb(61 255 122 / 0.14); }
-.bis-rank { width: 16px; font: 700 12px var(--font-display, inherit); color: #7dff9a; }
+.bis-rank { width: 16px; font: 700 12px var(--font-display); color: #7dff9a; }
 
 .bis-compare { z-index: 90; max-height: calc(100vh - 16px); overflow: hidden; padding: 10px; border-radius: 8px; pointer-events: none;
   border: 1px solid rgb(var(--gold) / 0.45); background: linear-gradient(180deg, rgb(10 12 14 / 0.97), rgb(4 6 8 / 0.97));
@@ -1511,7 +1514,7 @@ button.order-line:hover { @apply text-gold; }
 .bis-cmp-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .bis-card { min-width: 0; line-height: 1.35; }
 .bis-cmp-diff { margin-top: 8px; padding-top: 6px; border-top: 1px solid rgb(var(--gold) / 0.2); font-size: 12px; }
-.bis-cmp-total { margin-top: 4px; font: 600 13px var(--font-display, inherit); color: #e4c873; }
+.bis-cmp-total { margin-top: 4px; font: 600 13px var(--font-display); color: #e4c873; }
 @media (max-width: 900px) { .bis-compare { width: 300px; } .bis-cmp-cols { grid-template-columns: 1fr; } }
 
 /* the hall's backdrops: race (.tr-bg), class order hall, specialization art; BiS swaps the race for Naxxramas */
@@ -1546,7 +1549,8 @@ button.order-line:hover { @apply text-gold; }
 .tr-stage .tr-gear-name, .tr-stage .tr-gear-sub { text-shadow: 0 0 4px #000, 0 1px 3px #000, 0 0 10px #000; }
 
 .bis-rank-badge { position: absolute; left: -5px; top: -6px; min-width: 16px; height: 16px; padding: 0 3px; border-radius: 8px;
-  font: 700 10px/16px var(--font-display, inherit); text-align: center; color: #0c1a12; background: #7dff9a; box-shadow: 0 0 0 1px #000; }
+  font-family: var(--font-display); font-weight: 700; font-size: 10px; line-height: 16px; text-align: center; color: #0c1a12;
+  background: #7dff9a; box-shadow: 0 0 0 1px #000; }
 .tr-stage .bis-worn-badge { position: absolute; left: 50%; bottom: -6px; translate: -50% 0; padding: 0 4px; border-radius: 4px; white-space: nowrap;
-  width: auto; height: auto; font: 700 9px/12px var(--font-display, inherit) !important; letter-spacing: 0.05em; color: #0c1a12; background: #7dff9a; box-shadow: 0 0 0 1px #000, 0 0 8px #3dff7a; pointer-events: none; }
-.bis-worn-tag { margin-left: 6px; padding: 0 4px; border-radius: 3px; font-size: 10px; color: #0c1a12; background: #7dff9a; }
+  width: auto; height: auto; font-family: var(--font-display); font-weight: 700; font-size: 8px; line-height: 11px; letter-spacing: 0.05em; color: #0c1a12; background: #7dff9a; box-shadow: 0 0 0 1px #000, 0 0 8px #3dff7a; pointer-events: none; }
+.bis-worn-tag { margin-left: 6px; padding: 0 4px; border-radius: 3px; font-size: 10px; line-height: 14px; color: #0c1a12; background: #7dff9a; }
