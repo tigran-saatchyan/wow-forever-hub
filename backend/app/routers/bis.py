@@ -91,6 +91,13 @@ async def _state(session: AsyncSession, cid: int) -> dict:
 async def get_bis(cid: int, user: CurrentUser, session: Session, spec: str | None = None, lang: str = "ru"):
     lang = "ru" if lang == "ru" else "en"
     c, s = await _char(session, user, cid)
+    return await build(session, c, s, spec, lang)
+
+
+async def build(session: AsyncSession, c: Character, s: dict, spec: str | None, lang: str, save: bool = True) -> dict:
+    """The BiS list of a character for a specialization (its saved one when none is given). `save` keeps the state
+    (level, the once-a-day cheer); other pages reading the list (the auction house) pass False."""
+    cid = c.id
     cls, level, faction = s["classId"], s.get("level") or 1, s.get("faction")
     specs = bis.CLASSES[cls]["specs"]
     st = await _state(session, cid)
@@ -149,10 +156,11 @@ async def get_bis(cid: int, user: CurrentUser, session: Session, spec: str | Non
         for o in x["options"]:
             o["src"] = src.get(o["id"])
     cheer = False
-    if complete and st.get("cheer") != date.today().isoformat():
-        cheer, st["cheer"] = True, date.today().isoformat()
-    await session.merge(Setting(key=f"bis:{cid}", value=st))
-    await session.commit()
+    if save:
+        if complete and st.get("cheer") != date.today().isoformat():
+            cheer, st["cheer"] = True, date.today().isoformat()
+        await session.merge(Setting(key=f"bis:{cid}", value=st))
+        await session.commit()
     return {"status": "ready", "class": bis.CLASSES[cls]["key"], "specs": specs, "spec": spec or specs[0], "customBase": base, "customSet": bool(custom.get("w")), "specSaved": bool(st.get("spec")), "level": level,
             "twoHand": two_hand, "slots": slots, "have": have, "total": total, "complete": complete, "cheer": cheer,
             "weights": w, "maxIlvl": bis.MAX_ILVL}

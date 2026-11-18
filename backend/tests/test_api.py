@@ -104,3 +104,59 @@ def test_spa_fallback(tmp_path, monkeypatch):
         assert c.get("/favicon.svg").text == "<svg/>"
         assert c.get("/api/nope").status_code == 404
         assert c.get("/api/health").json() == {"ok": True}
+
+
+def test_market_lists(client):
+    login(client)
+    ls = client.get("/api/market/lists").json()
+    assert len(ls) == 1 and ls[0]["items"] == []  # every user starts with one list
+    herbs = client.post("/api/market/lists", json={"name": "Травы"}).json()
+    it = client.post(f"/api/market/lists/{herbs['id']}/items", json={"item_id": 2447, "below": 500}).json()
+    assert it["itemId"] == 2447 and it["below"] == 500
+    assert client.patch(f"/api/market/lists/{herbs['id']}", json={"name": "Травы и поты"}).json()["name"] == "Травы и поты"
+    ls = client.get("/api/market/lists").json()
+    assert [x["name"] for x in ls][1] == "Травы и поты" and ls[1]["items"][0]["itemId"] == 2447
+    assert client.delete(f"/api/market/lists/{herbs['id']}/items/{it['id']}").status_code == 204
+    assert client.delete(f"/api/market/lists/{herbs['id']}").status_code == 204
+    assert len(client.get("/api/market/lists").json()) == 1
+    assert client.post("/api/market/lists", json={"name": ""}).status_code == 422
+
+
+def test_market_bis_on_sale(client):
+    import asyncio
+
+    from app.db import AhLatest, Character, SessionLocal, Setting, User
+    from sqlalchemy import select
+
+    login(client)
+    me = client.get("/api/auth/me").json()
+
+    async def seed():
+        async with SessionLocal() as s:
+            uid = (await s.execute(select(User.id).where(User.email == me["email"]))).scalar_one()
+            c = Character(user_id=uid, region="eu", slug="x", name="Valthanis",
+                          profile={"summary": {"en": {"classId": 5, "level": 34, "faction": "HORDE"}}})
+            s.add(c)
+            await s.merge(Setting(key="market", value={"region": "eu", "ruleset": 1, "house": 113}))
+            await s.commit()
+            return c.id
+    cid = asyncio.run(seed())
+    first = client.get(f"/api/market/bis/{cid}?spec=shadow").json()
+    assert first["status"] == "ready" and first["spec"] == "shadow" and first["rows"] == [] and first["checked"] > 0
+    sale = next(iter(client.get(f"/api/bis/{cid}?spec=shadow").json()["slots"]["HEAD"]["options"]))
+
+    async def put_lot():
+        async with SessionLocal() as s:
+            s.add(AhLatest(ruleset=1, house=113, item_id=sale["id"], min_price=12345, median_price=15000, quantity=2, auctions=2))
+            await s.commit()
+    asyncio.run(put_lot())
+    rows = client.get(f"/api/market/bis/{cid}?spec=shadow").json()["rows"]
+    assert rows == [r for r in rows if r["slot"] == "HEAD"] and rows[0]["rank"] == 1 and rows[0]["latest"]["min"] == 12345
+
+    async def clean():  # the other test files share this database
+        async with SessionLocal() as s:
+            await s.delete(await s.get(Character, cid))
+            await s.execute(AhLatest.__table__.delete())
+            await s.execute(Setting.__table__.delete().where(Setting.key.in_(["market", f"bis:{cid}"])))
+            await s.commit()
+    asyncio.run(clean())

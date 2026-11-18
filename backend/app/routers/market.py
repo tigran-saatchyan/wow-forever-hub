@@ -19,7 +19,7 @@ from .. import wow
 from ..auth import AdminUser, CurrentUser
 from ..bnet import REGIONS, BnetError, client
 from ..config import get_settings
-from ..db import AhHistory, AhLatest, AhWatch, SessionLocal, Setting, get_session, utcnow
+from ..db import AhHistory, AhLatest, AhList, AhListItem, AhWatch, SessionLocal, Setting, get_session, utcnow
 from .items import get_item
 
 router = APIRouter(prefix="/api/market", tags=["market"])
@@ -144,7 +144,8 @@ async def poll_once(force: bool = False) -> dict:
             ]
             for i in range(0, len(rows), 2000):
                 await session.execute(insert(AhLatest), rows[i:i + 2000])
-            watched = set((await session.execute(select(AhWatch.item_id))).scalars())
+            watched = set((await session.execute(select(AhWatch.item_id))).scalars()) | \
+                set((await session.execute(select(AhListItem.item_id))).scalars())
             hist = [
                 {"ruleset": r, "house": h, "item_id": iid, "min_price": summary[iid]["min"],
                  "median_price": summary[iid]["median"], "quantity": summary[iid]["quantity"], "ts": now}
@@ -226,7 +227,7 @@ async def refresh(_: AdminUser):
     return await poll_once(force=True)
 
 
-async def _item_card(session: AsyncSession, cfg: dict, w: AhWatch, lang: str) -> dict:
+async def _item_card(session: AsyncSession, cfg: dict, w: AhWatch | AhListItem, lang: str) -> dict:
     r, h = cfg.get("ruleset"), cfg.get("house")
     latest = await session.get(AhLatest, (r, h, w.item_id)) if r is not None else None
     hist = (await session.execute(
@@ -295,3 +296,142 @@ async def price(item_id: int, _: CurrentUser, session: Session):
         return None
     x = await session.get(AhLatest, (cfg["ruleset"], cfg["house"], item_id))
     return {"min": x.min_price, "median": x.median_price, "quantity": x.quantity, "ts": x.ts} if x else None
+
+
+# --- the user's own lists (any items) -----------------------------------------------------------------------------
+
+DEFAULT_LIST = "Отслеживание"
+
+
+class ListIn(BaseModel):
+    name: str = Field(min_length=1, max_length=60)
+
+
+async def _own_list(session: AsyncSession, user, lid: int) -> AhList:
+    x = await session.get(AhList, lid)
+    if not x or x.user_id != user.id:
+        raise HTTPException(404, "no such list")
+    return x
+
+
+async def _first_lists(session: AsyncSession, user) -> None:
+    """A user without lists gets one, and the items watched before lists existed move into it."""
+    if (await session.execute(select(AhList.id).where(AhList.user_id == user.id).limit(1))).first():
+        return
+    lst = AhList(user_id=user.id, name=DEFAULT_LIST)
+    session.add(lst)
+    await session.flush()
+    for w in (await session.execute(select(AhWatch).where(AhWatch.user_id == user.id))).scalars().all():
+        session.add(AhListItem(list_id=lst.id, item_id=w.item_id, below=w.below, created=w.created))
+        await session.delete(w)
+    await session.commit()
+
+
+async def _list_card(session: AsyncSession, cfg: dict, x: AhList, lang: str) -> dict:
+    items = (await session.execute(select(AhListItem).where(AhListItem.list_id == x.id)
+                                   .order_by(AhListItem.created, AhListItem.id))).scalars().all()
+    return {"id": x.id, "name": x.name, "items": [await _item_card(session, cfg, w, lang) for w in items]}
+
+
+@router.get("/lists")
+async def lists(user: CurrentUser, session: Session, lang: str = "ru"):
+    await _first_lists(session, user)
+    cfg = await _setting(session, "market")
+    xs = (await session.execute(select(AhList).where(AhList.user_id == user.id).order_by(AhList.created, AhList.id))).scalars().all()
+    return [await _list_card(session, cfg, x, lang) for x in xs]
+
+
+@router.post("/lists")
+async def list_add(body: ListIn, user: CurrentUser, session: Session):
+    x = AhList(user_id=user.id, name=body.name.strip())
+    session.add(x)
+    await session.commit()
+    return {"id": x.id, "name": x.name, "items": []}
+
+
+@router.patch("/lists/{lid}")
+async def list_rename(lid: int, body: ListIn, user: CurrentUser, session: Session):
+    x = await _own_list(session, user, lid)
+    x.name = body.name.strip()
+    await session.commit()
+    return {"id": x.id, "name": x.name}
+
+
+@router.delete("/lists/{lid}", status_code=204)
+async def list_delete(lid: int, user: CurrentUser, session: Session):
+    x = await _own_list(session, user, lid)
+    await session.execute(delete(AhListItem).where(AhListItem.list_id == x.id))
+    await session.delete(x)
+    await session.commit()
+
+
+async def _seed_history(session: AsyncSession, cfg: dict, item_id: int) -> None:
+    """Start an item's history with the latest snapshot, so its chart does not wait for the next one."""
+    if not cfg:
+        return
+    r, h = cfg["ruleset"], cfg["house"]
+    latest = await session.get(AhLatest, (r, h, item_id))
+    seen = (await session.execute(select(AhHistory.id).where(
+        AhHistory.item_id == item_id, AhHistory.ruleset == r, AhHistory.house == h).limit(1))).first()
+    if latest and not seen:
+        session.add(AhHistory(ruleset=r, house=h, item_id=item_id, min_price=latest.min_price,
+                              median_price=latest.median_price, quantity=latest.quantity, ts=latest.ts))
+
+
+@router.post("/lists/{lid}/items")
+async def list_item_add(lid: int, body: WatchIn, user: CurrentUser, session: Session, lang: str = "ru"):
+    x = await _own_list(session, user, lid)
+    q = select(AhListItem).where(AhListItem.list_id == x.id, AhListItem.item_id == body.item_id)
+    w = (await session.execute(q)).scalar_one_or_none()
+    if w is None:
+        w = AhListItem(list_id=x.id, item_id=body.item_id)
+        session.add(w)
+    w.below = body.below
+    cfg = await _setting(session, "market")
+    await _seed_history(session, cfg, body.item_id)
+    await session.commit()
+    return await _item_card(session, cfg, w, lang)
+
+
+@router.delete("/lists/{lid}/items/{iid}", status_code=204)
+async def list_item_delete(lid: int, iid: int, user: CurrentUser, session: Session):
+    x = await _own_list(session, user, lid)
+    w = await session.get(AhListItem, iid)
+    if not w or w.list_id != x.id:
+        raise HTTPException(404, "not in the list")
+    await session.delete(w)
+    await session.commit()
+
+
+# --- BiS on the auction house -------------------------------------------------------------------------------------
+
+@router.get("/bis/{cid}")
+async def bis_on_sale(cid: int, user: CurrentUser, session: Session, spec: str | None = None, lang: str = "ru"):
+    """A character's BiS list for its level (and the chosen specialization) reduced to what is on sale now in the
+    chosen house: each item with its place in its slot's list (1, 2, 3, as on the throne room) and its price.
+    Items bound on pickup never reach the auction house, so the list holds the rest only."""
+    from . import bis as bis_routes
+
+    lang = "ru" if lang == "ru" else "en"
+    c, s = await bis_routes._char(session, user, cid)
+    out = await bis_routes.build(session, c, s, spec, lang, save=False)
+    if out.get("status") != "ready":
+        return {"status": out.get("status")}
+    cfg = await _setting(session, "market")
+    rows, ids = [], 0
+    for slot, x in out["slots"].items():
+        for rank, o in enumerate(x["options"]):
+            if o.get("wornOnly"):
+                continue
+            ids += 1
+            latest = await session.get(AhLatest, (cfg["ruleset"], cfg["house"], o["id"])) if cfg else None
+            if not latest:
+                continue
+            rows.append({"slot": slot, "rank": rank + 1, "id": o["id"], "name": o["name"], "q": o["q"],
+                         "ilvl": o["ilvl"], "req": o["req"], "worn": o["id"] == x.get("wornId"),
+                         "better": x.get("wornRank") is None or rank < x["wornRank"],
+                         "latest": {"min": latest.min_price, "median": latest.median_price,
+                                    "quantity": latest.quantity, "ts": latest.ts}})
+    return {"status": "ready", "level": out["level"], "spec": out["spec"], "specs": out["specs"],
+            "customSet": out["customSet"], "class": out["class"], "rows": rows, "checked": ids,
+            "configured": bool(cfg)}

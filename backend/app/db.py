@@ -140,6 +140,30 @@ class AhWatch(Base):
     created: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class AhList(Base):
+    """A user's own list of items followed on the auction house (any items: gear, potions, herbs), named by them."""
+
+    __tablename__ = "ah_list"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(60))
+    created: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class AhListItem(Base):
+    """An item of a list, with an optional "tell me below" price."""
+
+    __tablename__ = "ah_list_item"
+    __table_args__ = (UniqueConstraint("list_id", "item_id"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    list_id: Mapped[int] = mapped_column(ForeignKey("ah_list.id", ondelete="CASCADE"), index=True)
+    item_id: Mapped[int] = mapped_column(Integer, index=True)
+    below: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    created: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 engine = create_async_engine(get_settings().database_url)
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
