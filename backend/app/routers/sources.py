@@ -163,7 +163,7 @@ async def _refresh_quietly(item_id: int, lang: str) -> None:
         _refreshing.discard((item_id, lang))
 
 
-def with_fdb(out: dict, item_id: int) -> dict:
+def with_fdb(out: dict, item_id: int, side: str | None = None) -> dict:
     """ForeverDB's word added to any answer: who sells it (where, for how much, seen in Forever or not) and which
     recipe makes it (app/fdb_sources.py)."""
     from .. import fdb_sources
@@ -172,11 +172,11 @@ def with_fdb(out: dict, item_id: int) -> dict:
 
     lang = "ru" if (out.get("_lang") or "ru") == "ru" else "en"
     return {**out, "fdb": {"sold": fdb_sources.sold_by(item_id)[:8], "made": fdb_sources.made_by(item_id)[:4]},
-            "own": {"quests": item_sources.quests(item_id, lang), "drops": item_sources.drops(item_id, lang)}}
+            "own": {"quests": item_sources.quests(item_id, lang, side), "drops": item_sources.drops(item_id, lang)}}
 
 
 @router.get("/item/{item_id}")
-async def item_sources(item_id: int, _: CurrentUser, session: Session, lang: str = "ru"):
+async def item_sources(item_id: int, _: CurrentUser, session: Session, lang: str = "ru", side: str | None = None):
     lang = "ru" if lang == "ru" else "en"
     if known_here(item_id):  # the hub's own references know it: Everloot (often down) is not asked at all
         try:
@@ -185,8 +185,8 @@ async def item_sources(item_id: int, _: CurrentUser, session: Session, lang: str
             info = None
         base = {"item": info, "sold": [], "drops": [], "quests": [], "wiki": [], "errors": [], "dataAsOf": None,
                 "everloot": f"https://everloot.app/database/items/{item_id}", "at": utcnow().isoformat()}
-        return with_fdb({**base, "_lang": lang}, item_id)
-    return with_fdb({**await _item_sources(item_id, session, lang), "_lang": lang}, item_id)
+        return with_fdb({**base, "_lang": lang}, item_id, side)
+    return with_fdb({**await _item_sources(item_id, session, lang), "_lang": lang}, item_id, side)
 
 
 def known_here(item_id: int) -> bool:
@@ -316,7 +316,7 @@ async def prefetch_state(_: CurrentUser, session: Session):
     return row.value if row else None
 
 
-def brief(d: dict | None, item_id: int | None = None, lang: str = "ru") -> dict | None:
+def brief(d: dict | None, item_id: int | None = None, lang: str = "ru", side: str | None = None) -> dict | None:
     """One line of where an item comes from, for the BiS comparison. The hub's own references first — a quest
     (Blizzard's data, "chain" when it has quests around it), then a drop (a boss or rare in its dungeon or zone, or a
     world drop with its likeliest creature and how many kinds drop it; the original game's data) —, then ForeverDB's
@@ -324,7 +324,7 @@ def brief(d: dict | None, item_id: int | None = None, lang: str = "ru") -> dict 
     from .. import fdb_sources, item_sources
 
     if item_id:
-        own = item_sources.brief(item_id, lang)
+        own = item_sources.brief(item_id, lang, side)
         if own:
             return own
         fdb_sold = fdb_sources.sold_by(item_id)
@@ -386,7 +386,7 @@ async def _load_crafted() -> None:
                     {"name": r["name"], "prof": p["name"], "skill": r.get("skill") or r.get("yellow")})
 
 
-async def briefs(session: AsyncSession, ids: list[int], lang: str) -> dict[int, dict]:
+async def briefs(session: AsyncSession, ids: list[int], lang: str, side: str | None = None) -> dict[int, dict]:
     """brief() for many items at once, from the stored answers only (nothing is asked here)."""
     from sqlalchemy import select
 
@@ -396,7 +396,7 @@ async def briefs(session: AsyncSession, ids: list[int], lang: str) -> dict[int, 
     stored = {int(r.key.split(":")[1]): (r.value or {}).get("data") for r in rows}
     out = {}
     for i in ids:  # ForeverDB's index answers even for items Everloot was never asked about
-        b = brief(stored.get(i), i, lang)
+        b = brief(stored.get(i), i, lang, side)
         if b:
             out[i] = b
     return out

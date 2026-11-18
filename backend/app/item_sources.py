@@ -44,6 +44,10 @@ def _quests() -> dict:
     return json.loads(p.read_text("utf-8"))["items"] if p.is_file() else {}
 
 
+def _side(side: str | None) -> str | None:
+    return {"HORDE": "H", "ALLIANCE": "A", "H": "H", "A": "A"}.get((side or "").upper())
+
+
 @lru_cache(maxsize=1)
 def _chain() -> frozenset:
     return frozenset(_loot().get("chain") or [])
@@ -62,10 +66,14 @@ def _creature(entry: int, chance: float, lang: str) -> dict:
     }
 
 
-def quests(item_id: int, lang: str) -> list[dict]:
-    out = []
+def quests(item_id: int, lang: str, side: str | None = None) -> list[dict]:
+    """The quests rewarding the item; with a side, the other side's quests (the original game's races allowed) left out."""
+    out, mine, sides = [], _side(side), _loot().get("side") or {}
     for q in _quests().get(str(item_id)) or []:
-        out.append({"id": q["id"], "name": (q.get("ru") if lang == "ru" else None) or q.get("en") or f"#{q['id']}",
+        qs = sides.get(str(q["id"]))
+        if mine and qs and qs != mine:
+            continue
+        out.append({"side": qs, "id": q["id"], "name": (q.get("ru") if lang == "ru" else None) or q.get("en") or f"#{q['id']}",
                     "area": q.get("area") if lang == "ru" else q.get("areaEn"), "chain": q["id"] in _chain()})
     return out
 
@@ -78,10 +86,10 @@ def drops(item_id: int, lang: str) -> dict | None:
     return {"top": [_creature(e, c, lang) for e, c in x["d"]], "count": x["n"], "world": bool(x.get("world"))}
 
 
-def brief(item_id: int, lang: str) -> dict | None:
+def brief(item_id: int, lang: str, side: str | None = None) -> dict | None:
     """One line of where the item comes from, from these references only: a quest, then a drop (a boss or a rare
     in its dungeon or zone, or a world drop with its likeliest creature and how many others drop it)."""
-    qs = quests(item_id, lang)
+    qs = quests(item_id, lang, side)
     if qs:
         q = qs[0]
         return {"kind": "quest", "name": q["name"], "where": q["area"], "chain": q["chain"], "more": len(qs) - 1}

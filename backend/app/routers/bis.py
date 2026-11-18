@@ -144,7 +144,7 @@ async def get_bis(cid: int, user: CurrentUser, session: Session, spec: str | Non
     complete = total > 0 and have == total
     # where each choice comes from, from the stored "where to get it" answers (fetched ahead in the background)
     from .sources import briefs
-    src = await briefs(session, list({o["id"] for x in slots.values() for o in x["options"]}), lang)
+    src = await briefs(session, list({o["id"] for x in slots.values() for o in x["options"]}), lang, faction)
     for x in slots.values():
         for o in x["options"]:
             o["src"] = src.get(o["id"])

@@ -68,6 +68,7 @@ function Body({ id, fallbackName, onClose }: { id: number; fallbackName?: string
                     <li key={q.id}>
                       <a className="hover:text-gold hover:underline" href={wh(lang, "quest", q.id)} target="_blank" rel="noopener noreferrer">{q.name}</a>
                       {q.chain && <span className="ml-2 text-xs text-[#ffd100]">{t("so_chain")}</span>}
+                      {q.side && <span className={`ml-2 text-xs ${q.side === "H" ? "text-red-400" : "text-sky-400"}`}>{t(q.side === "H" ? "so_side_H" : "so_side_A")}</span>}
                       {q.area && <span className="ml-2 text-xs text-muted">{q.area}</span>}
                     </li>
                   ))}

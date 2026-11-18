@@ -180,10 +180,14 @@ def main() -> None:
     zs = {str(c["zone"]) for c in creatures.values() if c.get("zone")}
     chain = sorted(q["entry"] for q in t["quest_template"]
                    if q.get("PrevQuestId") or q.get("NextQuestId") or q.get("NextQuestInChain"))
+    # quests only one side can take (by the races allowed): "A" or "H"
+    ally, horde = 1 | 4 | 8 | 64, 2 | 16 | 32 | 128
+    side = {str(q["entry"]): ("A" if not q["RequiredRaces"] & horde else "H")
+            for q in t["quest_template"] if q.get("RequiredRaces") and not (q["RequiredRaces"] & ally and q["RequiredRaces"] & horde)}
     OUT.write_text(json.dumps({"source": "CMaNGOS classic-db (GPL v3), the original game's data",
                                "items": items, "creatures": {str(e): creatures[e] for e in sorted(used)},
                                "zones": {z: [names_en.get(z, z), names_ru.get(z) or names_en.get(z, z)] for z in sorted(zs)},
-                               "chain": chain},
+                               "chain": chain, "side": side},
                               ensure_ascii=False, separators=(",", ":")), "utf-8")
     print("wrote", OUT, len(items), "items", len(used), "creatures")
 

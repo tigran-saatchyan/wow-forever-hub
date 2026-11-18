@@ -117,3 +117,12 @@ def test_restored_wand_damage_not_believed():
     assert wand["dps"] is None and bis.score(wand, bis.WEIGHTS[(5, "holy")], "RANGED") == 0.0
     real = {"ilvl": 63, "dps": 64.0}
     assert bis.plausible_dps(real)["dps"] == 64.0
+
+
+def test_quest_rewards_by_side():
+    from app import item_sources
+    both = {q["id"] for q in item_sources.quests(16309, "ru")}  # Drakefire Amulet: one quest per side
+    assert {6502, 6602} <= both
+    horde = item_sources.quests(16309, "ru", "HORDE")
+    assert [q["id"] for q in horde] == [6602] and horde[0]["chain"] and horde[0]["name"] == "Кровь могучего черного дракона"
+    assert item_sources.brief(16309, "ru", "HORDE")["name"] == "Кровь могучего черного дракона"
