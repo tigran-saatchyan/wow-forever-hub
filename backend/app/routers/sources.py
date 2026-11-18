@@ -332,10 +332,16 @@ def brief(d: dict | None, item_id: int | None = None, lang: str = "ru") -> dict 
             v = fdb_sold[0]
             return {"kind": "vendor", "name": v.get("name") or f"NPC #{v['npc']}", "where": v.get("zone"),
                     "copper": v.get("price"), "more": len(fdb_sold) - 1}
+        own_made = _crafted.get(item_id)  # the client's recipe reference: names in the page's language, the skill
+        if own_made:
+            m = own_made[0]
+            return {"kind": "craft", "name": m["name"].get(lang) or m["name"]["en"], "where": m["prof"].get(lang) or m["prof"]["en"],
+                    "skill": m["skill"], "more": len(own_made) - 1}
         made = fdb_sources.made_by(item_id)
         if made:
             m = made[0]
-            return {"kind": "craft", "name": m["recipe"], "where": m["profession"], "more": len(made) - 1}
+            return {"kind": "craft", "name": m["recipe"], "where": PROF_RU.get(m.get("slug", ""), m["profession"]) if lang == "ru" else m["profession"],
+                    "skill": m.get("skill"), "more": len(made) - 1}
     d = d or {}  # Everloot, the last resort
     if d.get("quests"):
         q = d["quests"][0]
@@ -358,10 +364,33 @@ def brief(d: dict | None, item_id: int | None = None, lang: str = "ru") -> dict 
     return None
 
 
+PROF_RU = {"alchemy": "Алхимия", "blacksmithing": "Кузнечное дело", "enchanting": "Наложение чар", "engineering": "Инженерное дело",
+           "leatherworking": "Кожевничество", "tailoring": "Портняжное дело", "cooking": "Кулинария", "first-aid": "Первая помощь",
+           "mining": "Горное дело", "fishing": "Рыбная ловля"}
+_crafted: dict[int, list[dict]] = {}  # item -> recipes making it (from the recipe reference), filled by briefs()
+
+
+async def _load_crafted() -> None:
+    from . import professions
+
+    if _crafted:
+        return
+    try:
+        ds = await professions._load(professions._build())
+    except HTTPException:
+        return
+    for p in (ds or {}).get("professions", {}).values():
+        for r in p["recipes"]:
+            if r.get("item"):
+                _crafted.setdefault(r["item"], []).append(
+                    {"name": r["name"], "prof": p["name"], "skill": r.get("skill") or r.get("yellow")})
+
+
 async def briefs(session: AsyncSession, ids: list[int], lang: str) -> dict[int, dict]:
     """brief() for many items at once, from the stored answers only (nothing is asked here)."""
     from sqlalchemy import select
 
+    await _load_crafted()
     keys = [f"src:{i}:{lang}" for i in ids]
     rows = (await session.execute(select(Setting).where(Setting.key.in_(keys)))).scalars().all()
     stored = {int(r.key.split(":")[1]): (r.value or {}).get("data") for r in rows}

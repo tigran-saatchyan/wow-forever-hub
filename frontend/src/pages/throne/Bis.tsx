@@ -20,7 +20,7 @@ export interface BisItem {
   src?: Src | null;
 }
 /** Where it comes from, in one line (app/routers/sources.py brief). */
-export interface Src { kind: "quest" | "drop" | "world" | "vendor" | "craft"; name: string; where?: string | null; rate?: number | null; chain?: boolean; copper?: number | null; more: number; classic?: boolean }
+export interface Src { kind: "quest" | "drop" | "world" | "vendor" | "craft"; name: string; where?: string | null; rate?: number | null; chain?: boolean; copper?: number | null; more: number; classic?: boolean; skill?: number | null }
 
 export function SrcLine({ s }: { s?: Src | null }) {
   const { t } = useI18n();
@@ -31,7 +31,7 @@ export function SrcLine({ s }: { s?: Src | null }) {
     : s.kind === "drop" ? `${s.name}${s.where ? ` · ${s.where}` : ""}${pct}`
     : s.kind === "world" ? t("bis_src_world", { n: s.name }) + (s.where ? ` · ${s.where}` : "") + pct
     : s.kind === "vendor" ? t("bis_src_vendor", { n: s.name })
-    : t("bis_src_craft", { p: s.where ?? "", n: s.name });
+    : t("bis_src_craft", { p: `${s.where ?? ""}${s.skill ? ` (${s.skill})` : ""}`, n: s.name });
   return <div className={`bis-src ${s.kind}`} title={s.classic ? t("so_classic_note") : undefined}>{txt}{more}</div>;
 }
 export interface BisSlot { options: BisItem[]; pick: number; worn: BisItem | null; wornId: number | null; wornRank: number | null; ok: boolean }
