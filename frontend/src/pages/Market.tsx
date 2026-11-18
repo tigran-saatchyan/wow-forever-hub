@@ -355,6 +355,12 @@ function BisOnSale({ onAdd, listName }: { onAdd: (id: number) => void; listName?
           </div>
         ))}
       {d?.status === "ready" && <p className="text-xs text-muted">{t("mk_bis_note", { n: d.checked ?? 0 })}</p>}
+      {d?.status === "ready" && d.talentsFrom !== "custom" && (
+        <p className="text-xs text-muted">
+          {t("bis_w_src")} <a className="underline" href="https://github.com/VgerMods/Pawn" target="_blank" rel="noopener noreferrer">Pawn</a> (HawsJon)
+          {d.talentsMoved?.length ? <> · {t(d.talentsFrom === "real" ? "bis_w_real" : "bis_w_tree")}: {d.talentsMoved.join(", ")}</> : null}
+        </p>
+      )}
       <SourcePanel item={open} onClose={() => setOpen(null)} />
     </Fold>
   );

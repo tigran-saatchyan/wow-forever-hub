@@ -18,7 +18,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .. import bis, fdb_gear
+from .. import bis, fdb_gear, talent_weights
 from ..auth import CurrentUser
 from ..db import Character, SessionLocal, Setting, get_session
 
@@ -104,15 +104,21 @@ async def build(session: AsyncSession, c: Character, s: dict, spec: str | None, 
     if st.get("level") != level:  # a new level: new best gear, the picks start over (own weights stay)
         st = {"level": level, "spec": st.get("spec"), "picks": {}, "cheer": st.get("cheer"), "custom": st.get("custom")}
     allowed = [*specs, bis.CUSTOM]
-    spec = spec if spec in allowed else (st.get("spec") if st.get("spec") in allowed else None)
+    rows = (c.profile or {}).get("talents") or []
+    _, points = talent_weights._taken(cls, rows)
+    own_tree = specs[points.index(max(points))] if points and max(points) > 0 else None
+    spec = spec if spec in allowed else (st.get("spec") if st.get("spec") in allowed else own_tree)
     if not gear():
         return {"status": "nodata"}
     custom = st.get("custom") or {}
     base = custom.get("base") if custom.get("base") in specs else specs[0]
     if spec == bis.CUSTOM:  # the player's own weights over the specialization they started from
         out = bis.choose(gear(), cls, base, level, faction, w={**bis.weights(cls, base), **(custom.get("w") or {})})
+        moved, whose = [], "custom"
     else:
-        out = bis.choose(gear(), cls, spec or specs[0], level, faction)
+        # Pawn's weights for the specialization, moved by talents: the character's own when it plays this tree
+        tw, moved, whose = talent_weights.for_spec(bis.weights(cls, spec or specs[0]), cls, specs, spec or specs[0], level, rows, lang)
+        out = bis.choose(gear(), cls, spec or specs[0], level, faction, w=tw)
     w = out["weights"]
     picks = (st.get("picks") or {}).get(spec or specs[0]) or {}
     eq = {x["slot"]: x for x in (((c.profile or {}).get("equipment") or {}).get(lang) or [])}
@@ -163,7 +169,7 @@ async def build(session: AsyncSession, c: Character, s: dict, spec: str | None, 
         await session.commit()
     return {"status": "ready", "class": bis.CLASSES[cls]["key"], "specs": specs, "spec": spec or specs[0], "customBase": base, "customSet": bool(custom.get("w")), "specSaved": bool(st.get("spec")), "level": level,
             "twoHand": two_hand, "slots": slots, "have": have, "total": total, "complete": complete, "cheer": cheer,
-            "weights": w, "maxIlvl": bis.MAX_ILVL}
+            "weights": w, "maxIlvl": bis.MAX_ILVL, "talentsMoved": moved, "talentsFrom": whose}
 
 
 class Pick(BaseModel):

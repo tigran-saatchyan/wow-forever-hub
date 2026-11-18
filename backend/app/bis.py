@@ -80,37 +80,36 @@ MELEE = {"STRENGTH": 1.0, "AGILITY": 0.7, "STAMINA": 0.25, "ap": 0.5, "crit": 0.
 TANK = {"STAMINA": 1.0, "armor": 0.06, "tank": 0.9, "STRENGTH": 0.5, "AGILITY": 0.6, "hit": 0.4, "exp": 0.4,
         "dps": 1.0}
 
-WEIGHTS: dict[tuple[int, str], dict[str, float]] = {
-    (1, "arms"): _w(MELEE, dps=3.5), (1, "fury"): _w(MELEE, dps=2.8, dps_off=2.0), (1, "protection"): _w(TANK),
-    (2, "holy"): _w(HEALER, INTELLECT=0.75, SPIRIT=0.25, mp5=1.5, crit=0.7),
-    (2, "protection"): _w(TANK, tank=1.0, sp=0.4, INTELLECT=0.2),
-    (2, "retribution"): _w(MELEE, AGILITY=0.65, INTELLECT=0.15, ap=0.5, dps=3.5),
-    (3, "beastmastery"): {"AGILITY": 1.0, "rap": 0.5, "ap": 0.15, "INTELLECT": 0.25, "STAMINA": 0.3, "crit": 0.9,
-                          "hit": 1.1, "haste": 0.6, "dps_ranged": 3.0, "dps": 0.3},
-    (4, "assassination"): _w(MELEE, AGILITY=1.0, STRENGTH=0.55, hit=1.2, dps_off=2.0),
-    (5, "discipline"): _w(HEALER, heal=0.9, INTELLECT=0.65, SPIRIT=0.5, mp5=1.6, STAMINA=0.2, dps_wand=0.6),
-    (5, "holy"): _w(HEALER, SPIRIT=0.55, mp5=1.8, crit=0.45, dps_wand=0.5),
-    (5, "shadow"): _w(CASTER, INTELLECT=0.35, SPIRIT=0.4, STAMINA=0.25, crit=0.55, BONUS_STAT_SHADOW_DAMAGE_DONE=0.95,
-                      dps_wand=1.0),
-    (7, "elemental"): _w(CASTER, mp5=0.8, BONUS_STAT_NATURE_DAMAGE_DONE=0.9, dps_wand=0.0),
-    (7, "enhancement"): _w(MELEE, AGILITY=0.8, ap=0.5, INTELLECT=0.15),
-    (7, "restoration"): _w(HEALER, SPIRIT=0.35, mp5=1.8),
+# Our first estimate, kept for what Pawn's Forever scales leave out: shaman tanking, defense and avoidance ("tank"),
+# expertise. Everything else comes from Pawn (app/pawn_weights.py, tools/pawn_weights.py).
+OWN: dict[tuple[int, str], dict[str, float]] = {
     (7, "enhancement_tank"): _w(TANK, armor=0.05, STRENGTH=0.5, AGILITY=0.6, tank=0.85, dps=1.5),
-    (8, "arcane"): _w(CASTER, INTELLECT=0.5, BONUS_STAT_ARCANE_DAMAGE_DONE=0.9),
-    (8, "fire"): _w(CASTER, crit=0.75, BONUS_STAT_FIRE_DAMAGE_DONE=0.9),
-    (8, "frost"): _w(CASTER, BONUS_STAT_FROST_DAMAGE_DONE=0.9),
-    (9, "affliction"): _w(CASTER, STAMINA=0.4, INTELLECT=0.3, SPIRIT=0.2, crit=0.5, BONUS_STAT_SHADOW_DAMAGE_DONE=0.9),
-    (11, "balance"): _w(CASTER, BONUS_STAT_ARCANE_DAMAGE_DONE=0.5, BONUS_STAT_NATURE_DAMAGE_DONE=0.5, dps_wand=0.0),
-    (11, "feral"): _w(MELEE, STRENGTH=1.0, AGILITY=1.0, ap=0.5, STAMINA=0.25, dps=0.0),
-    (11, "restoration"): _w(HEALER, SPIRIT=0.6),
-    (11, "feral_bear"): _w(TANK, armor=0.08, AGILITY=0.7, STRENGTH=0.5, tank=0.9, dps=0.0),
 }
-for _c, _s in ((3, "marksmanship"), (3, "survival")):
-    WEIGHTS[(_c, _s)] = WEIGHTS[(3, "beastmastery")]
-for _s in ("combat", "subtlety"):
-    WEIGHTS[(4, _s)] = WEIGHTS[(4, "assassination")]
-for _s in ("demonology", "destruction"):
-    WEIGHTS[(9, _s)] = _w(WEIGHTS[(9, "affliction")], BONUS_STAT_SHADOW_DAMAGE_DONE=0.8, BONUS_STAT_FIRE_DAMAGE_DONE=0.8)
+# wand damage: Pawn gives it nothing, but a priest, mage or warlock levels with a wand in hand; worth per dps
+# against 1.0 of spell power (healers' spell power counts at their healing weight)
+WAND = {(5, "discipline"): 0.6, (5, "holy"): 0.5, (5, "shadow"): 1.0, (8, "arcane"): 0.8, (8, "fire"): 0.8,
+        (8, "frost"): 0.8, (9, "affliction"): 0.8, (9, "demonology"): 0.8, (9, "destruction"): 0.8}
+TANKS = {(1, "protection"): 0.9, (2, "protection"): 1.0, (11, "feral_bear"): 0.9}
+
+
+def _build_weights() -> dict[tuple[int, str], dict[str, float]]:
+    from .pawn_weights import PAWN
+
+    out = dict(OWN)
+    for key, w in PAWN.items():
+        c, spec = int(key.split(":")[0]), key.split(":")[1]
+        w = dict(w)
+        if (c, spec) in WAND:
+            w["dps_wand"] = round(WAND[(c, spec)] * (w.get("sp") or 1.0), 3)
+        if (c, spec) in TANKS:
+            w["tank"] = TANKS[(c, spec)] * w.get("STAMINA", 1.0)
+        if w.get("dps") and c in (1, 2, 4, 7, 11):
+            w["exp"] = round(w.get("hit", 0) * 0.7, 3)
+        out[(c, spec)] = w
+    return out
+
+
+WEIGHTS = _build_weights()
 
 # ---- what a class can wear ----
 CLOTH, LEATHER, MAIL, PLATE, SHIELD = 1, 2, 3, 4, 6

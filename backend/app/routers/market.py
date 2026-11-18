@@ -454,4 +454,5 @@ async def bis_on_sale(cid: int, user: CurrentUser, session: Session, spec: str |
                                     "quantity": latest.quantity, "ts": latest.ts}})
     return {"status": "ready", "level": out["level"], "spec": out["spec"], "specs": out["specs"],
             "customSet": out["customSet"], "class": out["class"], "rows": rows, "checked": ids,
+            "talentsMoved": out.get("talentsMoved"), "talentsFrom": out.get("talentsFrom"),
             "configured": bool(cfg)}

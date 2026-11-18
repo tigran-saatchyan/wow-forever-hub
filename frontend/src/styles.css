@@ -1570,3 +1570,6 @@ button.order-line:hover { @apply text-gold; }
 .om-pin.vendor .wm-glyph { width: 16px; height: 16px; font-size: 11px; color: #ffd76a; box-shadow: 0 0 0 1px #000, 0 0 0 2px #8a6a2c; }
 .om-pin.vendor .wm-label { display: none; }
 .om-pin.vendor:hover .wm-label { display: inline; }
+
+.bis-weights-note { grid-column: 1 / -1; margin: 2px auto 0; font-size: 11px; color: rgb(var(--muted)); text-align: center; }
+.bis-weights-note a { text-decoration: underline; }

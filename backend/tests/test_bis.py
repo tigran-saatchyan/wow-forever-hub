@@ -126,3 +126,19 @@ def test_quest_rewards_by_side():
     horde = item_sources.quests(16309, "ru", "HORDE")
     assert [q["id"] for q in horde] == [6602] and horde[0]["chain"] and horde[0]["name"] == "Кровь могучего черного дракона"
     assert item_sources.brief(16309, "ru", "HORDE")["name"] == "Кровь могучего черного дракона"
+
+
+def test_weights_from_pawn_and_forever_talents():
+    from app import talent_weights as tw
+    specs = bis.CLASSES[5]["specs"]
+    disc, moved, whose = tw.for_spec(bis.weights(5, "discipline"), 5, specs, "discipline", 34, None, "ru")
+    holy, moved_h, _ = tw.for_spec(bis.weights(5, "holy"), 5, specs, "holy", 34, None)
+    assert whose == "tree" and "Медитация" in moved and "Spiritual Guidance" in moved_h
+    assert disc["INTELLECT"] > holy["INTELLECT"]  # Mental Strength
+    assert holy["SPIRIT"] > bis.weights(5, "holy")["SPIRIT"]  # Spiritual Guidance: healing from spirit
+    assert disc["dps_wand"] == round(bis.weights(5, "discipline")["dps_wand"] * 1.25, 3)
+    # the character's own talents, when it plays the tree: only what it has taken counts
+    rows = [{"node": None, "spell": None, "name": "Mental Strength", "rank": 5}, {"name": "Wand Specialization", "rank": 5}]
+    real, moved_r, whose_r = tw.for_spec(bis.weights(5, "discipline"), 5, specs, "discipline", 34, rows)
+    assert whose_r == "real" and set(moved_r) == {"Mental Strength", "Wand Specialization"}
+    assert real["SPIRIT"] == bis.weights(5, "discipline")["SPIRIT"]  # no Meditation taken

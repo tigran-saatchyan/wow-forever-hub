@@ -73,6 +73,7 @@ export interface WatchCard {
 export interface AhList { id: number; name: string; items: WatchCard[]; pinned?: boolean }
 export interface BisSale {
   status: string; level?: number; spec?: string; specs?: string[]; customSet?: boolean; checked?: number; configured?: boolean;
+  talentsMoved?: string[]; talentsFrom?: string;
   rows?: { slot: string; rank: number; id: number; name: string; q: number; ilvl: number; req: number; worn: boolean; better: boolean;
     full: import("../pages/throne/Bis").BisItem; wornItem: import("../pages/throne/Bis").BisItem | null;
     latest: { min: number; median: number; quantity: number; ts: string } }[];
