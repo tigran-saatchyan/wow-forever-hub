@@ -24,12 +24,14 @@ interface Row {
   item: RefItem | null; made: number; known: boolean; color: "orange" | "yellow" | "green" | "gray" | null;
   cost: number | null; value: number | null; profit: number | null; margin: number | null; sale: Sale; parts: Part[];
 }
-interface Advice extends RefItem { ah: number | null; vendor: number | null; where: "ah" | "vendor"; qty: number; flip: number | null }
+interface Advice extends RefItem { ah: number | null; vendor: number | null; where: "ah" | "vendor"; qty: number; flip: number | null; de?: number | null }
+interface FdbVendor { npc: number; name: string; zone: string | null; x: number | null; y: number | null; price: number | null; seen: boolean | null; costs: { name: string; amount: number }[] }
+interface FdbLearn { ways: string[]; skill: number | null; item: number | null; vendors: { horde: FdbVendor[]; alliance: FdbVendor[] } }
 interface Market { configured: boolean; at?: string; items?: number; ok?: boolean; every?: number; left?: number | null }
 interface Overview { status: "ready" | "building"; market?: Market; rows?: Row[]; advice?: Advice[] }
 interface Step {
   id: number; name: string; item: RefItem | null; made: number; from: number; to: number; crafts: number;
-  cost: number; back: number; learn: { source: string; item?: RefItem | null; price?: number | null } | null;
+  cost: number; back: number; learn: { source: string; item?: RefItem | null; price?: number | null; fdb?: FdbLearn | null } | null;
 }
 interface Plan { status: string; skill: number; target: number; steps: Step[]; reagents: (Part & { count: number })[]; total: number; gaps: number[] }
 
@@ -318,6 +320,7 @@ function Leveling({ rows, onOpen }: { rows: Row[]; onOpen: (x: RefItem) => void 
                   {s.learn && (
                     <div className="mt-0.5 text-xs text-[#ffb070]">
                       {t("cr_learn")}: {s.learn.item ? <><Item x={s.learn.item} onOpen={onOpen} />{s.learn.price ? <> · <Money c={s.learn.price} /></> : null}</> : t(s.learn.source === "trainer" ? "pf_src_trainer" as Key : "pf_src_auto" as Key)}
+                      {s.learn.fdb && <LearnWhere l={s.learn.fdb} />}
                     </div>
                   )}
                 </li>
@@ -383,6 +386,7 @@ function Where({ advice, onOpen }: { advice: Advice[]; onOpen: (x: RefItem) => v
               <th className="p-1.5 font-normal">{t("cr_c_good")}</th>
               <th className="p-1.5 text-right font-normal">{t("cr_c_ah_net")}</th>
               <th className="p-1.5 text-right font-normal">{t("cr_c_vendor")}</th>
+              <th className="p-1.5 text-right font-normal" title={t("cr_c_de_h")}>{t("cr_c_de")}</th>
               <th className="p-1.5 font-normal">{t("cr_c_verdict")}</th>
             </tr>
           </thead>
@@ -392,6 +396,7 @@ function Where({ advice, onOpen }: { advice: Advice[]; onOpen: (x: RefItem) => v
                 <td className="p-1.5"><Item x={a} onOpen={onOpen} /></td>
                 <td className="p-1.5 text-right"><Gold c={a.ah} /></td>
                 <td className="p-1.5 text-right"><Gold c={a.vendor} /></td>
+                <td className={`p-1.5 text-right ${a.de && a.de > Math.max(a.ah ?? 0, a.vendor ?? 0) ? "text-[#c58cff]" : "text-muted"}`}>{a.de ? <Gold c={a.de} /> : "—"}</td>
                 <td className={`p-1.5 ${a.where === "vendor" ? "text-[#ffb070]" : "text-good"}`}>{t(a.where === "vendor" ? "cr_v_vendor" : "cr_v_ah")}</td>
               </tr>
             ))}
@@ -399,5 +404,23 @@ function Where({ advice, onOpen }: { advice: Advice[]; onOpen: (x: RefItem) => v
         </table>
       </div>
     </Section>
+  );
+}
+
+/** Where a recipe is learned, by ForeverDB: the vendors of the player's side (place, price or Merchant's Favor). */
+function LearnWhere({ l }: { l: FdbLearn }) {
+  const { t } = useI18n();
+  const vs = [...(l.vendors.horde || []), ...(l.vendors.alliance || [])].slice(0, 2);
+  return (
+    <div className="mt-0.5 text-[11px] text-muted">
+      {l.ways.length > 0 && <span>{l.ways.map((w) => t(`cr_way_${w}` as Key)).join(", ")}{l.skill ? ` · ${t("cr_from", { s: l.skill })}` : ""}</span>}
+      {vs.map((v) => (
+        <div key={v.npc}>
+          {v.name}{v.zone ? ` · ${v.zone}` : ""}{v.x != null ? ` ${v.x.toFixed(0)}, ${v.y?.toFixed(0)}` : ""}
+          {v.costs.length ? ` · ${v.costs.map((c) => `${c.amount} ${c.name}`).join(", ")}` : v.price ? <> · <Money c={v.price} /></> : null}
+          {v.seen ? <span className="text-good"> · {t("so_seen_forever")}</span> : null}
+        </div>
+      ))}
+    </div>
   );
 }

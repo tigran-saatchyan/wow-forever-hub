@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .. import craft
+from .. import craft, fdb_sources
 from ..auth import CurrentUser
 from ..config import get_settings
 from ..db import AhLatest, Character, Setting, get_session, utcnow
@@ -21,6 +21,7 @@ from . import professions as prof_routes
 from .market import _setting
 
 router = APIRouter(prefix="/api/craft", tags=["craft"])
+craft.VENDOR_PRICE = fdb_sources.vendor_price  # ForeverDB's vendors: who sells a reagent and for how much
 Session = Annotated[AsyncSession, Depends(get_session)]
 
 
@@ -79,8 +80,19 @@ async def overview(user: CurrentUser, session: Session, lang: str = "ru"):
     prices, market = await _prices(session)
     rows, used = await _rows(session, user, ds, prices, lang)
     item = _namer(ds, lang)
-    advice = [{**item(a["id"]), **a} for a in craft.advice(ds["items"], prices, used)]
+    advice = [{**item(a["id"]), **a, "de": _de(a["id"], prices)} for a in craft.advice(ds["items"], prices, used)]
     return {"status": "ready", "market": market, "rows": rows, "advice": advice}
+
+
+def _de(item_id: int, prices: dict) -> int | None:
+    """What disenchanting the item fetches (armor and weapons, uncommon to epic), by ForeverDB's table."""
+    from .bis import gear
+
+    g = gear().get(str(item_id))
+    if not g or g.get("cls") not in (2, 4) or not 2 <= (g.get("q") or 0) <= 4:
+        return None
+    res = fdb_sources.disenchant(g["q"], g["ilvl"], "weapon" if g["cls"] == 2 else "armor")
+    return craft.disenchant_value(res, prices) if res else None
 
 
 async def _rows(session: AsyncSession, user, ds: dict, prices: dict, lang: str) -> tuple[list[dict], set[int]]:
@@ -156,6 +168,8 @@ async def leveling_plan(user: CurrentUser, session: Session, cid: int, prof: int
         learn = st["learn"]
         if learn and learn.get("item"):
             learn = {**learn, "item": item(learn["item"])}
+        if learn is not None:  # where to learn it, by ForeverDB (vendors of each side, the skill, Merchant's Favor…)
+            learn = {**learn, "fdb": fdb_sources.learn(r.get("spell") or 0)}
         steps.append({**st, "name": r["name"][lang] or r["name"]["en"], "item": item(r.get("item")),
                       "made": r.get("count") or 1, "learn": learn})
     return {"status": "ready", "market": market, "skill": skill, "target": target, "steps": steps,

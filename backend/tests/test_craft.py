@@ -72,3 +72,17 @@ def test_flips():
     f = craft.flips(sell, PRICES, min_profit=50)
     assert f == [{"id": 5, "buy": 300, "sell": 400, "profit": 100, "qty": 2}]  # a vendor pays more than the lot costs
     assert craft.flips(sell, PRICES, min_profit=101) == []
+
+
+def test_disenchant_value_and_vendor_hook():
+    from app import craft
+    res = [{"itemId": 10940, "chancePercent": 80, "min": 1, "max": 3}, {"itemId": 10938, "chancePercent": 20, "min": 1, "max": 1}]
+    prices = {10940: {"ah": 100, "qty": 5}}
+    assert craft.disenchant_value(res, prices) == round(0.8 * 2 * 100 * 0.95)
+    assert craft.disenchant_value(res, {}) is None
+    old = craft.VENDOR_PRICE
+    craft.VENDOR_PRICE = lambda i: 7 if i == 4242 else None
+    try:
+        assert craft.unit_cost(4242, {}, {}) == (7, "vendor")
+    finally:
+        craft.VENDOR_PRICE = old

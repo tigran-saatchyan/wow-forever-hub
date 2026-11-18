@@ -18,7 +18,7 @@ log = logging.getLogger("uvicorn.error")
 KEY = "sources:index"
 PROFESSIONS = ["alchemy", "blacksmithing", "enchanting", "engineering", "leatherworking", "tailoring", "cooking",
                "first-aid", "mining", "fishing"]
-_index: dict = {"sold": {}, "made": {}}
+_index: dict = {"sold": {}, "made": {}, "learn": {}, "disenchant": []}
 
 
 def sold_by(item_id: int) -> list[dict]:
@@ -27,6 +27,32 @@ def sold_by(item_id: int) -> list[dict]:
 
 def made_by(item_id: int) -> list[dict]:
     return _index["made"].get(str(item_id), [])
+
+
+def learn(spell_id: int) -> dict | None:
+    """Where a recipe is learned (by its spell): the ways, the skill, the recipe item, the vendors of each side."""
+    return (_index.get("learn") or {}).get(str(spell_id))
+
+
+def vendor_price(item_id: int) -> int | None:
+    """One item's price at the cheapest vendor players saw sell it in Forever (else the original game's data)."""
+    xs = [v for v in sold_by(item_id) if v.get("price")]
+    if not xs:
+        return None
+    seen = [v for v in xs if v["seen"]] or xs
+    return min(round(v["price"] / max(1, v.get("stack") or 1)) for v in seen)
+
+
+def disenchant(q: int, ilvl: int, kind: str) -> list[dict]:
+    """What an uncommon, rare or epic piece of armor or a weapon disenchants into: Forever's results where players
+    saw them, else the original game's table."""
+    for row in _index.get("disenchant") or []:
+        if row.get("qualityId") == q and row.get("kind") == kind and \
+                (row.get("itemLevelMin") or 0) <= ilvl <= (row.get("itemLevelMax") or 999):
+            seen = row.get("seenInForever")
+            src = seen if isinstance(seen, dict) and seen.get("results") else row.get("classic") or {}
+            return src.get("results") or []
+    return []
 
 
 async def load() -> None:
@@ -46,6 +72,7 @@ async def sync() -> None:
         return
     sold: dict[str, list] = {}
     made: dict[str, list] = {}
+    learn_: dict[str, dict] = {}
     vendors = await c.pages("vendors", ttl_days=30)
     for v in vendors:
         try:
@@ -82,6 +109,18 @@ async def sync() -> None:
             offset += 100
         name = (p.get("data") or {}).get("name") or slug
         for r in recipes:
+            lf = r.get("learnedFrom") or {}
+            src = lf.get("sources") or {}
+            if r.get("spellId"):
+                vend = src.get("vendors") or {}
+                learn_[str(r["spellId"])] = {
+                    "ways": src.get("ways") or [], "skill": src.get("learnAtSkill"),
+                    "item": (src.get("recipeItem") or {}).get("itemId"),
+                    "vendors": {side: [{"npc": v.get("npcId"), "name": v.get("name"), "zone": v.get("zone"), "map": v.get("mapId"),
+                                        "x": v.get("x"), "y": v.get("y"), "price": v.get("price"), "seen": v.get("seenInForever"),
+                                        "costs": [{"name": c.get("name"), "amount": c.get("amount")} for c in v.get("costs") or []]}
+                                       for v in (vend.get(side) or [])[:3]] for side in ("horde", "alliance")},
+                }
             mk = r.get("makes") or {}
             if mk.get("itemId"):
                 made.setdefault(str(mk["itemId"]), []).append({
@@ -90,7 +129,11 @@ async def sync() -> None:
                 })
     for xs in sold.values():
         xs.sort(key=lambda v: (not v["seen"], v["price"] or 0))  # seen in Forever first, then the cheapest
-    _index = {"sold": sold, "made": made, "at": utcnow().isoformat()}
+    try:
+        de = (await c.get("disenchant", ttl_days=30)).get("data") or []
+    except (foreverdb.FdbError, httpx.HTTPError):
+        de = _index.get("disenchant") or []
+    _index = {"sold": sold, "made": made, "learn": learn_, "disenchant": de, "at": utcnow().isoformat()}
     async with SessionLocal() as s:
         await s.merge(FdbCache(path=KEY, build=None, at=utcnow(), value=_index))
         await s.commit()

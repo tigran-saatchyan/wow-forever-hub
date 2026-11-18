@@ -16,6 +16,7 @@ How things are valued:
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 from typing import Any
 
 AH_CUT = 0.05  # the faction auction house keeps 5% of the sale
@@ -53,13 +54,18 @@ def chance(r: dict, skill: int) -> float:
     return max(0.0, min(1.0, (g - skill) / (g - y)))
 
 
+# Who sells what, and for how much, as ForeverDB's vendors say (app/fdb_sources.py vendor_price); set by the
+# router when ForeverDB is configured. Without it, the hand-kept VENDOR_GOODS list and the client's buy price.
+VENDOR_PRICE: Callable[[int], int | None] | None = None
+
+
 def unit_cost(item: int, ref: dict, prices: dict) -> tuple[int | None, str | None]:
-    """One reagent: the cheaper of the auction house and (for goods vendors stock) a vendor."""
+    """One reagent: the cheaper of the auction house and a vendor that sells it."""
     p = prices.get(item) or {}
     ah = p.get("ah")
     x = ref.get(str(item)) or {}
-    vendor = None
-    if item in VENDOR_GOODS and x.get("buy"):
+    vendor = VENDOR_PRICE(item) if VENDOR_PRICE else None
+    if vendor is None and item in VENDOR_GOODS and x.get("buy"):
         vendor = math.ceil(x["buy"] / max(1, x.get("vstack") or 1))
     options = [(v, s) for v, s in ((ah, "ah"), (vendor, "vendor")) if v]
     if not options:
@@ -179,3 +185,16 @@ def flips(sell: dict[str, int], prices: dict, min_profit: int = 1) -> list[dict]
 
 
 Prices = dict[int, dict[str, Any]]
+
+
+def disenchant_value(results: list[dict], prices: dict) -> int | None:
+    """What disenchanting an item is worth on the auction house: each result's chance × its average count × its
+    lowest buyout less the cut; None when no result has a price."""
+    total, known = 0.0, False
+    for r in results:
+        p = (prices.get(r.get("itemId")) or {}).get("ah")
+        if not p:
+            continue
+        known = True
+        total += (r.get("chancePercent") or 0) / 100 * ((r.get("min") or 1) + (r.get("max") or 1)) / 2 * p * (1 - AH_CUT)
+    return round(total) if known else None
