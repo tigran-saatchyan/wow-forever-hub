@@ -115,6 +115,12 @@ async def get_bis(cid: int, user: CurrentUser, session: Session, spec: str | Non
         mine = (_item(wid, lang, w, slot) or _worn(eq[slot], w, slot)) if wid else None
         # what is worn is BiS only when it is one of the three items of the list for this level, and then its place
         # in it (0 = the first); a new level brings a new list, and the item is checked against that one
+        # what is worn takes part too: an item the reference lacks (Forever's API doesn't know every item) can't be
+        # left below items it beats
+        if mine and wid not in {o["id"] for o in options} and \
+                (len(options) < 3 or mine["score"] > options[-1]["score"]):
+            options = sorted([*options, {**mine, "wornOnly": True}], key=lambda o: -o["score"])[:3]
+            pick = min(pick, len(options) - 1)
         rank = next((n for n, o in enumerate(options) if o["id"] == wid), None) if wid else None
         slots[slot] = {"options": options, "pick": pick, "worn": mine, "wornId": wid, "wornRank": rank}
     for slot, x in slots.items():

@@ -84,3 +84,12 @@ def test_foreverdb_sources_brief():
         assert sources.brief(None, 999) is None
     finally:
         fdb_sources._index = {"sold": {}, "made": {}}
+
+
+def test_wand_damage_counts_for_casters():
+    w = bis.WEIGHTS[(5, "shadow")]
+    wand = {"stats": {}, "armor": None, "dps": 30.0, "cls": 2, "sub": 19}
+    assert bis.score(wand, w, "RANGED") == 30.0
+    told = {"stats": {}, "armor": None, "dps": 30.0, "cls": 2, "sub": 0}  # a worn wand known only by its dps
+    assert bis.score(told, w, "RANGED") == 30.0
+    assert bis.score(wand, bis.WEIGHTS[(1, "arms")], "RANGED") == 0.0

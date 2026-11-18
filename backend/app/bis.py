@@ -79,6 +79,10 @@ WEIGHTS: dict[tuple[int, str], dict[str, float]] = {
     (11, "feral"): _w(MELEE, STRENGTH=0.9, AGILITY=1.0, STAMINA=0.6, armor=0.02, dps=0.0),
     (11, "restoration"): _w(HEALER),
 }
+# priests, mages and warlocks kill with their wand while leveling: its damage counts (healers' less)
+for (_c, _s), _v in list(WEIGHTS.items()):
+    if _c in (5, 8, 9):
+        WEIGHTS[(_c, _s)] = {**_v, "dps_wand": 0.6 if _s in ("holy", "discipline") else 1.0}
 for _c, _s in ((3, "marksmanship"), (3, "survival")):
     WEIGHTS[(_c, _s)] = WEIGHTS[(3, "beastmastery")]
 for _s in ("combat", "subtlety"):
@@ -174,7 +178,9 @@ def score(it: dict, w: dict[str, float], slot: str = "") -> float:
     if "armor" in w and it.get("armor"):
         s += w["armor"] * it["armor"]
     if it.get("dps") and it["cls"] == 2:
-        if it["sub"] in RANGED_SUB and it["sub"] != 19:
+        if it["sub"] == 19 or (slot == "RANGED" and not it["sub"]):  # a wand (or a ranged weapon told only by its dps)
+            s += max(w.get("dps_wand", 0.0), w.get("dps_ranged", 0.0) if it["sub"] else 0.0) * it["dps"]
+        elif it["sub"] in RANGED_SUB:
             s += w.get("dps_ranged", 0.0) * it["dps"]
         elif it["sub"] != 19:
             s += (w.get("dps_off", w.get("dps", 0.0)) if slot == "OFF_HAND" else w.get("dps", 0.0)) * it["dps"]
