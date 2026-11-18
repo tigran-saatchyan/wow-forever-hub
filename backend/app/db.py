@@ -86,6 +86,17 @@ class Setting(Base):
     value: Mapped[dict] = mapped_column(JSON, default=dict)
 
 
+class FdbCache(Base):
+    """ForeverDB answers, by path (app/foreverdb.py): kept until the game build changes or they get old."""
+
+    __tablename__ = "fdb_cache"
+
+    path: Mapped[str] = mapped_column(String(255), primary_key=True)
+    build: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    value: Mapped[dict] = mapped_column(JSON, default=dict)
+
+
 class AhLatest(Base):
     """The latest auction snapshot of one house, one row per item (unit prices in copper)."""
 

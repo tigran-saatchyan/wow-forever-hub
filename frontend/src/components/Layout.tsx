@@ -85,6 +85,11 @@ export function Layout({ children }: { children: ReactNode }) {
         </div>
       </header>
       <main className="w-full px-4 py-6 lg:px-6">{children}</main>
+      {/* ForeverDB's terms: a visible link wherever its data is shown (the site shows it on many pages) */}
+      <footer className="px-4 pb-6 text-center text-xs text-muted lg:px-6">
+        <a className="hover:text-gold" href="https://foreverdb.net" target="_blank" rel="noopener noreferrer">{t("fdb_credit")}</a>
+        <span className="mx-2">·</span>{t("fdb_blizzard")}
+      </footer>
     </div>
   );
 }

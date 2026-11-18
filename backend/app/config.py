@@ -36,6 +36,11 @@ class Settings(BaseSettings):
     # How often, in minutes, to ask whether the auction house snapshot changed (a short 304 answer while it has
     # not; the whole house is downloaded only when it has). 0 turns the poller off (tests, runs without keys).
     ah_poll_minutes: int = 5
+    # ForeverDB (https://foreverdb.net/developers): the API key, and how much of the account's free 5000 requests a
+    # day and 30 a minute the hub may use (with room to spare). Empty key: every ForeverDB feature stays off.
+    foreverdb_key: str = ""
+    foreverdb_per_minute: int = 20
+    foreverdb_per_day: int = 4000
     # Fetch Everloot's "how to get it" for every recipe item in the background (off in tests).
     everloot_prefetch: bool = True
     # Refresh every character from Blizzard this often, in hours, so the leveling pace has points to go on
