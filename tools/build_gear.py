@@ -30,6 +30,9 @@ OUT = ROOT / "backend" / "app" / "data" / "gear.json"
 CACHE = Path(os.environ.get("FH_GEAR_CACHE", "/tmp/fh-gear"))
 DB2 = "https://wago.tools/db2/{t}/csv?build={b}&locale={l}"
 API = "https://eu.api.blizzard.com/data/wow/item/{i}?namespace=static-forever-eu&locale=en_US"
+# items the client's ItemSparse lacks (the server sends them to the game): asked in every language at once
+API_ALL = "https://eu.api.blizzard.com/data/wow/item/{i}?namespace=static-forever-eu"
+QUALITY = {"POOR": 0, "COMMON": 1, "UNCOMMON": 2, "RARE": 3, "EPIC": 4, "LEGENDARY": 5, "ARTIFACT": 6, "HEIRLOOM": 7}
 SKIP_TYPES = {0, 18, 24, 27, 28}  # not worn: nothing, bags, ammo, quivers, profession tools
 JUNK = ("Test", "TEST", "Deprecated", "Monster -", "[PH]", "OLD", "QA ", "zz")
 
@@ -63,6 +66,45 @@ def candidates(http: httpx.Client, build: str) -> dict[int, dict]:
     return out
 
 
+def extra_ids(http: httpx.Client, build: str) -> dict[int, tuple[int, int, int]]:
+    """Wearable items the client knows only by kind (Item) and not by stats (ItemSparse): id -> (slot, class,
+    subclass). Their name, quality, level and stats come from the API."""
+    sparse = {r["ID"] for r in table(http, "ItemSparse", build)}
+    out = {}
+    for r in table(http, "Item", build):
+        it = int(r["InventoryType"])
+        if r["ID"] in sparse or r["ClassID"] not in ("2", "4") or it in SKIP_TYPES | {4, 19}:
+            continue
+        out[int(r["ID"])] = (it, int(r["ClassID"]), int(r["SubclassID"]))
+    return out
+
+
+def from_api(d: dict, kind: tuple[int, int, int]) -> dict | None:
+    """An item the client's ItemSparse lacks, told entirely by the API (every language in one answer)."""
+    name = d.get("name") or {}
+    q = QUALITY.get((d.get("quality") or {}).get("type"), 1)
+    if not 2 <= q <= 5 or any(w in (name.get("en_US") or "") for w in JUNK):
+        return None
+    p = d.get("preview_item") or {}
+    links = ((p.get("requirements") or {}).get("playable_classes") or {}).get("links") or []
+    mask = sum(1 << (c["id"] - 1) for c in links if c.get("id")) or -1
+    fac = ((p.get("requirements") or {}).get("faction") or {}).get("value", {}).get("type")
+    loc = lambda k: (p.get(k) or {}).get("display_string") if isinstance(p.get(k), dict) else None  # noqa: E731
+    w = p.get("weapon") or {}
+    return {
+        "en": name.get("en_US") or "", "ru": name.get("ru_RU") or name.get("en_US") or "", "q": q,
+        "ilvl": d.get("level") or 0, "req": d.get("required_level") or 0, "slot": kind[0], "cls": kind[1], "sub": kind[2],
+        "classes": mask, "set": 0, "bind": 0, "races": -1, "pvp": 0, "rep": 0, "skill": 0, "flags": 0,
+        "faction": fac,
+        "stats": {s["type"]["type"]: s["value"] for s in p.get("stats") or [] if s.get("type") and not s.get("is_negated")},
+        "armor": (p.get("armor") or {}).get("value"), "dps": ((w.get("dps") or {}).get("value")),
+        "speed": (w.get("attack_speed") or {}).get("value"),
+        "spells": [(s.get("description") or {}).get("en_US") if isinstance(s.get("description"), dict) else s.get("description")
+                   for s in p.get("spells") or [] if s.get("description")],
+        "unique": bool(p.get("unique_equipped")),
+    }
+
+
 async def token(http: httpx.AsyncClient) -> str:
     r = await http.post("https://oauth.battle.net/token", data={"grant_type": "client_credentials"},
                         auth=(os.environ.get("FH_BNET_CLIENT_ID", "x"), os.environ.get("FH_BNET_CLIENT_SECRET", "y")))
@@ -84,12 +126,12 @@ def reduce(d: dict) -> dict:
     }
 
 
-async def fetch(ids: list[int], rate: float) -> dict[int, dict | None]:
-    (CACHE / "api").mkdir(parents=True, exist_ok=True)
+async def fetch(ids: list[int], rate: float, url: str = API, sub: str = "api", red=reduce) -> dict[int, dict | None]:
+    (CACHE / sub).mkdir(parents=True, exist_ok=True)
     got: dict[int, dict | None] = {}
     todo = []
     for i in ids:
-        p = CACHE / "api" / f"{i}.json"
+        p = CACHE / sub / f"{i}.json"
         if p.is_file():
             got[i] = json.loads(p.read_text())
         else:
@@ -101,7 +143,7 @@ async def fetch(ids: list[int], rate: float) -> dict[int, dict | None]:
             t0 = time.monotonic()
             for attempt in range(4):
                 try:
-                    r = await http.get(API.format(i=i), headers={"Authorization": f"Bearer {tok}"})
+                    r = await http.get(url.format(i=i), headers={"Authorization": f"Bearer {tok}"})
                 except httpx.HTTPError:  # a dropped connection: wait and ask again
                     await asyncio.sleep(3 * (attempt + 1))
                     continue
@@ -114,9 +156,9 @@ async def fetch(ids: list[int], rate: float) -> dict[int, dict | None]:
                 break
             else:
                 continue  # never answered: left for the next run
-            val = reduce(r.json()) if r.status_code == 200 else None
+            val = red(r.json()) if r.status_code == 200 else None
             if r.status_code in (200, 404):  # a 404 is an answer too: not in Forever
-                (CACHE / "api" / f"{i}.json").write_text(json.dumps(val))
+                (CACHE / sub / f"{i}.json").write_text(json.dumps(val))
             got[i] = val
             if n % 200 == 0:
                 print(f"{n}/{len(todo)}", flush=True)
@@ -131,6 +173,7 @@ def main() -> None:
     a = ap.parse_args()
     with httpx.Client() as http:
         cand = candidates(http, a.build)
+        extra = extra_ids(http, a.build)
     print(len(cand), "candidates", flush=True)
     api = asyncio.run(fetch(sorted(cand), a.rate))
     items = {}
@@ -139,6 +182,13 @@ def main() -> None:
         if x is None:
             continue
         items[str(i)] = {**c, **x}
+    print(len(extra), "more known only by kind", flush=True)
+    # the raw answer is kept (any quality), and read with the item's kind from the client
+    raw = asyncio.run(fetch(sorted(extra), a.rate, API_ALL, "api_all", lambda d: d))
+    for i, d in raw.items():
+        x = from_api(d, extra[i]) if d else None
+        if x:
+            items[str(i)] = x
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps({"build": a.build, "items": items}, ensure_ascii=False, separators=(",", ":")), "utf-8")
     print("wrote", OUT, len(items), "items")

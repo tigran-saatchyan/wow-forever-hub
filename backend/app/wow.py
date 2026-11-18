@@ -124,6 +124,11 @@ def equipment(eq: dict, lang: str | None = None) -> list[dict]:
             "enchants": _lines(it.get("enchantments"), lang),
             "set": name_of(_get(it, "set", "item_set"), lang) or None,
             "setInfo": item_set(it.get("set"), lang),
+            # the numbers too, for comparing with other gear (BiS): many items Forever's item API does not know
+            "statv": {_get(x, "type", "type"): x.get("value") for x in it.get("stats") or []
+                      if isinstance(x, dict) and _get(x, "type", "type") and not x.get("is_negated")},
+            "armor": _get(it, "armor", "value"),
+            "dps": _get(it, "weapon", "dps", "value"),
         })
     return out
 

@@ -39,3 +39,22 @@ def test_choose_top_three_rings_and_two_hand():
 def test_default_spec_by_points():
     assert bis.default_spec(5, [{"points": 5}, {"points": 21}, {"points": 0}]) == "holy"
     assert bis.default_spec(5, None) == "discipline"
+
+
+def test_worn_item_told_by_the_equipment():
+    from app.routers.bis import _worn
+    w = bis.WEIGHTS[(5, "holy")]
+    x = {"id": 4040, "name": "Клобук ночного неба", "quality": "UNCOMMON", "ilvl": 35,
+         "statv": {"INTELLECT": 12, "SPIRIT": 5}, "armor": 30, "dps": None}
+    got = _worn(x, w, "HEAD")
+    assert got["q"] == 2 and got["stats"] == {"INTELLECT": 12, "SPIRIT": 5}
+    assert got["score"] == bis.score({"stats": x["statv"], "armor": 30, "dps": None, "cls": 4, "sub": 0}, w) > 0
+
+
+def test_equipment_keeps_stat_numbers():
+    from app import wow
+    eq = {"equipped_items": [{"slot": {"type": "HEAD"}, "item": {"id": 4040}, "name": "Cowl", "quality": {"type": "UNCOMMON"},
+                              "stats": [{"type": {"type": "INTELLECT"}, "value": 12, "display": {"display_string": "+12 Intellect"}}],
+                              "armor": {"value": 30}}]}
+    x = wow.equipment(eq, "en")[0]
+    assert x["statv"] == {"INTELLECT": 12} and x["armor"] == 30

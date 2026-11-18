@@ -43,6 +43,19 @@ def _item(i: int, lang: str, w: dict, slot: str) -> dict | None:
             "spells": it.get("spells") or [], "two": it["slot"] == 17, "score": bis.score(it, w, slot)}
 
 
+QUALITY = {"POOR": 0, "COMMON": 1, "UNCOMMON": 2, "RARE": 3, "EPIC": 4, "LEGENDARY": 5}
+
+
+def _worn(x: dict, w: dict, slot: str) -> dict:
+    """A worn item the gear reference lacks (Forever's item API does not know every item): told by the character's
+    own equipment, which carries its stats."""
+    it = {"stats": x.get("statv") or {}, "armor": x.get("armor"), "dps": x.get("dps"),
+          "cls": 2 if x.get("dps") else 4, "sub": 0}
+    return {"id": x["id"], "name": x.get("name") or f"#{x['id']}", "q": QUALITY.get(x.get("quality") or "", 1),
+            "ilvl": x.get("ilvl") or 0, "req": 0, "stats": it["stats"], "armor": it["armor"], "dps": it["dps"],
+            "speed": None, "spells": [], "two": False, "score": bis.score(it, w, slot)}
+
+
 async def _char(session: AsyncSession, user, cid: int) -> tuple[Character, dict]:
     c = await session.get(Character, cid)
     if not c or c.user_id != user.id:
@@ -73,7 +86,8 @@ async def get_bis(cid: int, user: CurrentUser, session: Session, spec: str | Non
     out = bis.choose(gear(), cls, spec or specs[0], level, faction)
     w = out["weights"]
     picks = (st.get("picks") or {}).get(spec or specs[0]) or {}
-    worn = {x["slot"]: x["id"] for x in (((c.profile or {}).get("equipment") or {}).get(lang) or [])}
+    eq = {x["slot"]: x for x in (((c.profile or {}).get("equipment") or {}).get(lang) or [])}
+    worn = {k: x["id"] for k, x in eq.items()}
     slots, have, total = {}, 0, 0
     two_hand = out["twoHand"]
     for slot, cands in out["slots"].items():
@@ -82,7 +96,7 @@ async def get_bis(cid: int, user: CurrentUser, session: Session, spec: str | Non
         if slot == "MAIN_HAND" and options:
             two_hand = options[pick]["two"]
         wid = worn.get(slot)
-        mine = _item(wid, lang, w, slot) if wid else None
+        mine = (_item(wid, lang, w, slot) or _worn(eq[slot], w, slot)) if wid else None
         slots[slot] = {"options": options, "pick": pick, "worn": mine, "wornId": wid}
     for slot, x in slots.items():
         if slot == "OFF_HAND" and two_hand:
