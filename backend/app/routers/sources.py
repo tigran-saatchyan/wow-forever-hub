@@ -163,8 +163,20 @@ async def _refresh_quietly(item_id: int, lang: str) -> None:
         _refreshing.discard((item_id, lang))
 
 
+def with_fdb(out: dict, item_id: int) -> dict:
+    """ForeverDB's word added to any answer: who sells it (where, for how much, seen in Forever or not) and which
+    recipe makes it (app/fdb_sources.py)."""
+    from .. import fdb_sources
+
+    return {**out, "fdb": {"sold": fdb_sources.sold_by(item_id)[:8], "made": fdb_sources.made_by(item_id)[:4]}}
+
+
 @router.get("/item/{item_id}")
 async def item_sources(item_id: int, _: CurrentUser, session: Session, lang: str = "ru"):
+    return with_fdb(await _item_sources(item_id, session, lang), item_id)
+
+
+async def _item_sources(item_id: int, session: AsyncSession, lang: str) -> dict:
     """Stored answer at once (prefetched in the background), refreshed behind the scenes when old."""
     lang = "ru" if lang == "ru" else "en"
     key = (item_id, lang)
@@ -282,12 +294,13 @@ async def prefetch_state(_: CurrentUser, session: Session):
     return row.value if row else None
 
 
-def brief(d: dict | None) -> dict | None:
+def brief(d: dict | None, item_id: int | None = None) -> dict | None:
     """One line of where an item comes from, for the BiS comparison: the quest (and whether it is a chain), the
     creature that drops it most often (where, how often, how many other kinds of creature drop it too), or a
     vendor, or a recipe; None when nothing is known."""
-    if not d:
-        return None
+    from .. import fdb_sources
+
+    d = d or {}
     if d.get("quests"):
         q = d["quests"][0]
         return {"kind": "quest", "name": q.get("title") or f"#{q['quest']}", "chain": bool(q.get("chain")),
@@ -298,10 +311,19 @@ def brief(d: dict | None) -> dict | None:
         world = n >= 8 and (top.get("rate") or 0) < 0.01  # many kinds of creature, none often: a world drop
         return {"kind": "world" if world else "drop", "name": top.get("name") or f"NPC #{top['npc']}",
                 "where": top.get("where"), "rate": top.get("rate"), "more": n - 1}
+    fdb_sold = fdb_sources.sold_by(item_id) if item_id else []
+    if fdb_sold:  # ForeverDB's vendors: where they stand, and seen in Forever first
+        v = fdb_sold[0]
+        return {"kind": "vendor", "name": v.get("name") or f"NPC #{v['npc']}", "where": v.get("zone"),
+                "copper": v.get("price"), "more": len(fdb_sold) - 1}
     if d.get("sold"):
         v = d["sold"][0]
         return {"kind": "vendor", "name": v.get("name") or f"NPC #{v['npc']}", "copper": v.get("copper"),
                 "more": len(d["sold"]) - 1}
+    made = fdb_sources.made_by(item_id) if item_id else []
+    if made:
+        m = made[0]
+        return {"kind": "craft", "name": m["recipe"], "where": m["profession"], "more": len(made) - 1}
     loc = d.get("local") or {}
     if loc.get("crafted"):
         c = loc["crafted"][0]
@@ -315,9 +337,10 @@ async def briefs(session: AsyncSession, ids: list[int], lang: str) -> dict[int, 
 
     keys = [f"src:{i}:{lang}" for i in ids]
     rows = (await session.execute(select(Setting).where(Setting.key.in_(keys)))).scalars().all()
+    stored = {int(r.key.split(":")[1]): (r.value or {}).get("data") for r in rows}
     out = {}
-    for r in rows:
-        b = brief((r.value or {}).get("data"))
+    for i in ids:  # ForeverDB's index answers even for items Everloot was never asked about
+        b = brief(stored.get(i), i)
         if b:
-            out[int(r.key.split(":")[1])] = b
+            out[i] = b
     return out

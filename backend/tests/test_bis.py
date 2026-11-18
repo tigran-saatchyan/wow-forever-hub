@@ -71,3 +71,16 @@ def test_foreverdb_item_converted():
     w = fdb_gear.convert({**d, "classId": 2, "inventoryTypeId": 13, "damage": {"min": 82, "max": 153}, "speed": 1.9})
     assert w["dps"] == 61.8 and w["speed"] == 1900
     assert bis.usable(x, 5, 30, "HORDE")
+
+
+def test_foreverdb_sources_brief():
+    from app import fdb_sources
+    from app.routers import sources
+    fdb_sources._index = {"sold": {"777": [{"npc": 1, "name": "Corina Steele", "zone": "Elwynn Forest", "price": 536, "seen": True}]},
+                          "made": {"888": [{"profession": "Tailoring", "recipe": "Bolt", "skill": 1, "ways": ["auto"]}]}}
+    try:
+        assert sources.brief(None, 777) == {"kind": "vendor", "name": "Corina Steele", "where": "Elwynn Forest", "copper": 536, "more": 0}
+        assert sources.brief({}, 888)["kind"] == "craft"
+        assert sources.brief(None, 999) is None
+    finally:
+        fdb_sources._index = {"sold": {}, "made": {}}

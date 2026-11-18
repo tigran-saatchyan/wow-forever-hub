@@ -190,6 +190,10 @@ export interface ItemSources {
   quests: { quest: number; title: string | null; installs: number | null }[];
   wiki: { text: string; url: string | null; asOf: string | null }[];
   everloot: string; dataAsOf?: string; errors: string[]; at: string;
+  /** ForeverDB: who sells it (where, the price, seen in Forever or the original game's data) and which recipe makes it */
+  fdb?: { sold: { npc: number; name: string | null; title: string | null; side: string | null; zone: string | null; x: number | null; y: number | null;
+    price: number | null; stack: number | null; limited: boolean | null; seen: boolean; rep: string | null }[];
+    made: { profession: string; recipe: string; skill: number | null; ways: string[] }[] };
   /** what the hub knows itself, when Everloot did not answer (in full or in part) */
   local?: { crafted: { profession: string; recipe: string; skill: number | null }[]; bind: "pickup" | "equip" | "use" | "quest" | null;
     auction: { min: number; qty: number; at?: string } | null };

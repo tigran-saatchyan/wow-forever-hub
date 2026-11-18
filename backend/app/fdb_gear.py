@@ -124,8 +124,15 @@ async def sync() -> None:
 
 async def worker() -> None:
     """Sync at start and then every six hours (most passes find nothing new and cost only the lists' cache)."""
+    from . import fdb_sources
+
     await load()
+    await fdb_sources.load()
     while True:
+        try:  # where items come from first (a thousand requests), then the gear details (the rest of the day's share)
+            await fdb_sources.sync()
+        except Exception:  # noqa: BLE001
+            log.exception("ForeverDB sources sync")
         try:
             await sync()
         except Exception:  # noqa: BLE001 - the loop must survive anything

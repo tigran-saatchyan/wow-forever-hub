@@ -44,7 +44,7 @@ function Body({ id, fallbackName, onClose }: { id: number; fallbackName?: string
   const npc = (n: { npc: number; name: string | null }) => (
     <a className="hover:text-gold hover:underline" href={wh(lang, "npc", n.npc)} target="_blank" rel="noopener noreferrer">{n.name || `NPC #${n.npc}`}</a>
   );
-  const empty = d && !d.sold.length && !d.drops.length && !d.quests.length;
+  const empty = d && !d.sold.length && !d.drops.length && !d.quests.length && !d.fdb?.sold.length && !d.fdb?.made.length;
   return (
     <>
       <header className="flex items-center gap-3 border-b border-edge/60 p-4">
@@ -60,7 +60,38 @@ function Body({ id, fallbackName, onClose }: { id: number; fallbackName?: string
         {q.isError && <p className="text-bad">{String(q.error)}</p>}
         {d && (
           <>
-            {d.sold.length > 0 && (
+            {d.fdb && d.fdb.sold.length > 0 && (
+              <section>
+                <h3 className="panel-title mb-2">{t("so_sold")} <span className="text-[10px] font-normal normal-case tracking-normal text-muted">ForeverDB</span></h3>
+                <ul className="space-y-1.5">
+                  {d.fdb.sold.map((v) => (
+                    <li key={v.npc} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-edge/50 bg-bg/40 p-2">
+                      <span className="grid">
+                        <span>{npc(v)}{v.title ? <span className="text-xs text-muted"> &lt;{v.title}&gt;</span> : null}</span>
+                        <span className="text-[11px] text-muted">
+                          {v.zone ?? ""}{v.x != null ? ` · ${v.x.toFixed(0)}, ${v.y?.toFixed(0)}` : ""}{v.side ? ` · ${v.side}` : ""}
+                          {" · "}{v.seen ? <span className="text-good">{t("so_seen_forever")}</span> : t("so_classic_data")}
+                          {v.rep ? ` · ${t("so_rep_discount", { r: v.rep })}` : ""}
+                        </span>
+                      </span>
+                      <span className="flex items-center gap-2">
+                        {v.limited ? <span className="text-xs text-[#ff9a3c]">{t("so_limited")}</span> : null}
+                        {v.price != null && <Money c={v.price} />}{v.stack && v.stack > 1 ? <span className="text-xs text-muted">×{v.stack}</span> : null}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+            {d.fdb && d.fdb.made.length > 0 && (
+              <section>
+                <h3 className="panel-title mb-2">{t("so_made")}</h3>
+                <ul className="space-y-1">
+                  {d.fdb.made.map((m) => <li key={m.recipe}>{t("so_crafted", { p: m.profession, r: m.recipe })}{m.skill ? ` · ${m.skill}` : ""}</li>)}
+                </ul>
+              </section>
+            )}
+            {d.sold.length > 0 && !(d.fdb && d.fdb.sold.length) && (
               <section>
                 <h3 className="panel-title mb-2">{t("so_sold")}</h3>
                 <ul className="space-y-1.5">
@@ -142,6 +173,9 @@ function Body({ id, fallbackName, onClose }: { id: number; fallbackName?: string
       <footer className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-edge/60 p-3 text-xs text-muted">
         <a className="text-gold hover:underline" href={d?.everloot || `https://everloot.app/database/items/${id}`} target="_blank" rel="noopener noreferrer">Everloot →</a>
         <a className="text-gold hover:underline" href={wh(lang, "item", id)} target="_blank" rel="noopener noreferrer">Wowhead →</a>
+        {d?.fdb && (d.fdb.sold.length > 0 || d.fdb.made.length > 0) && (
+          <a className="text-gold hover:underline" href="https://foreverdb.net" target="_blank" rel="noopener noreferrer">{t("fdb_credit")}</a>
+        )}
         <span className="ml-auto">{t("so_credit")}{d?.dataAsOf ? ` · ${fmtDate(lang, d.dataAsOf)}` : ""}</span>
       </footer>
     </>
