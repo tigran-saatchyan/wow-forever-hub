@@ -162,3 +162,20 @@ def _models() -> dict[str, dict]:
 def boss_model(en: str) -> int | None:
     """The display id of a boss's model (tools/build_boss_models.py), for its portrait; none for Forever's new bosses."""
     return (_models().get(norm(en)) or {}).get("m")
+
+
+def bis_here(instance_id: int, notable: list[dict], bis_ids: dict[int, tuple], gear: dict, lang: str) -> list[dict]:
+    """The character's BiS items (top three of a slot for its level) that drop in the instance, with the boss."""
+    out, seen = [], set()
+    cands = [(i, e) for i, e, _ in _by_instance().get(instance_id, [])] + [(int(n["itemId"]), None) for n in notable or [] if n.get("itemId")]
+    for item, entry in cands:
+        if item in seen or item not in bis_ids:
+            continue
+        seen.add(item)
+        slot, rank, worn = bis_ids[item]
+        it = gear.get(str(item)) or {}
+        boss = (item_sources._loot()["creatures"].get(str(entry)) or {}) if entry else {}
+        out.append({"id": item, "name": it.get(lang) or it.get("en") or f"#{item}", "q": it.get("q", 3), "slot": slot,
+                    "rank": rank, "worn": worn, "bossEn": boss.get("en"),
+                    "boss": (boss.get("ru") if lang == "ru" else boss.get("en")) if boss else None})
+    return sorted(out, key=lambda x: (x["worn"], x["rank"]))

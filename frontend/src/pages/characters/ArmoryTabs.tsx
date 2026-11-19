@@ -309,12 +309,16 @@ function InstTile({ r, level, near, open, onToggle }: { r: InstRow; level: numbe
   const { t } = useI18n();
   const best = r.upgrades.reduce<number | null>((m, u) => (u.gain == null ? m : Math.max(m ?? 0, u.gain)), null);
   const { byBoss, other } = lootByBoss(r);
+  const bis = (r.bis || []).filter((x) => !x.worn);  // BiS for the level that drops here and is not worn yet
+  const bisRank = new Map((r.bis || []).map((x) => [x.id, x.rank]));
+  const cls = ["inst-tile", r.cleared ? "cleared" : "todo", bis.length ? "has-bis" : "", r.open ? "" : "closed",
+    open ? "open sm:col-span-2 xl:col-span-3" : ""].join(" ");
   return (
-    <li className={`inst-tile ${near ? "near" : ""} ${r.open ? "" : "closed"} ${open ? "open sm:col-span-2 xl:col-span-3" : ""}`}>
+    <li className={cls}>
       <button type="button" className="inst-head" onClick={onToggle} aria-expanded={open} disabled={!r.open && !r.bosses.length}>
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
-            <div className="truncate font-display text-xl text-[#f3e3b5]">{r.name}</div>
+            <div className="font-display text-xl leading-tight text-[#f3e3b5]">{r.name}</div>
             <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
               {r.levels && (
                 <span className={`inst-lv ${near ? "on" : ""}`}>{r.levels[0] === r.levels[1] ? r.levels[0] : `${r.levels[0]}–${r.levels[1]}`}</span>
@@ -324,7 +328,10 @@ function InstTile({ r, level, near, open, onToggle }: { r: InstRow; level: numbe
               {!r.open && <span className="rounded bg-white/5 px-1.5 py-0.5 text-muted">{t("in_closed")}</span>}
             </div>
           </div>
-          <span className={`inst-chev ${open ? "on" : ""}`} aria-hidden>▾</span>
+          <div className="flex flex-col items-end gap-1.5">
+            <span className={`inst-pill ${r.cleared ? "done" : "todo"}`}>{r.cleared ? `✓ ${t("in_cleared", { n: r.cleared })}` : t("in_not_cleared")}</span>
+            {bis.length > 0 && <span className="inst-pill bis">★ BiS: {bis.length}</span>}
+          </div>
         </div>
         {r.bosses.length > 0 && (
           <div className="inst-faces">
@@ -332,15 +339,43 @@ function InstTile({ r, level, near, open, onToggle }: { r: InstRow; level: numbe
             {r.bosses.length > 9 && <span className="ml-2 self-center text-xs text-muted">+{r.bosses.length - 9}</span>}
           </div>
         )}
+        {bis.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {bis.slice(0, 6).map((x) => (
+              <span key={x.id} className="inst-bis-chip" title={`${x.name} · ${t(`slot_${x.slot}` as Key)}${x.boss ? ` · ${x.boss}` : ""}`}>
+                <ItemIcon itemId={x.id} quality={Q_NAMES[x.q]} size={26} />
+                <b>{x.rank}</b>
+              </span>
+            ))}
+          </div>
+        )}
         <div className="mt-3 flex items-center justify-between gap-2 text-sm">
-          <span className={r.cleared ? "text-good" : "text-muted"}>{r.cleared ? `✓ ${t("in_cleared", { n: r.cleared })}` : t("in_not_cleared")}</span>
           {r.open && (r.upgradeCount > 0
             ? <span className="font-medium text-good">▲ {t("in_up_short", { n: r.upgradeCount })}{best != null ? ` · ${t("in_up_best", { p: Math.round(best) })}` : ""}</span>
             : <span className="text-muted">{r.lootKnown === "none" ? t("in_loot_unknown") : t("in_no_upgrades_short")}</span>)}
+          <span className={`inst-chev ml-auto ${open ? "on" : ""}`} aria-hidden>▾</span>
         </div>
       </button>
       {open && (
         <div className="inst-body">
+          {(r.bis || []).length > 0 && (
+            <div className="inst-boss bis mb-3">
+              <div className="mb-2 text-sm font-semibold text-[#c98cff]">★ {t("in_bis_here")}</div>
+              <ul className="grid gap-2 md:grid-cols-2">
+                {(r.bis || []).map((x) => (
+                  <li key={x.id} className="flex items-center gap-2.5 text-[15px]">
+                    <span className="bis-rank">{x.rank}</span>
+                    <ItemIcon itemId={x.id} quality={Q_NAMES[x.q]} size={34} />
+                    <span className="grid min-w-0 leading-tight">
+                      <span className="truncate" style={{ color: qColor(Q_NAMES[x.q]) }}>{x.name}</span>
+                      <span className="truncate text-xs text-muted">{t(`slot_${x.slot}` as Key)}{x.boss ? ` · ${x.boss}` : ""}</span>
+                    </span>
+                    {x.worn && <span className="ml-auto text-sm text-good">{t("bis_worn_tag")}</span>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           {r.bosses.length > 0 && (
             <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {r.bosses.map((b, i) => {
@@ -357,7 +392,7 @@ function InstTile({ r, level, near, open, onToggle }: { r: InstRow; level: numbe
                         </div>
                       </div>
                     </div>
-                    {ups.length > 0 && <ul className="mt-3 space-y-2">{ups.map((u) => <UpgradeItem key={u.id} u={u} level={level} />)}</ul>}
+                    {ups.length > 0 && <ul className="mt-3 space-y-2">{ups.map((u) => <UpgradeItem key={u.id} u={u} level={level} bis={bisRank.get(u.id)} />)}</ul>}
                   </li>
                 );
               })}
@@ -366,7 +401,7 @@ function InstTile({ r, level, near, open, onToggle }: { r: InstRow; level: numbe
           {other.length > 0 && (
             <div className="inst-boss mt-3">
               <div className="mb-2 text-sm text-muted">{t("in_other_loot")}</div>
-              <ul className="space-y-2">{other.map((u) => <UpgradeItem key={u.id} u={u} level={level} />)}</ul>
+              <ul className="space-y-2">{other.map((u) => <UpgradeItem key={u.id} u={u} level={level} bis={bisRank.get(u.id)} />)}</ul>
             </div>
           )}
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
@@ -392,7 +427,7 @@ function BossFace({ model, name, killed, size = 34 }: { model: number | null; na
 }
 
 /** One upgrade: hovering shows the throne room's comparison with what is worn in its slot. */
-function UpgradeItem({ u, level }: { u: InstRow["upgrades"][number]; level: number }) {
+function UpgradeItem({ u, level, bis }: { u: InstRow["upgrades"][number]; level: number; bis?: number }) {
   const { t } = useI18n();
   const [hover, setHover] = useState(false);
   const anchor = useRef<HTMLSpanElement>(null);
@@ -404,7 +439,7 @@ function UpgradeItem({ u, level }: { u: InstRow["upgrades"][number]; level: numb
           onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} onFocus={() => setHover(true)} onBlur={() => setHover(false)}>
           <ItemIcon itemId={u.id} quality={Q_NAMES[u.q]} size={34} />
           <span className="grid min-w-0 leading-tight">
-            <span className="truncate" style={{ color: qColor(Q_NAMES[u.q]) }}>{u.name}</span>
+            <span className="truncate" style={{ color: qColor(Q_NAMES[u.q]) }}>{bis ? <span className="mr-1 text-[#c98cff]">★{bis}</span> : null}{u.name}</span>
             <span className="truncate text-xs text-muted">{t(`slot_${u.slot}` as Key)}{u.req > level ? ` · ${t("in_from_level", { n: u.req })}` : ""}
               {u.chance != null ? ` · ${t("in_chance", { p: u.chance < 1 ? u.chance.toFixed(1) : Math.round(u.chance) })}` : ""}</span>
           </span>

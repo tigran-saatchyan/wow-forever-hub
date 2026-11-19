@@ -78,6 +78,7 @@ export interface InstRow {
     bossEn: string | null; chance: number | null; full?: import("../pages/throne/Bis").BisItem | null;
     worn?: import("../pages/throne/Bis").BisItem | null }[];
   upgradeCount: number; lootKnown: "classic" | "notable" | "none";
+  bis: { id: number; name: string; q: number; slot: string; rank: number; worn: boolean; boss: string | null; bossEn: string | null }[];
 }
 export interface Instances {
   available: boolean; status: number | null; level: number; spec: string | null; visited: number | null; deaths: number | null;

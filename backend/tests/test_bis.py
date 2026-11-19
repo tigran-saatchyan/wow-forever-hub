@@ -163,3 +163,11 @@ def test_instances_kills_and_upgrades(monkeypatch):
     ups = inst.upgrades(189, [], {"4040": head}, 5, 34, "HORDE", w, {"HEAD": 5.0}, "ru")
     assert ups and ups[0]["slot"] == "HEAD" and ups[0]["gain"] > 0
     assert inst.upgrades(189, [], {"4040": head}, 5, 34, "HORDE", w, {"HEAD": 999.0}, "ru") == []
+
+
+def test_bis_here_marks_the_dungeon(monkeypatch):
+    from app import instances as inst
+    monkeypatch.setattr(inst, "_by_instance", lambda: {189: [(4040, 3974, 12.0), (4041, 3974, 5.0)]})
+    _, head = item(4040, 1, INTELLECT=12)
+    got = inst.bis_here(189, [{"itemId": 9}], {4040: ("HEAD", 2, False), 9: ("NECK", 1, True)}, {"4040": head}, "ru")
+    assert [(x["id"], x["slot"], x["rank"], x["worn"]) for x in got] == [(4040, "HEAD", 2, False), (9, "NECK", 1, True)]

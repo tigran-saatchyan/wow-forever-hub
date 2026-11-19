@@ -402,12 +402,16 @@ async def instances(cid: int, user: CurrentUser, session: Session, lang: str = "
     s = ((c.profile or {}).get("summary") or {}).get("en") or {}
     level = s.get("level") or 1
     up_ctx = None
+    bis_ids: dict[int, tuple] = {}
     try:
         _, s2 = await bis_routes._char(session, user, cid)
         b = await bis_routes.build(session, c, s2, None, lang, save=False)
         if b.get("status") == "ready":
             worn = {k: (x.get("worn") or {}).get("score") or 0.0 for k, x in b["slots"].items()}
             up_ctx = (s2["classId"], b["weights"], worn, b["spec"], {k: x.get("worn") for k, x in b["slots"].items()})
+            # the character's BiS for its level: item -> (slot, place 1-3), to mark the dungeons that drop it
+            bis_ids = {o["id"]: (slot, n + 1, x.get("wornId") == o["id"]) for slot, x in b["slots"].items()
+                       for n, o in enumerate(x["options"]) if not o.get("wornOnly")}
     except Exception:  # noqa: BLE001 - the list is still worth showing without upgrades
         log.exception("instances: upgrades for %s", cid)
     rows = []
@@ -431,6 +435,7 @@ async def instances(cid: int, user: CurrentUser, session: Session, lang: str = "
                                 for b in d.get("bosses") or []],
                      "kills": [{"boss": k["bossLocal"] or k["boss"], "kills": k["kills"]} for k in mine],
                      "cleared": sum(k["kills"] for k in mine[:1]), "upgrades": ups[:12], "upgradeCount": len(ups),
+                     "bis": inst.bis_here(d["id"], d.get("notableLoot") or [], bis_ids, bis_routes.gear(), lang),
                      "lootKnown": "classic" if d["id"] in INSTANCES else ("notable" if d.get("notableLoot") else "none")})
     # what the statistics count but the list lacks (ForeverDB not reached): shown all the same
     listed = {inst.norm(r["nameEn"]) for r in rows}
@@ -442,7 +447,7 @@ async def instances(cid: int, user: CurrentUser, session: Session, lang: str = "
             rows.append({"id": -len(rows) - 1, "name": name[:1].upper() + name[1:], "nameEn": k["instance"], "kind": "dungeon",
                          "players": None, "levels": None, "new": False, "open": True, "url": None, "bosses": [],
                          "kills": [{"boss": x["bossLocal"] or x["boss"], "kills": x["kills"]} for x in same],
-                         "cleared": same[0]["kills"], "upgrades": [], "upgradeCount": 0, "lootKnown": "none"})
+                         "cleared": same[0]["kills"], "upgrades": [], "upgradeCount": 0, "bis": [], "lootKnown": "none"})
     rows.sort(key=lambda r: ((r["levels"] or [99])[0], r["kind"] != "dungeon", r["nameEn"]))
     out = {"available": bool(stats_en), "status": err, "level": level, "spec": up_ctx[3] if up_ctx else None,
            "visited": inst.stat_value(stats_en, "Total 5-player dungeons entered"),

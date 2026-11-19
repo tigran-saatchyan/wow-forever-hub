@@ -1583,12 +1583,25 @@ button.order-line:hover { @apply text-gold; }
 .boss-face img { position: absolute; width: 230%; max-width: none; left: 50%; top: -12%; transform: translateX(-50%); }
 .boss-face.killed { border-color: rgb(110 200 110 / 0.7); box-shadow: 0 0 8px -2px rgb(110 200 110 / 0.6); }
 
-.inst-tile { border-radius: 10px; border: 1px solid rgb(var(--edge) / 0.6); background: linear-gradient(180deg, rgb(20 22 18 / 0.85), rgb(8 9 8 / 0.85));
-  transition: border-color .15s, box-shadow .15s; }
-.inst-tile:hover { border-color: rgb(var(--gold) / 0.5); }
-.inst-tile.near { border-color: rgb(var(--gold) / 0.55); box-shadow: inset 0 0 40px -18px rgb(var(--gold) / 0.5); }
-.inst-tile.closed { opacity: 0.55; }
-.inst-tile.open { border-color: rgb(var(--gold) / 0.7); }
+.inst-tile { position: relative; border-radius: 10px; border: 1px solid rgb(var(--edge) / 0.55); overflow: hidden;
+  background: linear-gradient(180deg, rgb(16 17 15 / 0.9), rgb(7 8 7 / 0.9)); transition: border-color .15s, box-shadow .15s; }
+.inst-tile:hover { border-color: rgb(var(--gold) / 0.45); }
+/* cleared: a green bar down the left side and a green wash; not cleared stays dark */
+.inst-tile.cleared { border-color: rgb(80 190 90 / 0.55); background: linear-gradient(180deg, rgb(22 48 26 / 0.92), rgb(8 18 10 / 0.92)); }
+.inst-tile.cleared::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 5px; background: linear-gradient(180deg, #5fd36a, #2c8a36); }
+.inst-tile.todo { border-style: dashed; }
+/* BiS for the level drops here: the epic purple, strongest where the dungeon is still to do */
+.inst-tile.has-bis { border: 2px solid #a335ee; box-shadow: 0 0 22px -6px #a335ee, inset 0 0 40px -22px #a335ee; }
+.inst-tile.has-bis.cleared { border-style: solid; box-shadow: 0 0 12px -6px #a335ee; }
+.inst-tile.closed { opacity: 0.5; filter: grayscale(0.6); }
+.inst-pill { border-radius: 999px; padding: 3px 10px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.inst-pill.done { background: #2f8a3a; color: #eaffea; box-shadow: 0 0 10px -3px #5fd36a; }
+.inst-pill.todo { background: rgb(255 255 255 / 0.06); color: rgb(var(--muted)); border: 1px dashed rgb(var(--muted) / 0.5); }
+.inst-pill.bis { background: linear-gradient(180deg, #b55cff, #7b1fc4); color: #fff; box-shadow: 0 0 12px -2px #a335ee; }
+.inst-bis-chip { position: relative; display: inline-flex; }
+.inst-bis-chip b { position: absolute; right: -4px; bottom: -4px; min-width: 15px; height: 15px; border-radius: 999px; background: #7b1fc4;
+  color: #fff; font-size: 10px; line-height: 15px; text-align: center; box-shadow: 0 0 0 1px #0b0c0a; }
+.inst-boss.bis { border-color: rgb(163 53 238 / 0.6); background: rgb(60 15 90 / 0.25); }
 .inst-head { display: block; width: 100%; padding: 14px 16px; text-align: left; cursor: pointer; }
 .inst-head:disabled { cursor: default; }
 .inst-lv { border-radius: 4px; padding: 2px 7px; font-family: ui-monospace, monospace; font-size: 13px; background: rgb(255 255 255 / 0.06); color: rgb(var(--muted)); }
