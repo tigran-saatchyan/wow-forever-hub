@@ -129,6 +129,11 @@ async def worker() -> None:
     await load()
     await fdb_sources.load()
     while True:
+        try:  # the dungeon list first: thirty requests, and the characters' dungeon tab waits for it
+            from . import instances
+            await instances.catalog()
+        except Exception:  # noqa: BLE001
+            log.exception("ForeverDB dungeons")
         try:  # where items come from first (a thousand requests), then the gear details (the rest of the day's share)
             await fdb_sources.sync()
         except Exception:  # noqa: BLE001

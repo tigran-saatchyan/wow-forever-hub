@@ -70,6 +70,16 @@ export interface WatchCard {
   latest: { min: number; median: number; quantity: number; auctions: number; ts: string } | null;
   history: PricePoint[];
 }
+export interface InstRow {
+  id: number; name: string; nameEn: string; kind: "dungeon" | "raid"; players: number | null; levels: [number, number] | null;
+  new: boolean; url: string | null; bosses: string[]; kills: { boss: string; kills: number }[]; cleared: number;
+  upgrades: { id: number; name: string; q: number; req: number; slot: string; gain: number | null; boss: string | null; chance: number | null }[];
+  upgradeCount: number; lootKnown: "classic" | "notable" | "none";
+}
+export interface Instances {
+  available: boolean; status: number | null; level: number; spec: string | null; visited: number | null; deaths: number | null;
+  fdb: boolean; rows: InstRow[];
+}
 export interface AhList { id: number; name: string; items: WatchCard[]; pinned?: boolean }
 export interface BisSale {
   status: string; level?: number; spec?: string; specs?: string[]; customSet?: boolean; checked?: number; configured?: boolean;
@@ -129,6 +139,7 @@ export const wowApi = {
     req<{ id: number; name: string; lots: number; items: number; error?: string | null; itemMin?: number | null; itemQty?: number | null }[]>(
       `/api/market/compare?ruleset=${ruleset}&region=${region}&item=${item}&lang=${lang}`),
   refreshMarket: () => req<MarketConfig["state"]>("/api/market/refresh", { method: "POST" }),
+  instances: (cid: number, lang: Lang) => req<Instances>(`/api/characters/${cid}/instances?lang=${lang}`),
   lists: (lang: Lang) => req<AhList[]>(`/api/market/lists?lang=${lang}`),
   addList: (name: string) => req<AhList>("/api/market/lists", { method: "POST", body: JSON.stringify({ name }) }),
   renameList: (id: number, name: string) => req<AhList>(`/api/market/lists/${id}`, { method: "PATCH", body: JSON.stringify({ name }) }),

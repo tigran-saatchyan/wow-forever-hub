@@ -163,3 +163,31 @@ def test_market_bis_on_sale(client):
             await s.execute(Setting.__table__.delete().where(Setting.key.in_(["market", f"bis:{cid}"])))
             await s.commit()
     asyncio.run(clean())
+
+
+def test_character_instances_without_sources(client):
+    import asyncio
+
+    from app.db import Character, SessionLocal, User
+    from sqlalchemy import select
+
+    login(client)
+    me = client.get("/api/auth/me").json()
+
+    async def seed():
+        async with SessionLocal() as s:
+            uid = (await s.execute(select(User.id).where(User.email == me["email"]))).scalar_one()
+            c = Character(user_id=uid, region="eu", slug="y", name="Y",
+                          profile={"summary": {"en": {"classId": 5, "level": 34, "faction": "HORDE"}}})
+            s.add(c)
+            await s.commit()
+            return c.id
+    cid = asyncio.run(seed())
+    d = client.get(f"/api/characters/{cid}/instances").json()
+    assert d["level"] == 34 and d["rows"] == [] and d["fdb"] is False and d["available"] is False
+
+    async def clean():
+        async with SessionLocal() as s:
+            await s.delete(await s.get(Character, cid))
+            await s.commit()
+    asyncio.run(clean())

@@ -365,3 +365,78 @@ async def refresher() -> None:
         except Exception:  # noqa: BLE001
             log.exception("refresher round failed")
         await asyncio.sleep(hours * 3600)
+
+
+_inst_cache: dict[tuple[int, str], tuple[float, dict]] = {}
+
+
+@router.get("/{cid}/instances")
+async def instances(cid: int, user: CurrentUser, session: Session, lang: str = "ru"):
+    """Dungeons and raids for the character: Forever's list with levels and bosses (ForeverDB), last-boss kills
+    (Blizzard's statistics), and the upgrades each holds for the character's current specialization."""
+    from .. import instances as inst
+    from ..item_sources import INSTANCES
+    from . import bis as bis_routes
+
+    lang = "ru" if lang == "ru" else "en"
+    c = await _own(session, user, cid)
+    hit = _inst_cache.get((cid, lang))
+    if hit and hit[0] > time.time():
+        return hit[1]
+    base = (c.profile or {}).get("path")
+    stats_en, stats_l, err = {}, {}, None
+    if base:
+        try:
+            stats_en = await client().get(base + "/achievements/statistics", "profile", c.region, "en")
+            stats_l = stats_en if lang == "en" else await client().get(base + "/achievements/statistics", "profile", c.region, lang)
+        except BnetError as e:
+            err = e.status
+    killed = inst.kills(stats_en, stats_l)
+    try:  # read from the cache the background sync fills; a cold start does not keep the page waiting long
+        cat = await asyncio.wait_for(inst.catalog(), 20)
+    except asyncio.TimeoutError:
+        cat = []
+    s = ((c.profile or {}).get("summary") or {}).get("en") or {}
+    level = s.get("level") or 1
+    up_ctx = None
+    try:
+        _, s2 = await bis_routes._char(session, user, cid)
+        b = await bis_routes.build(session, c, s2, None, lang, save=False)
+        if b.get("status") == "ready":
+            worn = {k: (x.get("worn") or {}).get("score") or 0.0 for k, x in b["slots"].items()}
+            up_ctx = (s2["classId"], b["weights"], worn, b["spec"])
+    except Exception:  # noqa: BLE001 - the list is still worth showing without upgrades
+        log.exception("instances: upgrades for %s", cid)
+    rows = []
+    for d in cat:
+        mine = [k for k in killed if inst.norm(k["instance"]) == inst.norm(d["name"])
+                or inst.norm(k["boss"]) in {inst.norm(b) for b in d.get("bosses") or []}]
+        names = item_sources_names(d["id"], d["name"], mine, lang)
+        ups = inst.upgrades(d["id"], d.get("notableLoot") or [], bis_routes.gear(), up_ctx[0], level, s.get("faction"),
+                            up_ctx[1], up_ctx[2], lang) if up_ctx else []
+        rows.append({"id": d["id"], "name": names, "nameEn": d["name"], "kind": d.get("kind"), "players": d.get("players"),
+                     "levels": d.get("levelRange"), "new": bool(d.get("newInForever")), "url": d.get("url"),
+                     "bosses": d.get("bosses") or [],
+                     "kills": [{"boss": k["bossLocal"] or k["boss"], "kills": k["kills"]} for k in mine],
+                     "cleared": sum(k["kills"] for k in mine[:1]), "upgrades": ups[:6], "upgradeCount": len(ups),
+                     "lootKnown": "classic" if d["id"] in INSTANCES else ("notable" if d.get("notableLoot") else "none")})
+    rows.sort(key=lambda r: ((r["levels"] or [99])[0], r["kind"] != "dungeon", r["nameEn"]))
+    out = {"available": bool(stats_en), "status": err, "level": level, "spec": up_ctx[3] if up_ctx else None,
+           "visited": inst.stat_value(stats_en, "Total 5-player dungeons entered"),
+           "deaths": inst.stat_value(stats_en, "Total deaths in 5-player dungeons"),
+           "fdb": bool(cat), "rows": rows}
+    if cat:  # an empty list (ForeverDB still loading) is asked again next time
+        _inst_cache[(cid, lang)] = (time.time() + 900, out)
+    return out
+
+
+def item_sources_names(iid: int, en: str, mine: list[dict], lang: str) -> str:
+    """The instance's name in the page's language: the statistics' own words, then the hub's list, then English."""
+    from ..item_sources import INSTANCES
+
+    if lang == "en":
+        return en
+    for k in mine:
+        if k.get("instanceLocal"):
+            return k["instanceLocal"][:1].upper() + k["instanceLocal"][1:]
+    return INSTANCES[iid][1] if iid in INSTANCES else en

@@ -1,10 +1,10 @@
 /** Armory tabs read from the character's profile sub-resources; each says plainly when Blizzard gives nothing. */
 import { useQuery } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
-import { fmtDate, useI18n } from "../../lib/i18n";
+import { fmtDate, useI18n, type Key } from "../../lib/i18n";
 import { Model3D } from "../../components/Model3D";
-import { ItemIcon, Money } from "../../components/Wow";
-import { media, useCharacter, wowApi, type StatGroup } from "../../lib/wowApi";
+import { ItemHover, ItemIcon, Money } from "../../components/Wow";
+import { media, qColor, useCharacter, wowApi, type InstRow, type StatGroup } from "../../lib/wowApi";
 
 export function useTab<T>(cid: number, name: string) {
   const { lang } = useI18n();
@@ -231,32 +231,91 @@ function CollectionBlock({ cid, kind, title, faction }: { cid: number; kind: str
   );
 }
 
-interface Inst { name: string; modes: { mode: string; done: number | null; total: number | null; bosses: { name: string; kills: number | null }[] }[] }
+const Q_NAMES = ["POOR", "COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY"];
+
+/**
+ * Dungeons and raids: Forever's list with levels and bosses (ForeverDB), how often the character killed each
+ * one's last boss (Blizzard's statistics: Forever leaves the encounter lists empty), and what each holds that
+ * beats what the character wears, for its current specialization.
+ */
 export function InstancesTab({ cid }: { cid: number }) {
-  const { t } = useI18n();
-  const dungeons = useTab<Inst[]>(cid, "dungeons");
-  const raids = useTab<Inst[]>(cid, "raids");
-  const list = (xs: Inst[]) => (
-    <ul className="grid gap-2 sm:grid-cols-2">
-      {xs.map((i) => (
-        <li key={i.name} className="rounded-md border border-edge/50 bg-bg/40 p-2">
-          <b className="text-sm">{i.name}</b>
-          {i.modes.map((m) => (
-            <details key={m.mode} className="mt-1 text-sm">
-              <summary className="cursor-pointer text-muted">{m.mode}: <span className="text-ink">{m.done ?? 0}/{m.total ?? "?"}</span></summary>
-              <ul className="mt-1 space-y-0.5 pl-3 text-xs">
-                {m.bosses.map((b) => <li key={b.name} className={b.kills ? "text-good" : "text-muted"}>{b.name}{b.kills ? ` ×${b.kills}` : ""}</li>)}
-              </ul>
-            </details>
-          ))}
-        </li>
-      ))}
-    </ul>
+  const { t, lang } = useI18n();
+  const q = useQuery({ queryKey: ["instances", cid, lang], queryFn: () => wowApi.instances(cid, lang), staleTime: 10 * 60e3, retry: false });
+  const [all, setAll] = useState(false);
+  if (q.isLoading) return <p className="text-sm text-muted">…</p>;
+  if (q.isError) return <p className="text-sm text-bad">{String(q.error)}</p>;
+  const d = q.data!;
+  const lv = d.level;
+  const near = (r: InstRow) => !r.levels || (r.levels[0] <= lv + 3 && r.levels[1] >= lv - 2);
+  const shown = d.rows.filter((r) => all || near(r) || r.cleared > 0);
+  const part = (kind: string) => shown.filter((r) => r.kind === kind);
+  const card = (r: InstRow) => (
+    <li key={r.id} className={`rounded-md border p-3 ${near(r) ? "border-gold/50 bg-gold/5" : "border-edge/50 bg-bg/40"}`}>
+      <div className="flex flex-wrap items-baseline gap-2">
+        <b className="text-sm">{r.name}</b>
+        {r.levels && <span className="text-xs text-muted">{t("in_levels", { a: r.levels[0], b: r.levels[1] })}</span>}
+        {r.new && <span className="rounded bg-sky-500/15 px-1.5 text-[11px] text-sky-300">{t("in_new")}</span>}
+        <span className={`ml-auto text-xs ${r.cleared ? "text-good" : "text-muted"}`}>
+          {r.cleared ? t("in_cleared", { n: r.cleared }) : t("in_not_cleared")}
+        </span>
+      </div>
+      {r.kills.length > 0 && (
+        <p className="mt-1 text-xs text-good">{r.kills.map((k) => t("in_kills", { b: k.boss, n: k.kills })).join(" · ")}</p>
+      )}
+      {r.upgrades.length > 0 ? (
+        <div className="mt-2">
+          <div className="text-xs text-muted">{t("in_upgrades", { n: r.upgradeCount })}</div>
+          <ul className="mt-1 space-y-1">
+            {r.upgrades.map((u) => (
+              <li key={u.id}>
+                <ItemHover id={u.id}>
+                  <span tabIndex={0} className="flex items-center gap-2 text-xs">
+                    <ItemIcon itemId={u.id} quality={Q_NAMES[u.q]} size={22} />
+                    <span className="min-w-0 flex-1 truncate">
+                      <span style={{ color: qColor(Q_NAMES[u.q]) }}>{u.name}</span>
+                      <span className="text-muted"> · {t(`slot_${u.slot}` as Key)}{u.boss ? ` · ${u.boss}` : ""}{u.req > lv ? ` · ${t("in_from_level", { n: u.req })}` : ""}</span>
+                    </span>
+                    <span className="font-mono text-good">{u.gain == null ? t("mk_bis_new") : `+${Math.round(u.gain)}%`}</span>
+                  </span>
+                </ItemHover>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <p className="mt-2 text-xs text-muted">{r.lootKnown === "none" ? t("in_loot_unknown") : t("in_no_upgrades")}</p>
+      )}
+      {r.lootKnown === "notable" && <p className="mt-1 text-[11px] text-muted">{t("in_loot_notable")}</p>}
+      <details className="mt-2 text-xs">
+        <summary className="cursor-pointer text-muted">{t("in_bosses", { n: r.bosses.length })}</summary>
+        <p className="mt-1 text-muted">{r.bosses.join(" · ")}</p>
+        {r.url && <a className="mt-1 inline-block underline" href={r.url} target="_blank" rel="noopener noreferrer">ForeverDB</a>}
+      </details>
+    </li>
   );
   return (
     <div className="space-y-4">
-      <div><h3 className="panel-title mb-2">{t("in_dungeons")}</h3><Frame q={dungeons} empty={(d) => !d.length}>{list}</Frame></div>
-      <div><h3 className="panel-title mb-2">{t("in_raids")}</h3><Frame q={raids} empty={(d) => !d.length}>{list}</Frame></div>
+      <div className="grid gap-2 sm:grid-cols-3">
+        <Stat k={t("in_visited")} v={d.visited ?? "—"} />
+        <Stat k={t("in_deaths")} v={d.deaths ?? "—"} />
+        <Stat k={t("in_cleared_n")} v={d.rows.filter((r) => r.cleared).length} />
+      </div>
+      {!d.available && <p className="text-sm text-muted">{t("ar_unavailable", { s: d.status ?? "?" })}</p>}
+      {!d.fdb && <p className="text-sm text-muted">{t("in_no_fdb")}</p>}
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <span className="text-muted">{t("in_for_level", { n: lv })}</span>
+        <button className={all ? "btn" : "btn-primary"} onClick={() => setAll(false)}>{t("in_show_near")}</button>
+        <button className={all ? "btn-primary" : "btn"} onClick={() => setAll(true)}>{t("in_show_all")}</button>
+      </div>
+      {(["dungeon", "raid"] as const).map((k) => part(k).length > 0 && (
+        <div key={k}>
+          <h3 className="panel-title mb-2">{t(k === "dungeon" ? "in_dungeons" : "in_raids")}</h3>
+          <ul className="grid gap-2 lg:grid-cols-2">{part(k).map(card)}</ul>
+        </div>
+      ))}
+      <p className="text-xs text-muted">
+        {t("in_note")} <a className="underline" href="https://foreverdb.net" target="_blank" rel="noopener noreferrer">ForeverDB.net</a>
+      </p>
     </div>
   );
 }

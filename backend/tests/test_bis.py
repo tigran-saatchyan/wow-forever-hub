@@ -142,3 +142,24 @@ def test_weights_from_pawn_and_forever_talents():
     real, moved_r, whose_r = tw.for_spec(bis.weights(5, "discipline"), 5, specs, "discipline", 34, rows)
     assert whose_r == "real" and set(moved_r) == {"Mental Strength", "Wand Specialization"}
     assert real["SPIRIT"] == bis.weights(5, "discipline")["SPIRIT"]  # no Meditation taken
+
+
+def test_instances_kills_and_upgrades(monkeypatch):
+    from app import instances as inst
+    en = {"categories": [{"name": "Dungeons & Raids", "sub_categories": [{"name": "Boss Kills", "statistics": [
+        {"id": 15027, "name": "Bazzalan kills (Ragefire Chasm)", "quantity": 2.0},
+        {"id": 63571, "name": "Rath'mael Kills (Ruins of Lordaeron)", "quantity": 1.0}]}],
+        "statistics": [{"id": 932, "name": "Total 5-player dungeons entered", "quantity": 15.0}]}]}
+    ru = {"categories": [{"sub_categories": [{"statistics": [
+        {"id": 15027, "name": "Убийства Баззалана (Огненная Пропасть)"}, {"id": 63571, "name": "Убийства Рат'маэля (Руины Лордерона)"}]}]}]}
+    ks = inst.kills(en, ru)
+    assert [(k["instance"], k["kills"], k["instanceLocal"]) for k in ks] == [
+        ("Ragefire Chasm", 2, "Огненная Пропасть"), ("Ruins of Lordaeron", 1, "Руины Лордерона")]
+    assert inst.stat_value(en, "Total 5-player dungeons entered") == 15
+    # a head piece from Scarlet Monastery's loot beats an empty-ish worn head
+    monkeypatch.setattr(inst, "_by_instance", lambda: {189: [(4040, 3974, 12.0)]})
+    _, head = item(4040, 1, INTELLECT=12, SPIRIT=10)
+    w = bis.weights(5, "holy")
+    ups = inst.upgrades(189, [], {"4040": head}, 5, 34, "HORDE", w, {"HEAD": 5.0}, "ru")
+    assert ups and ups[0]["slot"] == "HEAD" and ups[0]["gain"] > 0
+    assert inst.upgrades(189, [], {"4040": head}, 5, 34, "HORDE", w, {"HEAD": 999.0}, "ru") == []
