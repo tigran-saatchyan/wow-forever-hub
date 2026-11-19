@@ -392,7 +392,7 @@ function BisRowItem({ r, onOpen }: { r: NonNullable<BisSale["rows"]>[number]; on
   const [hover, setHover] = useState(false);
   const anchor = useRef<HTMLButtonElement>(null);
   return (
-    <button ref={anchor} className="flex items-center gap-2 text-left" onClick={onOpen}
+    <button ref={anchor} className="inline-flex items-center gap-2 text-left" onClick={onOpen}
       onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} onFocus={() => setHover(true)} onBlur={() => setHover(false)}>
       <span className="bis-rank" title={t("bis_rank", { n: r.rank })}>{r.rank}</span>
       <ItemIcon itemId={r.id} quality={["POOR", "COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY"][r.q]} size={28} />

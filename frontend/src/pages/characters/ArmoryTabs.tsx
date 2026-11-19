@@ -363,19 +363,22 @@ function UpgradeItem({ u, level }: { u: InstRow["upgrades"][number]; level: numb
   const anchor = useRef<HTMLSpanElement>(null);
   return (
     <li>
-      <span ref={anchor} tabIndex={0} className="flex items-center gap-2"
-        onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} onFocus={() => setHover(true)} onBlur={() => setHover(false)}>
-        <ItemIcon itemId={u.id} quality={Q_NAMES[u.q]} size={22} />
-        <span className="min-w-0 flex-1 truncate">
-          <span style={{ color: qColor(Q_NAMES[u.q]) }}>{u.name}</span>
-          <span className="text-muted"> · {t(`slot_${u.slot}` as Key)}{u.req > level ? ` · ${t("in_from_level", { n: u.req })}` : ""}
-            {u.chance != null ? ` · ${u.chance < 1 ? u.chance.toFixed(1) : Math.round(u.chance)}%` : ""}</span>
+      {/* the tooltip stands beside the item's own name, not at the far end of the row */}
+      <div className="flex items-center gap-2">
+        <span ref={anchor} tabIndex={0} className="inline-flex min-w-0 items-center gap-2"
+          onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} onFocus={() => setHover(true)} onBlur={() => setHover(false)}>
+          <ItemIcon itemId={u.id} quality={Q_NAMES[u.q]} size={22} />
+          <span className="min-w-0 truncate">
+            <span style={{ color: qColor(Q_NAMES[u.q]) }}>{u.name}</span>
+            <span className="text-muted"> · {t(`slot_${u.slot}` as Key)}{u.req > level ? ` · ${t("in_from_level", { n: u.req })}` : ""}
+              {u.chance != null ? ` · ${u.chance < 1 ? u.chance.toFixed(1) : Math.round(u.chance)}%` : ""}</span>
+          </span>
         </span>
-        <span className="font-mono text-good">{u.gain == null ? t("mk_bis_new") : `+${Math.round(u.gain)}%`}</span>
+        <span className="ml-auto font-mono text-good">{u.gain == null ? t("mk_bis_new") : `+${Math.round(u.gain)}%`}</span>
         <AnimatePresence>
           {hover && u.full && anchor.current && <Compare a={u.full} b={u.worn ?? null} side="right" anchor={anchor.current} />}
         </AnimatePresence>
-      </span>
+      </div>
     </li>
   );
 }
