@@ -268,7 +268,7 @@ export function Compare({ a, b, side, anchor }: { a: BisItem; b: BisItem | null;
   const { t } = useI18n();
   // drawn over the whole page (a portal), beside the slot: the hall's name plate and the other slots can't cover it
   const r = anchor.getBoundingClientRect();
-  const vw = window.innerWidth, vh = window.innerHeight, W = Math.min(420, vw - 16);
+  const vw = window.innerWidth, vh = window.innerHeight, W = Math.min(540, vw - 16);
   const pos: React.CSSProperties = { position: "fixed", width: W };
   if (side === "none") {
     pos.left = r.left + r.width / 2 - W / 2;

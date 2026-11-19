@@ -434,28 +434,28 @@ body {
 
   /* tooltips: dark glass with a gold edge, rank texts in the game's tooltip yellow */
   .wow-tip {
-    width: min(340px, calc(100vw - 32px));
-    @apply rounded-lg border px-3.5 py-3 text-sm leading-snug;
+    width: min(400px, calc(100vw - 32px));
+    @apply rounded-lg border px-4 py-3.5 text-[15px] leading-snug;
     background: #0a0d12f2;
     border-color: rgb(var(--gold) / 0.45);
     box-shadow: 0 12px 40px #000a;
     color: rgb(var(--ink));
   }
   .wow-tip h4 {
-    @apply text-base font-semibold;
+    @apply text-[17px] font-semibold;
   }
   .wow-tip .r {
     @apply mb-1.5 mt-0.5 font-mono text-xs text-muted;
   }
   .wow-tip .meta {
-    @apply mb-1.5 grid grid-cols-[1fr_auto] gap-x-3 text-[12.5px];
+    @apply mb-1.5 grid grid-cols-[1fr_auto] gap-x-3 text-[14px];
     color: #cfc8ba;
   }
   .wow-tip .meta span:nth-child(2n) {
     text-align: right;
   }
   .wow-tip .req {
-    @apply mb-1 text-[12.5px] text-bad;
+    @apply mb-1 text-[14px] text-bad;
   }
   .wow-tip .d {
     white-space: pre-line;
@@ -1508,14 +1508,17 @@ button.order-line:hover { @apply text-gold; }
 .bis-opt.on { background: rgb(61 255 122 / 0.14); }
 .bis-rank { width: 16px; font: 700 12px var(--font-display); color: #7dff9a; }
 
-.bis-compare { z-index: 90; max-height: calc(100vh - 16px); overflow: hidden; padding: 10px; border-radius: 8px; pointer-events: none;
+.bis-compare { z-index: 90; max-height: calc(100vh - 16px); overflow: hidden; padding: 14px 16px; border-radius: 8px; pointer-events: none; font-size: 15px;
   border: 1px solid rgb(var(--gold) / 0.45); background: linear-gradient(180deg, rgb(10 12 14 / 0.97), rgb(4 6 8 / 0.97));
   box-shadow: 0 20px 50px -14px #000; }
-.bis-cmp-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.bis-card { min-width: 0; line-height: 1.35; }
-.bis-cmp-diff { margin-top: 8px; padding-top: 6px; border-top: 1px solid rgb(var(--gold) / 0.2); font-size: 12px; }
-.bis-cmp-total { margin-top: 4px; font: 600 13px var(--font-display); color: #e4c873; }
-@media (max-width: 900px) { .bis-compare { width: 300px; } .bis-cmp-cols { grid-template-columns: 1fr; } }
+.bis-cmp-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.bis-card { min-width: 0; line-height: 1.45; }
+.bis-card .font-semibold { font-size: 17px; line-height: 1.25; margin-bottom: 2px; }
+.bis-compare .text-xs, .bis-compare .text-\[11px\], .bis-compare .text-sm { font-size: 14px; line-height: 1.45; }
+.bis-compare .eyebrow { font-size: 11px; }
+.bis-cmp-diff { margin-top: 10px; padding-top: 8px; border-top: 1px solid rgb(var(--gold) / 0.2); font-size: 14px; line-height: 1.5; }
+.bis-cmp-total { margin-top: 6px; font: 600 16px var(--font-display); color: #e4c873; }
+@media (max-width: 900px) { .bis-compare { width: min(360px, calc(100vw - 16px)) !important; } .bis-cmp-cols { grid-template-columns: 1fr; } }
 
 /* the hall's backdrops: race (.tr-bg), class order hall, specialization art; BiS swaps the race for Naxxramas */
 .tr-classbg { inset: -30px; z-index: 0; background: var(--bg-class) center 40% / cover no-repeat; opacity: 0.42;
