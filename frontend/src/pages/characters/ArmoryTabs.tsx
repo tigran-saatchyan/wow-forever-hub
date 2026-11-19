@@ -244,6 +244,7 @@ export function InstancesTab({ cid }: { cid: number }) {
   const { t, lang } = useI18n();
   const q = useQuery({ queryKey: ["instances", cid, lang], queryFn: () => wowApi.instances(cid, lang), staleTime: 10 * 60e3, retry: false });
   const [all, setAll] = useState(false);
+  const [open, setOpen] = useState<Set<number>>(new Set());
   if (q.isLoading) return <p className="text-sm text-muted">…</p>;
   if (q.isError) return <p className="text-sm text-bad">{String(q.error)}</p>;
   const d = q.data!;
@@ -251,27 +252,9 @@ export function InstancesTab({ cid }: { cid: number }) {
   const near = (r: InstRow) => r.open && !!r.levels && r.levels[0] <= lv + 3 && r.levels[1] >= lv - 2;
   const shown = d.rows.filter((r) => all || near(r) || r.cleared > 0);
   const part = (kind: string) => shown.filter((r) => r.kind === kind);
-  const card = (r: InstRow) => (
-    <li key={r.id} className={`rounded-md border p-3 ${near(r) ? "border-gold/50 bg-gold/5" : "border-edge/50 bg-bg/40"} ${r.open ? "" : "opacity-60"}`}>
-      <div className="flex flex-wrap items-baseline gap-2">
-        <b className="text-sm">{r.name}</b>
-        {r.levels && (
-          <span className={`rounded px-1.5 font-mono text-xs ${near(r) ? "bg-gold/15 text-gold" : "bg-white/5 text-muted"}`}>
-            {r.levels[0] === r.levels[1] ? r.levels[0] : `${r.levels[0]}–${r.levels[1]}`}
-          </span>
-        )}
-        {r.kind === "raid" && r.players && <span className="text-[11px] text-muted">{t("in_players", { n: r.players })}</span>}
-        {r.new && <span className="rounded bg-sky-500/15 px-1.5 text-[11px] text-sky-300">{t("in_new")}</span>}
-        {!r.open && <span className="rounded bg-white/5 px-1.5 text-[11px] text-muted">{t("in_closed")}</span>}
-        <span className={`ml-auto text-xs ${r.cleared ? "text-good" : "text-muted"}`}>
-          {r.cleared ? t("in_cleared", { n: r.cleared }) : t("in_not_cleared")}
-        </span>
-      </div>
-      {!r.open ? null : <InstLoot r={r} level={lv} />}
-    </li>
-  );
+  const toggle = (id: number) => setOpen((o) => { const n = new Set(o); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div className="grid gap-2 sm:grid-cols-3">
         <Stat k={t("in_visited")} v={d.visited ?? "—"} />
         <Stat k={t("in_deaths")} v={d.deaths ?? "—"} />
@@ -283,11 +266,17 @@ export function InstancesTab({ cid }: { cid: number }) {
         <span className="text-muted">{t("in_for_level", { n: lv })}</span>
         <button className={all ? "btn" : "btn-primary"} onClick={() => setAll(false)}>{t("in_show_near")}</button>
         <button className={all ? "btn-primary" : "btn"} onClick={() => setAll(true)}>{t("in_show_all")} ({d.rows.length})</button>
+        <span className="ml-auto flex gap-2">
+          <button className="btn" onClick={() => setOpen(new Set(shown.filter((r) => r.open).map((r) => r.id)))}>{t("in_expand_all")}</button>
+          <button className="btn" onClick={() => setOpen(new Set())}>{t("in_collapse_all")}</button>
+        </span>
       </div>
       {(["dungeon", "raid"] as const).map((k) => part(k).length > 0 && (
         <div key={k}>
-          <h3 className="panel-title mb-2">{t(k === "dungeon" ? "in_dungeons" : "in_raids")}</h3>
-          <ul className="grid gap-2 lg:grid-cols-2">{part(k).map(card)}</ul>
+          <h3 className="panel-title mb-3">{t(k === "dungeon" ? "in_dungeons" : "in_raids")}</h3>
+          <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {part(k).map((r) => <InstTile key={r.id} r={r} level={lv} near={near(r)} open={open.has(r.id)} onToggle={() => toggle(r.id)} />)}
+          </ul>
         </div>
       ))}
       <p className="text-xs text-muted">
@@ -299,10 +288,8 @@ export function InstancesTab({ cid }: { cid: number }) {
 
 const bossKey = (x: string | null | undefined) => (x || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 
-/** The bosses of a dungeon in order, each with what it drops that beats what is worn; loot no listed boss drops
- *  (ForeverDB's notable loot of a new dungeon) after them. */
-function InstLoot({ r, level }: { r: InstRow; level: number }) {
-  const { t } = useI18n();
+/** Upgrades grouped by the listed boss that drops them; the rest (ForeverDB's notable loot) apart. */
+function lootByBoss(r: InstRow) {
   const byBoss = new Map<string, InstRow["upgrades"]>();
   const listed = new Set(r.bosses.map((b) => bossKey(b.en)));
   const other: InstRow["upgrades"] = [];
@@ -311,46 +298,94 @@ function InstLoot({ r, level }: { r: InstRow; level: number }) {
     if (k && listed.has(k)) byBoss.set(k, [...(byBoss.get(k) || []), u]);
     else other.push(u);
   }
+  return { byBoss, other };
+}
+
+/**
+ * A dungeon as a tile: name, levels, whether it is cleared, its bosses' faces and how much it holds for the
+ * character. A click opens it across the whole row: every boss with its portrait, kills and the upgrades it drops.
+ */
+function InstTile({ r, level, near, open, onToggle }: { r: InstRow; level: number; near: boolean; open: boolean; onToggle: () => void }) {
+  const { t } = useI18n();
+  const best = r.upgrades.reduce<number | null>((m, u) => (u.gain == null ? m : Math.max(m ?? 0, u.gain)), null);
+  const { byBoss, other } = lootByBoss(r);
   return (
-    <div className="mt-2 space-y-1.5">
-      <div className="text-xs text-muted">
-        {r.upgradeCount ? t("in_upgrades", { n: r.upgradeCount }) : r.lootKnown === "none" ? t("in_loot_unknown") : t("in_no_upgrades")}
-      </div>
-      <ul className="space-y-1">
-        {r.bosses.map((b, i) => {
-          const ups = byBoss.get(bossKey(b.en)) || [];
-          return (
-            <li key={b.en} className="text-xs">
-              <div className={`flex items-center gap-2 ${ups.length ? "" : "text-muted"}`}>
-                <span className="w-4 text-right font-mono text-muted">{i + 1}</span>
-                <BossFace model={b.model} name={b.name} killed={!!b.kills} />
-                <span className={ups.length ? "text-ink" : ""}>{b.name}</span>
-                {b.kills ? <span className="text-good">✓ ×{b.kills}</span> : null}
-              </div>
-              {ups.length > 0 && <ul className="ml-[3.75rem] mt-0.5 space-y-0.5">{ups.map((u) => <UpgradeItem key={u.id} u={u} level={level} />)}</ul>}
-            </li>
-          );
-        })}
-      </ul>
-      {other.length > 0 && (
-        <div className="text-xs">
-          <div className="text-muted">{t("in_other_loot")}</div>
-          <ul className="ml-6 mt-0.5 space-y-0.5">{other.map((u) => <UpgradeItem key={u.id} u={u} level={level} />)}</ul>
+    <li className={`inst-tile ${near ? "near" : ""} ${r.open ? "" : "closed"} ${open ? "open sm:col-span-2 xl:col-span-3" : ""}`}>
+      <button type="button" className="inst-head" onClick={onToggle} aria-expanded={open} disabled={!r.open && !r.bosses.length}>
+        <div className="flex items-start gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="truncate font-display text-xl text-[#f3e3b5]">{r.name}</div>
+            <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
+              {r.levels && (
+                <span className={`inst-lv ${near ? "on" : ""}`}>{r.levels[0] === r.levels[1] ? r.levels[0] : `${r.levels[0]}–${r.levels[1]}`}</span>
+              )}
+              {r.kind === "raid" && r.players && <span className="text-muted">{t("in_players", { n: r.players })}</span>}
+              {r.new && <span className="rounded bg-sky-500/15 px-1.5 py-0.5 text-sky-300">{t("in_new")}</span>}
+              {!r.open && <span className="rounded bg-white/5 px-1.5 py-0.5 text-muted">{t("in_closed")}</span>}
+            </div>
+          </div>
+          <span className={`inst-chev ${open ? "on" : ""}`} aria-hidden>▾</span>
+        </div>
+        {r.bosses.length > 0 && (
+          <div className="inst-faces">
+            {r.bosses.slice(0, 9).map((b) => <BossFace key={b.en} model={b.model} name={b.name} killed={!!b.kills} size={38} />)}
+            {r.bosses.length > 9 && <span className="ml-2 self-center text-xs text-muted">+{r.bosses.length - 9}</span>}
+          </div>
+        )}
+        <div className="mt-3 flex items-center justify-between gap-2 text-sm">
+          <span className={r.cleared ? "text-good" : "text-muted"}>{r.cleared ? `✓ ${t("in_cleared", { n: r.cleared })}` : t("in_not_cleared")}</span>
+          {r.open && (r.upgradeCount > 0
+            ? <span className="font-medium text-good">▲ {t("in_up_short", { n: r.upgradeCount })}{best != null ? ` · ${t("in_up_best", { p: Math.round(best) })}` : ""}</span>
+            : <span className="text-muted">{r.lootKnown === "none" ? t("in_loot_unknown") : t("in_no_upgrades_short")}</span>)}
+        </div>
+      </button>
+      {open && (
+        <div className="inst-body">
+          {r.bosses.length > 0 && (
+            <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {r.bosses.map((b, i) => {
+                const ups = byBoss.get(bossKey(b.en)) || [];
+                return (
+                  <li key={b.en} className={`inst-boss ${b.kills ? "killed" : ""}`}>
+                    <div className="flex items-center gap-3">
+                      <BossFace model={b.model} name={b.name} killed={!!b.kills} size={64} />
+                      <div className="min-w-0">
+                        <div className="text-xs text-muted">{t("in_boss_n", { n: i + 1 })}</div>
+                        <div className="text-base font-semibold leading-tight text-ink">{b.name}</div>
+                        <div className={`text-sm ${b.kills ? "text-good" : "text-muted"}`}>
+                          {b.kills ? `✓ ${t("in_killed", { n: b.kills })}` : ups.length ? t("in_up_short", { n: ups.length }) : t("in_nothing_for_you")}
+                        </div>
+                      </div>
+                    </div>
+                    {ups.length > 0 && <ul className="mt-3 space-y-2">{ups.map((u) => <UpgradeItem key={u.id} u={u} level={level} />)}</ul>}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          {other.length > 0 && (
+            <div className="inst-boss mt-3">
+              <div className="mb-2 text-sm text-muted">{t("in_other_loot")}</div>
+              <ul className="space-y-2">{other.map((u) => <UpgradeItem key={u.id} u={u} level={level} />)}</ul>
+            </div>
+          )}
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
+            {r.lootKnown === "notable" && <span>{t("in_loot_notable")}</span>}
+            {r.url && <a className="underline" href={r.url} target="_blank" rel="noopener noreferrer">ForeverDB</a>}
+          </div>
         </div>
       )}
-      {r.lootKnown === "notable" && <p className="text-[11px] text-muted">{t("in_loot_notable")}</p>}
-      {r.url && <a className="text-[11px] text-muted underline" href={r.url} target="_blank" rel="noopener noreferrer">ForeverDB</a>}
-    </div>
+    </li>
   );
 }
 
 /** A boss's portrait: Wowhead's still of its model, framed like the game's encounter journal; a skull for the
  *  bosses Forever added, whose models no source here names. */
-function BossFace({ model, name, killed }: { model: number | null; name: string; killed: boolean }) {
+function BossFace({ model, name, killed, size = 34 }: { model: number | null; name: string; killed: boolean; size?: number }) {
   const [bad, setBad] = useState(false);
   const src = model ? media(`https://wow.zamimg.com/modelviewer/classic/webthumbs/npc/${model & 255}/${model}.webp`) : undefined;
   return (
-    <span className={`boss-face ${killed ? "killed" : ""}`} title={name}>
+    <span className={`boss-face ${killed ? "killed" : ""}`} title={name} style={{ width: size, height: size, fontSize: size * 0.42 }}>
       {src && !bad ? <img src={src} alt="" loading="lazy" onError={() => setBad(true)} /> : <span aria-hidden>☠</span>}
     </span>
   );
@@ -364,17 +399,17 @@ function UpgradeItem({ u, level }: { u: InstRow["upgrades"][number]; level: numb
   return (
     <li>
       {/* the tooltip stands beside the item's own name, not at the far end of the row */}
-      <div className="flex items-center gap-2">
-        <span ref={anchor} tabIndex={0} className="inline-flex min-w-0 items-center gap-2"
+      <div className="flex items-center gap-2.5 text-[15px]">
+        <span ref={anchor} tabIndex={0} className="inline-flex min-w-0 items-center gap-2.5"
           onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} onFocus={() => setHover(true)} onBlur={() => setHover(false)}>
-          <ItemIcon itemId={u.id} quality={Q_NAMES[u.q]} size={22} />
-          <span className="min-w-0 truncate">
-            <span style={{ color: qColor(Q_NAMES[u.q]) }}>{u.name}</span>
-            <span className="text-muted"> · {t(`slot_${u.slot}` as Key)}{u.req > level ? ` · ${t("in_from_level", { n: u.req })}` : ""}
-              {u.chance != null ? ` · ${u.chance < 1 ? u.chance.toFixed(1) : Math.round(u.chance)}%` : ""}</span>
+          <ItemIcon itemId={u.id} quality={Q_NAMES[u.q]} size={34} />
+          <span className="grid min-w-0 leading-tight">
+            <span className="truncate" style={{ color: qColor(Q_NAMES[u.q]) }}>{u.name}</span>
+            <span className="truncate text-xs text-muted">{t(`slot_${u.slot}` as Key)}{u.req > level ? ` · ${t("in_from_level", { n: u.req })}` : ""}
+              {u.chance != null ? ` · ${t("in_chance", { p: u.chance < 1 ? u.chance.toFixed(1) : Math.round(u.chance) })}` : ""}</span>
           </span>
         </span>
-        <span className="ml-auto font-mono text-good">{u.gain == null ? t("mk_bis_new") : `+${Math.round(u.gain)}%`}</span>
+        <span className="ml-auto font-mono text-base text-good">{u.gain == null ? t("mk_bis_new") : `+${Math.round(u.gain)}%`}</span>
         <AnimatePresence>
           {hover && u.full && anchor.current && <Compare a={u.full} b={u.worn ?? null} side="right" anchor={anchor.current} />}
         </AnimatePresence>
