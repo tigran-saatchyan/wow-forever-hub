@@ -143,6 +143,9 @@ export const wowApi = {
     req<{ id: number; name: string; lots: number; items: number; error?: string | null; itemMin?: number | null; itemQty?: number | null }[]>(
       `/api/market/compare?ruleset=${ruleset}&region=${region}&item=${item}&lang=${lang}`),
   refreshMarket: () => req<MarketConfig["state"]>("/api/market/refresh", { method: "POST" }),
+  bisCompare: (cid: number, ids: number[], lang: Lang) =>
+    req<{ id: number; gear: boolean; slot?: string; full?: import("../pages/throne/Bis").BisItem | null;
+      worn?: import("../pages/throne/Bis").BisItem | null }[]>(`/api/bis/${cid}/compare?ids=${ids.join(",")}&lang=${lang}`),
   instances: (cid: number, lang: Lang) => req<Instances>(`/api/characters/${cid}/instances?lang=${lang}`),
   lists: (lang: Lang) => req<AhList[]>(`/api/market/lists?lang=${lang}`),
   addList: (name: string) => req<AhList>("/api/market/lists", { method: "POST", body: JSON.stringify({ name }) }),

@@ -194,3 +194,33 @@ def test_character_instances_without_sources(client):
             await s.delete(await s.get(Character, cid))
             await s.commit()
     asyncio.run(clean())
+
+
+def test_bis_compare_any_items(client):
+    import asyncio
+
+    from app.db import Character, SessionLocal, User
+    from app.routers.bis import gear
+    from sqlalchemy import select
+
+    login(client)
+    me = client.get("/api/auth/me").json()
+
+    async def seed():
+        async with SessionLocal() as s:
+            uid = (await s.execute(select(User.id).where(User.email == me["email"]))).scalar_one()
+            c = Character(user_id=uid, region="eu", slug="z", name="Z",
+                          profile={"summary": {"en": {"classId": 5, "level": 34, "faction": "HORDE"}}})
+            s.add(c)
+            await s.commit()
+            return c.id
+    cid = asyncio.run(seed())
+    cloth = next(int(k) for k, v in gear().items() if v["slot"] == 1 and v["cls"] == 4 and v["sub"] == 1)
+    got = client.get(f"/api/bis/{cid}/compare?ids={cloth},999999999").json()
+    assert got[0]["gear"] and got[0]["slot"] == "HEAD" and got[0]["full"]["id"] == cloth and got[1] == {"id": 999999999, "gear": False}
+
+    async def clean():
+        async with SessionLocal() as s:
+            await s.delete(await s.get(Character, cid))
+            await s.commit()
+    asyncio.run(clean())

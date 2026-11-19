@@ -264,7 +264,7 @@ function Delta({ v, base }: { v: number; base: number }) {
 }
 
 /** The game's two-column comparison: the BiS item, what is worn, and the difference in every stat. */
-export function Compare({ a, b, side, anchor }: { a: BisItem; b: BisItem | null; side: string; anchor: HTMLElement }) {
+export function Compare({ a, b, side, anchor, head }: { a: BisItem; b: BisItem | null; side: string; anchor: HTMLElement; head?: string }) {
   const { t } = useI18n();
   // drawn over the whole page (a portal), beside the slot: the hall's name plate and the other slots can't cover it
   const r = anchor.getBoundingClientRect();
@@ -289,7 +289,7 @@ export function Compare({ a, b, side, anchor }: { a: BisItem; b: BisItem | null;
   return (
     createPortal(<motion.div className="bis-compare" style={pos} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
       <div className="bis-cmp-cols">
-        <ItemCard x={a} head={t("bis_this")} />
+        <ItemCard x={a} head={head ?? t("bis_this")} />
         <ItemCard x={b} head={t("bis_worn_now")} />
       </div>
       <div className="bis-cmp-diff">

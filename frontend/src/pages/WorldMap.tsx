@@ -187,7 +187,7 @@ export function WorldMap() {
         <World continent={continent} setContinent={setContinent} zone={zone} setZone={setZone} faction={faction} />
       ) : (
         <div className="space-y-4">
-        <ChainPicker current={chain.key} ids={ids} who={who} pick={setChain} />
+        <ChainPicker current={chain.key} ids={ids} who={who} pick={setChain} cid={char?.id ?? null} />
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
           <div className="space-y-3">
             {chainPins ? (

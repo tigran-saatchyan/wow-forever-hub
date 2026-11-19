@@ -59,7 +59,8 @@ export interface Chain {
   classes?: number[];
   /** what it is and why do it */
   about: L;
-  reward: { item?: number; text: L };
+  /** the item it ends with; `choices` when the last quest offers several to choose from (one of them) */
+  reward: { item?: number; choices?: number[]; text: L };
   needs: Need[];
   /** the lowest level to start, and what the original game's phase was */
   minLevel?: number; classic?: L;
@@ -117,7 +118,7 @@ export const CHAINS: Chain[] = [
     key: "morphaz", faction: null, classes: [5], stage: 1, category: "class", minLevel: 50,
     name: { ru: "Кровь Морфаза — Благословенные чётки", en: "Blood of Morphaz — Blessed Prayer Beads" },
     about: { ru: "Классовая цепочка жреца на 50–52: от наставника жрецов к Огтинку в Азшару, две добычи по миру и Морфаз в Затонувшем храме. Награда на выбор — Благословенные чётки (аксессуар лекаря: на 20 секунд сильнее исцеление, лучшее до 60), посох Woestave или Круг надежды.", en: "The priest's class chain for 50–52: from the priest trainer to Ogtinc in Azshara, two things to gather and Morphaz in the Sunken Temple. A reward to choose: the Blessed Prayer Beads (a healer's trinket: stronger healing for 20 seconds, among the best until 60), the Woestave or the Circle of Hope." },
-    reward: { item: 19990, text: { ru: "на выбор: Благословенные чётки, Woestave или Круг надежды", en: "choose: Blessed Prayer Beads, the Woestave or the Circle of Hope" } },
+    reward: { item: 19990, choices: [19990, 20082, 20006], text: { ru: "на выбор: Благословенные чётки, Woestave или Круг надежды", en: "choose: Blessed Prayer Beads, the Woestave or the Circle of Hope" } },
     needs: [
       { text: { ru: "50 уровень (ForeverDB)", en: "level 50 (ForeverDB)" }, level: 50 },
       { text: { ru: "группа на Затонувший храм", en: "a group for the Sunken Temple" } },

@@ -254,3 +254,28 @@ async def upcoming_items() -> list[int]:
                     for cands in bis.choose(gear(), cls, sp, lv, s.get("faction"))["slots"].values():
                         out += [x["id"] for x in cands]
     return list(dict.fromkeys(out))
+
+
+@router.get("/{cid}/compare")
+async def compare_items(cid: int, user: CurrentUser, session: Session, ids: str = "", lang: str = "ru"):
+    """Any items against what the character wears, by its specialization's weights: for each item that is gear it
+    can wear, the item as the BiS mode shows it and the worn one in the same slot (of two rings or trinkets, the
+    weaker); `gear` false for anything else (a key, a quest item), which keeps its plain tooltip."""
+    lang = "ru" if lang == "ru" else "en"
+    c, s = await _char(session, user, cid)
+    b = await build(session, c, s, None, lang, save=False)
+    out = []
+    want = [int(x) for x in ids.split(",") if x.strip().isdigit()][:30]
+    if b.get("status") != "ready":
+        return [{"id": i, "gear": False} for i in want]
+    w, spec, cls = b["weights"], b["spec"], s["classId"]
+    for i in want:
+        it = gear().get(str(i))
+        slots = [sl for sl in bis.SLOTS if it and bis.fits(it, sl, cls, spec)] if it else []
+        if not slots:
+            out.append({"id": i, "gear": False})
+            continue
+        slot = min(slots, key=lambda sl: ((b["slots"].get(sl) or {}).get("worn") or {}).get("score") or 0.0)
+        out.append({"id": i, "gear": True, "slot": slot, "full": _item(i, lang, w, slot),
+                    "worn": (b["slots"].get(slot) or {}).get("worn")})
+    return out

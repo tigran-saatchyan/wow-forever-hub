@@ -2,20 +2,32 @@
  * The chain side of the map page: which chain to show (stage by stage, in the order to do them), what the
  * chosen one is and why, what it needs first, and how far every character has come in it.
  */
+import { useQuery } from "@tanstack/react-query";
+import { AnimatePresence } from "framer-motion";
+import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ItemHover, ItemIcon } from "../../components/Wow";
+import { Compare, type BisItem } from "../throne/Bis";
 import { CHAINS, STAGES, fits, needMet, progress, type Chain } from "../../lib/chains";
 import { useI18n, type Key } from "../../lib/i18n";
 import { store } from "../../lib/store";
-import { fullName, type Character } from "../../lib/wowApi";
+import { fullName, wowApi, type Character } from "../../lib/wowApi";
 import { ClassIcon } from "../Characters";
 import { useTab } from "../characters/ArmoryTabs";
 
 type Who = { faction?: string | null; classId?: number | null; level?: number | null };
 
 /** Every chain, stage by stage; the current character's progress on each. */
-export function ChainPicker({ current, ids, who, pick }: { current: string; ids: Set<number>; who: Who; pick: (k: string) => void }) {
+export function ChainPicker({ current, ids, who, pick, cid }: { current: string; ids: Set<number>; who: Who; pick: (k: string) => void; cid?: number | null }) {
   const { t, lang } = useI18n();
+  // the rewards of the chains this character can do, against what it wears
+  const items = (c: Chain) => c.reward.choices ?? (c.reward.item ? [c.reward.item] : []);
+  const rewards = [...new Set(CHAINS.filter((c) => fits(c, who.faction, who.classId)).flatMap(items))];
+  const cmp = useQuery({
+    queryKey: ["bis-compare", cid, rewards.join(","), lang], enabled: !!cid && rewards.length > 0, staleTime: 10 * 60e3, retry: false,
+    queryFn: () => wowApi.bisCompare(cid!, rewards, lang),
+  });
+  const byId = new Map((cmp.data || []).map((x) => [x.id, x]));
   return (
     <div className="cn-stages">
       {STAGES.map((st) => {
@@ -35,10 +47,19 @@ export function ChainPicker({ current, ids, who, pick }: { current: string; ids:
                 const ok = fits(c, who.faction, who.classId);
                 const p = progress(c, ids);
                 return (
-                  <button key={c.key} className={`chip cn-chip ${c.key === current ? "border-gold/60 text-gold" : ""} ${ok ? "" : "opacity-50"}`} onClick={() => pick(c.key)}
+                  <button key={c.key} className={`chip cn-chip ${c.reward.choices ? "cn-chip-col" : ""} ${c.key === current ? "border-gold/60 text-gold" : ""} ${ok ? "" : "opacity-50"}`} onClick={() => pick(c.key)}
                     title={ok ? undefined : t("cn_not_for")}>
-                    {c.name[lang]}
-                    <span className={`cn-prog ${p.complete ? "text-good" : ""}`}>{!ok ? "—" : p.complete ? "✓" : `${p.done}/${p.total}`}</span>
+                    <span className="flex items-center gap-1.5">
+                      {ok && !c.reward.choices && c.reward.item && <RewardIcon id={c.reward.item} c={byId.get(c.reward.item)} />}
+                      <span>{c.name[lang]}</span>
+                      <span className={`cn-prog ${p.complete ? "text-good" : ""}`}>{!ok ? "—" : p.complete ? "✓" : `${p.done}/${p.total}`}</span>
+                    </span>
+                    {ok && c.reward.choices && (
+                      <span className="cn-rewards">
+                        <span className="cn-choice">{t("cn_choice")}</span>
+                        {c.reward.choices.map((i) => <RewardIcon key={i} id={i} c={byId.get(i)} />)}
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -69,7 +90,13 @@ export function ChainInfo({ c, ids, who }: { c: Chain; ids: Set<number>; who: Wh
       {c.unverified && <p className="text-xs text-[#ffb070]">⚠ {t("cn_unverified")}: {c.unverified[lang]}</p>}
       <div className="flex items-center gap-2 text-sm">
         <span className="eyebrow">{t("cn_reward")}</span>
-        {c.reward.item ? (
+        {c.reward.choices ? (
+          <span className="inline-flex flex-wrap items-center gap-1.5">
+            {c.reward.choices.map((i) => <ItemHover key={i} id={i}><span className="cn-reward"><ItemIcon itemId={i} size={22} /></span></ItemHover>)}
+            <span className="cn-choice">{t("cn_choice")}</span>
+            <span className="text-gold">{c.reward.text[lang]}</span>
+          </span>
+        ) : c.reward.item ? (
           <ItemHover id={c.reward.item}><span className="inline-flex items-center gap-1.5"><ItemIcon itemId={c.reward.item} size={22} /><span className="text-gold">{c.reward.text[lang]}</span></span></ItemHover>
         ) : <span className="text-gold">{c.reward.text[lang]}</span>}
       </div>
@@ -131,4 +158,22 @@ function CharRow({ c, ch, on, choose }: { c: Chain; ch: Character; on: boolean; 
 /** A link to a chain on the map, following one character. */
 export function ChainLink({ chain, char, children }: { chain: string; char?: number; children: React.ReactNode }) {
   return <Link to={`/map?chain=${chain}`} onClick={() => char && store.set("mapChar", char)} className="hover:underline">{children}</Link>;
+}
+
+/** A chain's reward on its chip: gear the character can wear compares with what it wears (as on the throne room);
+ *  anything else keeps the item's own tooltip. */
+function RewardIcon({ id, c }: { id: number; c?: { gear: boolean; full?: BisItem | null; worn?: BisItem | null } }) {
+  const { t } = useI18n();
+  const [hover, setHover] = useState(false);
+  const anchor = useRef<HTMLSpanElement>(null);
+  const icon = <ItemIcon itemId={id} size={24} />;
+  if (c?.gear && c.full) {
+    return (
+      <span ref={anchor} className="cn-reward" onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+        {icon}
+        <AnimatePresence>{hover && anchor.current && <Compare a={c.full} b={c.worn ?? null} side="right" anchor={anchor.current} head={t("cn_reward")} />}</AnimatePresence>
+      </span>
+    );
+  }
+  return <ItemHover id={id}><span className="cn-reward">{icon}</span></ItemHover>;
 }
