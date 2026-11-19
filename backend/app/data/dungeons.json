@@ -8,6 +8,14 @@
    "en": "Ruins of Ahn'Qiraj",
    "ru": "Руины Ан'Киража",
    "kind": "raid",
+   "bossRu": {
+    "Kurinnaxx": "Куриннакс",
+    "General Rajaxx": "Генерал Раджакс",
+    "Moam": "Моам",
+    "Buru the Gorger": "Буру Ненасытный",
+    "Ayamiss the Hunter": "Аямисса Охотница",
+    "Ossirian the Unscarred": "Оссириан Неуязвимый"
+   },
    "players": 20,
    "levels": [
     60,
@@ -31,6 +39,17 @@
    "en": "Ahn'Qiraj Temple",
    "ru": "Храм Ан'Киража",
    "kind": "raid",
+   "bossRu": {
+    "The Prophet Skeram": "Пророк Скерам",
+    "Silithid Royalty": "Силитидская знать",
+    "Battleguard Sartura": "Боевой страж Сартура",
+    "Fankriss the Unyielding": "Фанкрисс Непреклонный",
+    "Viscidus": "Нечистотон",
+    "Princess Huhuran": "Принцесса Хухуран",
+    "Twin Emperors": "Императоры-близнецы",
+    "Ouro": "Оуро",
+    "C'thun": "К'Тун"
+   },
    "players": 40,
    "levels": [
     60,
@@ -57,6 +76,23 @@
    "en": "Naxxramas",
    "ru": "Наксрамас",
    "kind": "raid",
+   "bossRu": {
+    "Anub'Rekhan": "Ануб'Рекан",
+    "Grand Widow Faerlina": "Великая вдова Фарлина",
+    "Maexxna": "Мексна",
+    "Noth the Plaguebringer": "Нот Чумной",
+    "Heigan the Unclean": "Хейган Нечестивый",
+    "Loatheb": "Мерзот",
+    "Instructor Razuvious": "Инструктор Разувиус",
+    "Gothik the Harvester": "Готик Жнец",
+    "The Four Horsemen": "Четыре всадника",
+    "Patchwerk": "Лоскутик",
+    "Grobbulus": "Гроббулус",
+    "Gluth": "Глут",
+    "Thaddius": "Таддиус",
+    "Sapphiron": "Сапфирон",
+    "Kel'Thuzad": "Кел'Тузад"
+   },
    "players": 40,
    "levels": [
     60,
@@ -111,6 +147,7 @@
    "en": "Manor Mistmantle",
    "ru": "Manor Mistmantle",
    "kind": "dungeon",
+   "bossRu": {},
    "players": 5,
    "levels": null,
    "new": true,
@@ -124,6 +161,12 @@
    "en": "Ragefire Chasm",
    "ru": "Огненная пропасть",
    "kind": "dungeon",
+   "bossRu": {
+    "Oggleflint": "Огглфлинт",
+    "Taragaman the Hungerer": "Тарагаман Ненасытный",
+    "Jergosh the Invoker": "Жергош Призыватель Духов",
+    "Bazzalan": "Баззалан"
+   },
    "players": 5,
    "levels": [
     13,
@@ -153,6 +196,12 @@
    "en": "The Hall of Thanes",
    "ru": "Чертоги танов",
    "kind": "dungeon",
+   "bossRu": {
+    "Faldrim Anvilmar": "Фалдрим Старая Наковальня",
+    "Infurnus": "Инфурий",
+    "Plunder": "Крад",
+    "Durgen Dirgehammer": "Дарген Сокрушающий Молот"
+   },
    "players": 5,
    "levels": [
     13,
@@ -196,6 +245,15 @@
    "en": "Ruins of Lordaeron",
    "ru": "Руины Лордерона",
    "kind": "dungeon",
+   "bossRu": {
+    "Witherfang": "Сухожвал",
+    "The Abandoned": "Покинутый",
+    "The Butcher": "Мясник",
+    "Lordaeron Captain": "Лордеронский капитан",
+    "Viktor the Vile": "Виктор Вероломный",
+    "Bjork": "Бьорк",
+    "Rath'mael": "Рат'маэль"
+   },
    "players": 5,
    "levels": [
     15,
@@ -244,6 +302,16 @@
    "en": "Deadmines",
    "ru": "Мертвые копи",
    "kind": "dungeon",
+   "bossRu": {
+    "Rhahk'Zor": "Рак'Зор",
+    "Sneed": "Снид",
+    "Miner Johnson": "Шахтер Джонсон",
+    "Gilnid": "Гилнид",
+    "Captain Greenskin": "Капитан Зеленямс",
+    "Mr. Smite": "Мистер Каюк",
+    "Cookie": "Пирожок",
+    "Edwin VanCleef": "Эдвин ван Клиф"
+   },
    "players": 5,
    "levels": [
     17,
@@ -293,6 +361,16 @@
    "en": "Wailing Caverns",
    "ru": "Пещеры Стенаний",
    "kind": "dungeon",
+   "bossRu": {
+    "Lady Anacondra": "Леди Анакондра",
+    "Lord Cobrahn": "Лорд Кобран",
+    "Kresh": "Криг",
+    "Lord Pythas": "Лорд Питонас",
+    "Skum": "Шкам",
+    "Lord Serpentis": "Лорд Серпентис",
+    "Verdan the Everliving": "Вердан Вечноживущий",
+    "Mutanus the Devourer": "Мутанус Пожиратель"
+   },
    "players": 5,
    "levels": [
     15,
@@ -342,6 +420,16 @@
    "en": "Shadowfang Keep",
    "ru": "Крепость Темного Клыка",
    "kind": "dungeon",
+   "bossRu": {
+    "Rethilgore": "Ретилгор",
+    "Razorclaw the Butcher": "Остроклык Мясник",
+    "Baron Silverlaine": "Барон Сильверлейн",
+    "Commander Springvale": "Командир Спрингвейл",
+    "Odo the Blindwatcher": "Одо Слепой Страж",
+    "Fenrus the Devourer": "Фенрус Пожиратель",
+    "Wolf Master Nandos": "Командир воргенов Нандос",
+    "Archmage Arugal": "Верховный маг Аругал"
+   },
    "players": 5,
    "levels": [
     20,
@@ -389,6 +477,17 @@
    "en": "Blackfathom Deeps",
    "ru": "Непроглядная Пучина",
    "kind": "dungeon",
+   "bossRu": {
+    "Ghamoo-ra": "Гхаму-ра",
+    "Lady Sarevess": "Леди Саревесс",
+    "Geilhast": "Гелихаст",
+    "Lorgus Jett": "Лоргус Джетт",
+    "Old Serra'kis": "Старина Серракис",
+    "Twilight Lord Kelris": "Повелитель сумрака Келрис",
+    "Aku'mai": "Аку'май",
+    "Baron Aquanis": "Барон Акванис",
+    "Gelihast": "Гелихаст"
+   },
    "players": 5,
    "levels": [
     24,
@@ -435,6 +534,13 @@
    "en": "Stormwind Stockade",
    "ru": "Тюрьма",
    "kind": "dungeon",
+   "bossRu": {
+    "Targorr the Dread": "Таргорр Ужасный",
+    "Kam Deepfury": "Кам Гневливый",
+    "Hamhock": "Хрупконог",
+    "Dextren Ward": "Декстрен Вард",
+    "Bazil Thredd": "Базиль Тредд"
+   },
    "players": 5,
    "levels": [
     24,
@@ -479,6 +585,14 @@
    "en": "Razorfen Kraul",
    "ru": "Лабиринты Иглошкурых",
    "kind": "dungeon",
+   "bossRu": {
+    "Roogug": "Ругуг",
+    "Aggem Thorncurse": "Аггем Терновое Проклятие",
+    "Death Speaker Jargba": "Вестник смерти Джаргба",
+    "Overlord Ramtusk": "Властитель Злоклык",
+    "Agathelos the Raging": "Агателос Свирепый",
+    "Charlga Razorflank": "Чарлга Остробок"
+   },
    "players": 5,
    "levels": [
     29,
@@ -524,6 +638,14 @@
    "en": "Gnomeregan",
    "ru": "Гномреган",
    "kind": "dungeon",
+   "bossRu": {
+    "Grubbis": "Грязнюк",
+    "Viscous Fallout": "Липкая муть",
+    "Electrocutioner 6000": "\"Электрошокер-6000\"",
+    "Crowd Pummeler 9-60": "\"Толпогон 9-60\"",
+    "Mekgineer Thermaplugg": "Анжинер Термоштепсель",
+    "Mechanical Menagerie": "Механический зверинец"
+   },
    "players": 5,
    "levels": [
     29,
@@ -568,6 +690,12 @@
    "en": "Excavation Site: Wetlands",
    "ru": "Раскопки: Болотина",
    "kind": "dungeon",
+   "bossRu": {
+    "Saltspine": "Солеспин",
+    "Shadetooth": "Тенезуб",
+    "Highland Horror": "Ужас нагорья",
+    "Relic Guardian": "Страж реликвий"
+   },
    "players": 5,
    "levels": [
     26,
@@ -611,6 +739,17 @@
    "en": "City of Dalaran",
    "ru": "Даларан",
    "kind": "dungeon",
+   "bossRu": {
+    "Arcane Anomaly": "Волшебная аномалия",
+    "Fel Ancient": "Древень Скверны",
+    "Mana Devourer": "Пожиратель маны",
+    "Mana Elemental": "Элементаль маны",
+    "Unstable Sentinel": "Нестабильный часовой",
+    "Lyn the Ignored": "Лин Забытый",
+    "Atrexis the Grave Knight": "Атрексий Могильный Рыцарь",
+    "Mana Wraith": "Призрак магии",
+    "Shade of the Archmage": "Тень верховного мага"
+   },
    "players": 5,
    "levels": [
     28,
@@ -660,6 +799,15 @@
    "en": "Scarlet Monastery",
    "ru": "Монастырь Алого ордена",
    "kind": "dungeon",
+   "bossRu": {
+    "Interrogator Vishas": "Дознаватель Вишас",
+    "Bloodmage Thalnos": "Волшебник крови Талнос",
+    "Houndmaster Loksey": "Псарь Локси",
+    "Arcanist Doan": "Чародей Доан",
+    "Herod": "Ирод",
+    "High Inquisitor Fairbanks": "Верховный инквизитор Фэйрбанкс",
+    "High Inquisitor Whitemane": "Верховный инквизитор Вайтмейн"
+   },
    "players": 5,
    "levels": [
     30,
@@ -706,6 +854,14 @@
    "en": "Razorfen Downs",
    "ru": "Курганы Иглошкурых",
    "kind": "dungeon",
+   "bossRu": {
+    "Tuten'kash": "Тутен'каш",
+    "Plaguemaw the Rotting": "Чумобрюх Гнилой",
+    "Mordresh Fire Eye": "Мордреш Огненный Глаз",
+    "Ragglesnout": "Круглорыл",
+    "Glutton": "Обжора",
+    "Amnennar the Coldbringer": "Амненнар Хладовей"
+   },
    "players": 5,
    "levels": [
     37,
@@ -751,6 +907,16 @@
    "en": "Uldaman",
    "ru": "Ульдаман",
    "kind": "dungeon",
+   "bossRu": {
+    "Revelosh": "Ревелош",
+    "The Lost Dwarves": "Потерянные дворфы",
+    "Ironaya": "Иронайа",
+    "Obsidian Sentinel": "Обсидиановый часовой",
+    "Ancient Stone Keeper": "Древний каменный хранитель",
+    "Galgann Firehammer": "Галганн Огнемолот",
+    "Grimlok": "Гримлок",
+    "Archaedas": "Аркедас"
+   },
    "players": 5,
    "levels": [
     41,
@@ -798,6 +964,16 @@
    "en": "Zul'Farrak",
    "ru": "Зул'Фаррак",
    "kind": "dungeon",
+   "bossRu": {
+    "Hydromancer Velratha": "Гидромантка Велрата",
+    "Gahz'rilla": "Газ'рилла",
+    "Antu'sul": "Анту'сул",
+    "Theka the Martyr": "Тека Мученик",
+    "Witch Doctor Zum'rah": "Знахарь Зум'рах",
+    "Nekrum Gutchewer": "Некрум Кишкожуй",
+    "Shadowpriest Sezz'ziz": "Жрец Тьмы Шезз'зиз",
+    "Chief Ukorz Sandscalp": "Вождь Укорз Песчаный Череп"
+   },
    "players": 5,
    "levels": [
     44,
@@ -845,6 +1021,16 @@
    "en": "Maraudon",
    "ru": "Мародон",
    "kind": "dungeon",
+   "bossRu": {
+    "Noxxion": "Ноксион",
+    "Razorlash": "Бритвохлест",
+    "Tinkerer Gizlock": "Ремонтник Гизлок",
+    "Lord Vyletongue": "Лорд Злоязыкий",
+    "Celebras the Cursed": "Келебрас Проклятый",
+    "Landslide": "Обвал",
+    "Rotgrip": "Гнилопасть",
+    "Princess Theradras": "Принцесса Терадрас"
+   },
    "players": 5,
    "levels": [
     46,
@@ -892,6 +1078,21 @@
    "en": "Sunken Temple",
    "ru": "Затонувший храм",
    "kind": "dungeon",
+   "bossRu": {
+    "Avatar of Hakkar": "Аватара Хаккара",
+    "Atal'alarion": "Атал'аларион",
+    "Jammal'an the Prophet": "Джаммал'ан Пророк",
+    "Dreamscythe": "Жнец Снов",
+    "Festering Rotslime": "Гнойная гнилослизь",
+    "Atal'ai Defenders": "Защитники Атал'ай",
+    "Shade of Eranikus": "Тень Эраникуса",
+    "Weaver": "Ткачик",
+    "Dreamscythe and Weaver": "Жнец Снов и Ткачик",
+    "Hazzas": "Хаззас",
+    "Morphaz": "Морфаз",
+    "Jammal'an and Ogom": "Джаммал'ан и Огом",
+    "Morphaz and Hazzas": "Морфаз и Хаззас"
+   },
    "players": 5,
    "levels": [
     50,
@@ -939,6 +1140,29 @@
    "en": "Blackrock Depths",
    "ru": "Глубины Черной горы",
    "kind": "dungeon",
+   "bossRu": {
+    "High Interrogator Gerstahn": "Верховный дознаватель Герштан",
+    "Lord Roccor": "Лорд Роккор",
+    "Houndmaster Grebmar": "Псарь Гребмар",
+    "Ring of Law": "Зал Правосудия",
+    "Pyromancer Loregrain": "Пиромант Зерно Мудрости",
+    "Lord Incendius": "Лорд Опалитель",
+    "Warder Stilgiss": "Тюремщик Стилгисс",
+    "Fineous Darkvire": "Финий Темнострой",
+    "Bael'Gar": "Бейл'Гор",
+    "General Angerforge": "Генерал Кузня Гнева",
+    "Golem Lord Argelmach": "Повелитель големов Аргелмах",
+    "Hurley Blackbreath": "Харли Чернопых",
+    "Phalanx": "Фаланг",
+    "Ribbly Screwspigot": "Риббли Крутипроб",
+    "Plugger Spazzring": "Штоппор Наливалс",
+    "The Vault": "Свод",
+    "Ambassador Flamelash": "Посол Огнехлыст",
+    "The Seven": "Семеро",
+    "Magmus": "Магмус",
+    "Princess Moira Bronzebeard": "Принцесса Мойра Бронзобород",
+    "Emperor Dagran Thaurissan": "Император Дагран Тауриссан"
+   },
    "players": 5,
    "levels": [
     52,
@@ -999,6 +1223,22 @@
    "en": "Blackrock Spire",
    "ru": "Вершина Черной горы",
    "kind": "dungeon",
+   "bossRu": {
+    "Highlord Omokk": "Вождь Омокк",
+    "Shadow Hunter Vosh'gajin": "Темная охотница Вос'гаджин",
+    "War Master Voone": "Воевода Вун",
+    "Mother Smolderweb": "Мать Дымная Паутина",
+    "Urok Doomhowl": "Аррок Смертный Вопль",
+    "Quartermaster Zigris": "Интендант Зигрис",
+    "Halycon": "Халикон",
+    "Gizrul the Slavener": "Гизрул Поработитель",
+    "Overlord Wyrmthalak": "Властитель Змейталак",
+    "Pyroguard Emberseer": "Пиростраж Углевзор",
+    "Warchief Rend Blackhand": "Вождь Ренд Чернорук",
+    "The Beast": "Зверь",
+    "General Drakkisath": "Генерал Драккисат",
+    "Lord Valthalak": "Лорд Вальтхалак"
+   },
    "players": 5,
    "levels": [
     55,
@@ -1052,6 +1292,27 @@
    "en": "Dire Maul",
    "ru": "Забытый город",
    "kind": "dungeon",
+   "bossRu": {
+    "Zevrim Thornhoof": "Зеврим Терновое Копыто",
+    "Hydrospawn": "Гидротварь",
+    "Lethtendris": "Лефтендрис",
+    "Pusillin": "Пузиллин",
+    "Alzzin the Wildshaper": "Алззин Перевертень",
+    "Tendris Warpwood": "Тендрис Криводрев",
+    "Illyanna Ravenoak": "Иллиана Воронья Ольха",
+    "Magister Kalendris": "Магистр Календрис",
+    "Immol'thar": "Бессмер'тер",
+    "Prince Tortheldrin": "Принц Тортелдрин",
+    "Guard Mol'dar": "Стражник Мол'дар",
+    "Stomper Kreeg": "Топотун Криг",
+    "Guard Fengus": "Стражник Фенгус",
+    "Guard Slip'kik": "Стражник Слип'кик",
+    "Captain Kromcrush": "Капитан Давигром",
+    "Cho'Rush the Observer": "Чо'Раш Наблюдатель",
+    "King Gordok": "Король Гордок",
+    "Lord Hel'nurath": "Лорд Хел'нурат",
+    "Tsu'zee": "Цу'зи"
+   },
    "players": 5,
    "levels": [
     54,
@@ -1110,6 +1371,27 @@
    "en": "Stratholme",
    "ru": "Стратхольм",
    "kind": "dungeon",
+   "bossRu": {
+    "Hearthsinger Forresten": "Певчий Форрестен",
+    "Timmy the Cruel": "Тимми Беспощадный",
+    "Malor the Zealous": "Малор Ревностный",
+    "Cannon Master Willey": "Мастер-канонир Вилли",
+    "Archivist Galford": "Архивариус Галфорд",
+    "Balnazzar": "Балназзар",
+    "The Unforgiven": "Непрощенный",
+    "Baroness Anastari": "Баронесса Анастари",
+    "Nerub'enkan": "Неруб'энкан",
+    "Maleki the Pallid": "Малекай Бледный",
+    "Magistrate Barthilas": "Мировой судья Бартилас",
+    "Ramstein the Gorger": "Рамштайн Ненасытный",
+    "Baron Rivendare": "Барон Ривендер",
+    "Black Guard Swordsmith": "Оружейник Черной Стражи",
+    "Crimson Hammersmith": "Молотобоец из Багрового легиона",
+    "Ezra Grimm": "Эзра Гримм",
+    "Postmaster Malown": "Почтальон Мэлоун",
+    "Skul": "Череп",
+    "Stonespine": "Каменный Гребень"
+   },
    "players": 5,
    "levels": [
     58,
@@ -1168,6 +1450,22 @@
    "en": "Scholomance",
    "ru": "Некроситет",
    "kind": "dungeon",
+   "bossRu": {
+    "Kirtonos": "Киртонос",
+    "Jandice Barov": "Джандис Барова",
+    "Rattlegore": "Громоклин",
+    "Marduk Blackpool": "Мардук Блэкпул",
+    "Vectus": "Вектус",
+    "Kormok": "Кормок",
+    "Ras Frostwhisperer": "Рас Ледяной Шепот",
+    "Instructor Malicia": "Инструктор Коварнесса",
+    "Doctor Theolen Krastinov": "Доктор Теолен Крастинов",
+    "Lorekeeper Polkelt": "Хранитель знаний Полкелт",
+    "The Ravenian": "Равениан",
+    "Lord Alexei Barov": "Лорд Алексей Баров",
+    "Lady Illucia Barov": "Леди Иллюсия Барова",
+    "Darkmaster Gandling": "Темный магистр Гандлинг"
+   },
    "players": 5,
    "levels": [
     58,
@@ -1222,6 +1520,9 @@
    "en": "Onyxia's Lair",
    "ru": "Логово Ониксии",
    "kind": "raid",
+   "bossRu": {
+    "Onyxia": "Ониксия"
+   },
    "players": 40,
    "levels": [
     60,
@@ -1262,6 +1563,18 @@
    "en": "Zul'Gurub",
    "ru": "Зул'Гуруб",
    "kind": "raid",
+   "bossRu": {
+    "High Priestess Jeklik": "Верховная жрица Джеклик",
+    "High Priest Venoxis": "Верховный жрец Веноксис",
+    "High Priestess Mar'li": "Верховная жрица Мар'ли",
+    "Bloodlord Mandokir": "Мандокир Повелитель Крови",
+    "Edge of Madness": "Грань Безумия",
+    "High Priest Thekal": "Верховный жрец Текал",
+    "Gahz'ranka": "Газ'ранка",
+    "High Priestess Arlokk": "Верховная жрица Арлокк",
+    "Jin'do the Hexxer": "Джин'до Проклинатель",
+    "Hakkar": "Хаккар"
+   },
    "players": 20,
    "levels": [
     60,
@@ -1289,6 +1602,19 @@
    "en": "Molten Core",
    "ru": "Огненные Недра",
    "kind": "raid",
+   "bossRu": {
+    "Lucifron": "Люцифрон",
+    "Magmadar": "Магмадар",
+    "Gehennas": "Гееннас",
+    "Garr": "Гарр",
+    "Shazzrah": "Шаззрах",
+    "Baron Geddon": "Барон Геддон",
+    "Sulfuron Harbinger": "Предвестник Сульфурон",
+    "Golemagg the Incinerator": "Големагг Испепелитель",
+    "Majordomo Executus": "Мажордом Экзекутус",
+    "Ragnaros": "Рагнарос",
+    "The Molten Core": "Огненные Недра"
+   },
    "players": 40,
    "levels": [
     60,
@@ -1339,6 +1665,16 @@
    "en": "Blackwing Lair",
    "ru": "Логово Крыла Тьмы",
    "kind": "raid",
+   "bossRu": {
+    "Razorgore the Untamed": "Бритвосмерт Неукротимый",
+    "Vaelastrasz the Corrupt": "Валестраз Порочный",
+    "Broodlord Lashlayer": "Предводитель драконов Разящий Бич",
+    "Firemaw": "Огнечрев",
+    "Ebonroc": "Черноскал",
+    "Flamegor": "Пламегор",
+    "Chromaggus": "Хроммагус",
+    "Nefarian": "Нефариан"
+   },
    "players": 40,
    "levels": [
     60,
@@ -1382,7 +1718,7 @@
    "url": "https://foreverdb.net/dungeon/469-blackwing-lair"
   },
   {
-   "id": null,
+   "id": 3001,
    "en": "The Shaper's Terrace",
    "ru": "Терраса Создателя",
    "kind": "dungeon",
@@ -1393,12 +1729,37 @@
    ],
    "new": true,
    "open": false,
-   "bosses": [],
+   "bosses": [
+    "Titanosaur",
+    "Ravasaur Hunters",
+    "Thunderhoof",
+    "Venomridge",
+    "Direhorn Matriarch",
+    "Cinder",
+    "King Op",
+    "Snowtalon",
+    "Bolt",
+    "Vitrix",
+    "Nanaya"
+   ],
+   "bossRu": {
+    "Titanosaur": "Титанозавр",
+    "Ravasaur Hunters": "Равазавры-охотники",
+    "Thunderhoof": "Громокопыт",
+    "Venomridge": "Ядогорб",
+    "Direhorn Matriarch": "Дикорог-матриарх",
+    "Cinder": "Пепел",
+    "King Op": "Король Оп",
+    "Snowtalon": "Снежнокоготь",
+    "Bolt": "Электр",
+    "Vitrix": "Витрикс",
+    "Nanaya": "Нанайя"
+   },
    "notableLoot": [],
    "url": null
   },
   {
-   "id": null,
+   "id": 2974,
    "en": "Blackmaw Hold",
    "ru": "Крепость Черночревов",
    "kind": "dungeon",
@@ -1409,12 +1770,29 @@
    ],
    "new": true,
    "open": false,
-   "bosses": [],
+   "bosses": [
+    "Withermaw",
+    "Impaan the Imprisoner",
+    "Elder Shaman Bloodmane",
+    "Bonesnout the Unbroken",
+    "Varrox Bleakhoof",
+    "Blackmaw Behemoth",
+    "Unbound Spirit"
+   ],
+   "bossRu": {
+    "Withermaw": "Сухозев",
+    "Impaan the Imprisoner": "Бесаан Бесноватый",
+    "Elder Shaman Bloodmane": "Старейшина-шаман Кровогрив",
+    "Bonesnout the Unbroken": "Костерыл Несломленный",
+    "Varrox Bleakhoof": "Варрокс Мутное Копыто",
+    "Blackmaw Behemoth": "Исполин из клана Черночревов",
+    "Unbound Spirit": "Свободный дух"
+   },
    "notableLoot": [],
    "url": null
   },
   {
-   "id": null,
+   "id": 2994,
    "en": "Alcaz Prison",
    "ru": "Тюрьма Алькац",
    "kind": "dungeon",
@@ -1425,12 +1803,25 @@
    ],
    "new": true,
    "open": false,
-   "bosses": [],
+   "bosses": [
+    "Overseer Wrex",
+    "Tidemistress Ca'zass",
+    "Katerina the Cleaner",
+    "The Questioner",
+    "Blazeroar"
+   ],
+   "bossRu": {
+    "Overseer Wrex": "Надзиратель Рекс",
+    "Tidemistress Ca'zass": "Повелительница приливов Ка'засс",
+    "Katerina the Cleaner": "Катерина Чистильщица",
+    "The Questioner": "Дознаватель",
+    "Blazeroar": "Пламеяра"
+   },
    "notableLoot": [],
    "url": null
   },
   {
-   "id": null,
+   "id": 2970,
    "en": "The Drowned City",
    "ru": "Затонувший город",
    "kind": "dungeon",
@@ -1441,12 +1832,27 @@
    ],
    "new": true,
    "open": false,
-   "bosses": [],
+   "bosses": [
+    "Zul'Alai",
+    "Var'Taka",
+    "Captain Dreadrise",
+    "Deathless Guardians",
+    "Primeval Elemental",
+    "Min'loth the Serpent"
+   ],
+   "bossRu": {
+    "Zul'Alai": "Зул'алай",
+    "Var'Taka": "Вар'така",
+    "Captain Dreadrise": "Капитан Морожад",
+    "Deathless Guardians": "Неумирающие стражи",
+    "Primeval Elemental": "Первородный элементаль",
+    "Min'loth the Serpent": "Мин'лот-Змей"
+   },
    "notableLoot": [],
    "url": null
   },
   {
-   "id": null,
+   "id": 3039,
    "en": "Krol'dok Stronghold",
    "ru": "Крепость Крол'док",
    "kind": "dungeon",
@@ -1457,7 +1863,20 @@
    ],
    "new": true,
    "open": false,
-   "bosses": [],
+   "bosses": [
+    "Slavecrusher Grox",
+    "Twilight Commander Zarmok",
+    "Handler Ashka",
+    "Nar'gurk",
+    "Overseer Mugg"
+   ],
+   "bossRu": {
+    "Slavecrusher Grox": "Рабомучитель Грокс",
+    "Twilight Commander Zarmok": "Сумеречный командир Зармок",
+    "Handler Ashka": "Укротительница Ашка",
+    "Nar'gurk": "Нар'гурк",
+    "Overseer Mugg": "Надзиратель Магг"
+   },
    "notableLoot": [],
    "url": null
   }

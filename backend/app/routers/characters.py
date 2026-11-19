@@ -430,7 +430,8 @@ async def instances(cid: int, user: CurrentUser, session: Session, lang: str = "
             ups = []
         rows.append({"id": d["id"], "name": names, "nameEn": d["en"], "kind": d.get("kind"), "players": d.get("players"),
                      "levels": d.get("levels"), "new": bool(d.get("new")), "open": bool(d.get("open")), "url": d.get("url"),
-                     "bosses": [{"en": b, "name": inst.boss_name(b, lang), "model": inst.boss_model(b),
+                     "bosses": [{"en": b, "name": ((d.get("bossRu") or {}).get(b) if lang == "ru" else None) or inst.boss_name(b, lang),
+                                 "model": inst.boss_model(b),
                                  "kills": next((k["kills"] for k in mine if inst.norm(k["boss"]) == inst.norm(b)), None)}
                                 for b in d.get("bosses") or []],
                      "kills": [{"boss": k["bossLocal"] or k["boss"], "kills": k["kills"]} for k in mine],

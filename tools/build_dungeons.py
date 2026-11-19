@@ -4,7 +4,9 @@ dungeon tab never depends on a live answer:
 - the list, level ranges ("13–18", as the game's group finder gives them), bosses and notable loot: ForeverDB
   (https://foreverdb.net, credited on the page) — the game files carry only a single minimum level;
 - names in Russian and the dungeons Forever's files hold but ForeverDB doesn't list yet: the client's
-  LFGDungeons table (wago.tools), with its minimum level from ContentTuning.
+  LFGDungeons table (wago.tools), with its minimum level from ContentTuning;
+- the bosses of every dungeon, in order, with their Russian names: the client's DungeonEncounter table (by the
+  dungeon's map, found by name in Map) — the only source for the dungeons not open yet.
 
     python tools/build_dungeons.py [--build 1.60.1.70938]
 
@@ -85,6 +87,16 @@ def main() -> None:
             continue
         client[k] = {"en": r["Name_lang"], "ru": ru.get(r["ID"]) or r["Name_lang"],
                                    "min": int((ct.get(r["ContentTuningID"]) or {}).get("MinLevelSquish") or 0) or None}
+    maps = {norm(r["MapName_lang"]): int(r["ID"]) for r in wago("Map", a.build)}
+    ru_enc = {r["ID"]: r["Name_lang"] for r in wago("DungeonEncounter", a.build, "ruRU")}
+    enc: dict[int, list] = {}
+    for r in wago("DungeonEncounter", a.build):
+        enc.setdefault(int(r["MapID"]), []).append((int(r["OrderIndex"]), r["Name_lang"], ru_enc.get(r["ID"]) or r["Name_lang"]))
+
+    def bosses_of(map_id: int | None) -> tuple[list[str], dict[str, str]]:
+        xs = sorted(enc.get(map_id or -1, []))
+        return [en for _, en, _ in xs], {en: ru for _, en, ru in xs}
+
     out, used = [], set()
     for x in listed:
         if x.get("status") == "other":  # maps from other games' files, never playable here
@@ -93,15 +105,18 @@ def main() -> None:
         c = client.get(norm(d["name"])) or {}
         used.add(norm(d["name"]))
         ru_name = INSTANCES[d["id"]][1] if d["id"] in INSTANCES else c.get("ru") or d["name"]
-        out.append({"id": d["id"], "en": d["name"], "ru": ru_name, "kind": d["kind"],
+        cb, cru = bosses_of(d["id"])
+        out.append({"id": d["id"], "en": d["name"], "ru": ru_name, "kind": d["kind"], "bossRu": cru,
                     "players": d.get("players"), "levels": d.get("levelRange") or ([c["min"], c["min"]] if c.get("min") else None),
-                    "new": bool(d.get("newInForever")), "open": bool(d.get("announced")), "bosses": d.get("bosses") or [],
+                    "new": bool(d.get("newInForever")), "open": bool(d.get("announced")), "bosses": d.get("bosses") or cb,
                     "notableLoot": d.get("notableLoot") or [], "url": d.get("url")})
     for k, c in client.items():  # in Forever's files but not in ForeverDB's list
         if k not in used:
-            out.append({"id": None, "en": c["en"], "ru": c["ru"], "kind": "dungeon", "players": 5,
+            mid = maps.get(k) or maps.get(norm(re.sub(r"^the ", "", c["en"].lower())))
+            cb, cru = bosses_of(mid)
+            out.append({"id": mid, "en": c["en"], "ru": c["ru"], "kind": "dungeon", "players": 5,
                         "levels": [c["min"], c["min"]] if c.get("min") else None, "new": True, "open": False,
-                        "bosses": [], "notableLoot": [], "url": None})
+                        "bosses": cb, "bossRu": cru, "notableLoot": [], "url": None})
     OUT.write_text(json.dumps({"source": "ForeverDB.net (https://foreverdb.net) and the game's files", "build": a.build,
                                "at": time.strftime("%Y-%m-%d"), "dungeons": out}, ensure_ascii=False, indent=1), "utf-8")
     print("wrote", OUT, len(out))
