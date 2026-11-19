@@ -246,15 +246,21 @@ export function InstancesTab({ cid }: { cid: number }) {
   if (q.isError) return <p className="text-sm text-bad">{String(q.error)}</p>;
   const d = q.data!;
   const lv = d.level;
-  const near = (r: InstRow) => !r.levels || (r.levels[0] <= lv + 3 && r.levels[1] >= lv - 2);
+  const near = (r: InstRow) => r.open && !!r.levels && r.levels[0] <= lv + 3 && r.levels[1] >= lv - 2;
   const shown = d.rows.filter((r) => all || near(r) || r.cleared > 0);
   const part = (kind: string) => shown.filter((r) => r.kind === kind);
   const card = (r: InstRow) => (
-    <li key={r.id} className={`rounded-md border p-3 ${near(r) ? "border-gold/50 bg-gold/5" : "border-edge/50 bg-bg/40"}`}>
+    <li key={r.id} className={`rounded-md border p-3 ${near(r) ? "border-gold/50 bg-gold/5" : "border-edge/50 bg-bg/40"} ${r.open ? "" : "opacity-60"}`}>
       <div className="flex flex-wrap items-baseline gap-2">
         <b className="text-sm">{r.name}</b>
-        {r.levels && <span className="text-xs text-muted">{t("in_levels", { a: r.levels[0], b: r.levels[1] })}</span>}
+        {r.levels && (
+          <span className={`rounded px-1.5 font-mono text-xs ${near(r) ? "bg-gold/15 text-gold" : "bg-white/5 text-muted"}`}>
+            {r.levels[0] === r.levels[1] ? r.levels[0] : `${r.levels[0]}–${r.levels[1]}`}
+          </span>
+        )}
+        {r.kind === "raid" && r.players && <span className="text-[11px] text-muted">{t("in_players", { n: r.players })}</span>}
         {r.new && <span className="rounded bg-sky-500/15 px-1.5 text-[11px] text-sky-300">{t("in_new")}</span>}
+        {!r.open && <span className="rounded bg-white/5 px-1.5 text-[11px] text-muted">{t("in_closed")}</span>}
         <span className={`ml-auto text-xs ${r.cleared ? "text-good" : "text-muted"}`}>
           {r.cleared ? t("in_cleared", { n: r.cleared }) : t("in_not_cleared")}
         </span>
@@ -262,7 +268,7 @@ export function InstancesTab({ cid }: { cid: number }) {
       {r.kills.length > 0 && (
         <p className="mt-1 text-xs text-good">{r.kills.map((k) => t("in_kills", { b: k.boss, n: k.kills })).join(" · ")}</p>
       )}
-      {r.upgrades.length > 0 ? (
+      {!r.open ? null : r.upgrades.length > 0 ? (
         <div className="mt-2">
           <div className="text-xs text-muted">{t("in_upgrades", { n: r.upgradeCount })}</div>
           <ul className="mt-1 space-y-1">
@@ -286,11 +292,11 @@ export function InstancesTab({ cid }: { cid: number }) {
         <p className="mt-2 text-xs text-muted">{r.lootKnown === "none" ? t("in_loot_unknown") : t("in_no_upgrades")}</p>
       )}
       {r.lootKnown === "notable" && <p className="mt-1 text-[11px] text-muted">{t("in_loot_notable")}</p>}
-      <details className="mt-2 text-xs">
+      {r.bosses.length > 0 && <details className="mt-2 text-xs">
         <summary className="cursor-pointer text-muted">{t("in_bosses", { n: r.bosses.length })}</summary>
         <p className="mt-1 text-muted">{r.bosses.join(" · ")}</p>
         {r.url && <a className="mt-1 inline-block underline" href={r.url} target="_blank" rel="noopener noreferrer">ForeverDB</a>}
-      </details>
+      </details>}
     </li>
   );
   return (
@@ -301,11 +307,11 @@ export function InstancesTab({ cid }: { cid: number }) {
         <Stat k={t("in_cleared_n")} v={d.rows.filter((r) => r.cleared).length} />
       </div>
       {!d.available && <p className="text-sm text-muted">{t("ar_unavailable", { s: d.status ?? "?" })}</p>}
-      {!d.fdb && <p className="text-sm text-muted">{t("in_no_fdb")}</p>}
+      {!d.fdb && <p className="text-xs text-muted">{t("in_no_fdb")}</p>}
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <span className="text-muted">{t("in_for_level", { n: lv })}</span>
         <button className={all ? "btn" : "btn-primary"} onClick={() => setAll(false)}>{t("in_show_near")}</button>
-        <button className={all ? "btn-primary" : "btn"} onClick={() => setAll(true)}>{t("in_show_all")}</button>
+        <button className={all ? "btn-primary" : "btn"} onClick={() => setAll(true)}>{t("in_show_all")} ({d.rows.length})</button>
       </div>
       {(["dungeon", "raid"] as const).map((k) => part(k).length > 0 && (
         <div key={k}>

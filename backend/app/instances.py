@@ -7,6 +7,7 @@ the dungeons Forever added).
 
 from __future__ import annotations
 
+import json
 import logging
 import re
 from functools import lru_cache
@@ -23,22 +24,41 @@ def norm(s: str | None) -> str:
     return re.sub(r"^the\s+", "", re.sub(r"[^a-z0-9' ]", "", (s or "").lower())).strip()
 
 
+@lru_cache(maxsize=1)
+def snapshot() -> list[dict]:
+    """The list the hub ships (tools/build_dungeons.py): ForeverDB's dungeons with level ranges, bosses and notable
+    loot, Russian names and the dungeons only Forever's files hold. The tab stands on it when ForeverDB can't answer."""
+    p = item_sources.DATA / "dungeons.json"
+    xs = json.loads(p.read_text("utf-8"))["dungeons"] if p.is_file() else []
+    return [{**x, "id": x["id"] if x.get("id") is not None else -(n + 1)} for n, x in enumerate(xs)]
+
+
 async def catalog() -> list[dict]:
-    """Forever's dungeons and raids that are in the game, with bosses and notable loot (cached a month by build)."""
+    """The shipped list, brought up to date by ForeverDB's live answers when it gives them (cached a month by
+    build): new level ranges, bosses, notable loot, a dungeon announced since."""
+    base = [dict(x) for x in snapshot()]
     c = fdb()
     if not c.configured:
-        return []
-    out = []
+        return base
+    by_id = {x["id"]: x for x in base}
     for x in await c.pages("dungeons", ttl_days=30):
-        if not x.get("announced") or x.get("status") == "other":
+        if x.get("status") == "other":
             continue
         try:
             d = (await c.get(f"dungeons/{x['id']}", ttl_days=30)).get("data") or x
-        except Exception:  # noqa: BLE001 - a dungeon without its details is still worth listing
+        except Exception:  # noqa: BLE001 - the shipped copy of this one stays
             log.exception("foreverdb dungeon %s", x.get("id"))
-            d = x
-        out.append(d)
-    return out
+            continue
+        row = by_id.get(d["id"])
+        if row is None:
+            row = {"id": d["id"], "en": d["name"], "ru": d["name"], "kind": d.get("kind") or "dungeon", "new": True}
+            base.append(row)
+            by_id[d["id"]] = row
+        row.update({"players": d.get("players"), "levels": d.get("levelRange") or row.get("levels"),
+                    "new": bool(d.get("newInForever")), "open": bool(d.get("announced")),
+                    "bosses": d.get("bosses") or row.get("bosses") or [],
+                    "notableLoot": d.get("notableLoot") or row.get("notableLoot") or [], "url": d.get("url") or row.get("url")})
+    return base
 
 
 def kills(stats_en: dict, stats_local: dict) -> list[dict]:

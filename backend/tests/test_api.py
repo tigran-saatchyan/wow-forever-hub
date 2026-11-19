@@ -184,7 +184,10 @@ def test_character_instances_without_sources(client):
             return c.id
     cid = asyncio.run(seed())
     d = client.get(f"/api/characters/{cid}/instances").json()
-    assert d["level"] == 34 and d["rows"] == [] and d["fdb"] is False and d["available"] is False
+    assert d["level"] == 34 and d["fdb"] is False and d["available"] is False
+    rfc = next(r for r in d["rows"] if r["nameEn"] == "Ragefire Chasm")  # the shipped list stands in for ForeverDB
+    assert rfc["levels"] == [13, 18] and rfc["name"] == "Огненная пропасть" and rfc["open"] and rfc["cleared"] == 0
+    assert any(not r["open"] for r in d["rows"])  # what is in the files but not open yet is listed too
 
     async def clean():
         async with SessionLocal() as s:

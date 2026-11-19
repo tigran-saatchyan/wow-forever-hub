@@ -392,13 +392,13 @@ async def instances(cid: int, user: CurrentUser, session: Session, lang: str = "
         except BnetError as e:
             err = e.status
     killed = inst.kills(stats_en, stats_l)
+    live = True
     try:  # read from the cache the background sync fills; a cold start does not keep the page waiting long
         cat = await asyncio.wait_for(inst.catalog(), 20)
-    except asyncio.TimeoutError:
-        cat = []
-    except Exception:  # noqa: BLE001 - ForeverDB out of its daily share or down: the kills still show
-        log.exception("instances: ForeverDB dungeons")
-        cat = []
+    except Exception as e:  # noqa: BLE001 - ForeverDB slow, out of its daily share or down: the shipped list
+        if not isinstance(e, asyncio.TimeoutError):
+            log.exception("instances: ForeverDB dungeons")
+        cat, live = inst.snapshot(), False
     s = ((c.profile or {}).get("summary") or {}).get("en") or {}
     level = s.get("level") or 1
     up_ctx = None
@@ -412,17 +412,17 @@ async def instances(cid: int, user: CurrentUser, session: Session, lang: str = "
         log.exception("instances: upgrades for %s", cid)
     rows = []
     for d in cat:
-        mine = [k for k in killed if inst.norm(k["instance"]) == inst.norm(d["name"])
+        mine = [k for k in killed if inst.norm(k["instance"]) == inst.norm(d["en"])
                 or inst.norm(k["boss"]) in {inst.norm(b) for b in d.get("bosses") or []}]
-        names = item_sources_names(d["id"], d["name"], mine, lang)
+        names = d["ru"] if lang == "ru" else d["en"]
         try:
             ups = inst.upgrades(d["id"], d.get("notableLoot") or [], bis_routes.gear(), up_ctx[0], level, s.get("faction"),
                                 up_ctx[1], up_ctx[2], lang) if up_ctx else []
         except Exception:  # noqa: BLE001 - one odd item must not take the tab down
             log.exception("instances: upgrades in %s", d.get("id"))
             ups = []
-        rows.append({"id": d["id"], "name": names, "nameEn": d["name"], "kind": d.get("kind"), "players": d.get("players"),
-                     "levels": d.get("levelRange"), "new": bool(d.get("newInForever")), "url": d.get("url"),
+        rows.append({"id": d["id"], "name": names, "nameEn": d["en"], "kind": d.get("kind"), "players": d.get("players"),
+                     "levels": d.get("levels"), "new": bool(d.get("new")), "open": bool(d.get("open")), "url": d.get("url"),
                      "bosses": d.get("bosses") or [],
                      "kills": [{"boss": k["bossLocal"] or k["boss"], "kills": k["kills"]} for k in mine],
                      "cleared": sum(k["kills"] for k in mine[:1]), "upgrades": ups[:6], "upgradeCount": len(ups),
@@ -435,26 +435,14 @@ async def instances(cid: int, user: CurrentUser, session: Session, lang: str = "
             name = (k["instanceLocal"] or k["instance"]) if lang == "ru" else k["instance"]
             same = [x for x in killed if inst.norm(x["instance"]) == inst.norm(k["instance"])]
             rows.append({"id": -len(rows) - 1, "name": name[:1].upper() + name[1:], "nameEn": k["instance"], "kind": "dungeon",
-                         "players": None, "levels": None, "new": False, "url": None, "bosses": [],
+                         "players": None, "levels": None, "new": False, "open": True, "url": None, "bosses": [],
                          "kills": [{"boss": x["bossLocal"] or x["boss"], "kills": x["kills"]} for x in same],
                          "cleared": same[0]["kills"], "upgrades": [], "upgradeCount": 0, "lootKnown": "none"})
     rows.sort(key=lambda r: ((r["levels"] or [99])[0], r["kind"] != "dungeon", r["nameEn"]))
     out = {"available": bool(stats_en), "status": err, "level": level, "spec": up_ctx[3] if up_ctx else None,
            "visited": inst.stat_value(stats_en, "Total 5-player dungeons entered"),
            "deaths": inst.stat_value(stats_en, "Total deaths in 5-player dungeons"),
-           "fdb": bool(cat), "rows": rows}
-    if cat:  # an empty list (ForeverDB still loading) is asked again next time
+           "fdb": live and inst.fdb().configured, "rows": rows}
+    if live:  # the shipped list (ForeverDB not reached) is asked again next time
         _inst_cache[(cid, lang)] = (time.time() + 900, out)
     return out
-
-
-def item_sources_names(iid: int, en: str, mine: list[dict], lang: str) -> str:
-    """The instance's name in the page's language: the statistics' own words, then the hub's list, then English."""
-    from ..item_sources import INSTANCES
-
-    if lang == "en":
-        return en
-    for k in mine:
-        if k.get("instanceLocal"):
-            return k["instanceLocal"][:1].upper() + k["instanceLocal"][1:]
-    return INSTANCES[iid][1] if iid in INSTANCES else en

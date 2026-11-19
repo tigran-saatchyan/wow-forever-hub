@@ -1,0 +1,1465 @@
+{
+ "source": "ForeverDB.net (https://foreverdb.net) and the game's files",
+ "build": "1.60.1.70938",
+ "at": "2026-11-19",
+ "dungeons": [
+  {
+   "id": 509,
+   "en": "Ruins of Ahn'Qiraj",
+   "ru": "Руины Ан'Киража",
+   "kind": "raid",
+   "players": 20,
+   "levels": [
+    60,
+    60
+   ],
+   "new": false,
+   "open": false,
+   "bosses": [
+    "Kurinnaxx",
+    "General Rajaxx",
+    "Moam",
+    "Buru the Gorger",
+    "Ayamiss the Hunter",
+    "Ossirian the Unscarred"
+   ],
+   "notableLoot": [],
+   "url": "https://foreverdb.net/dungeon/509-ruins-of-ahnqiraj"
+  },
+  {
+   "id": 531,
+   "en": "Ahn'Qiraj Temple",
+   "ru": "Храм Ан'Киража",
+   "kind": "raid",
+   "players": 40,
+   "levels": [
+    60,
+    60
+   ],
+   "new": false,
+   "open": false,
+   "bosses": [
+    "The Prophet Skeram",
+    "Silithid Royalty",
+    "Battleguard Sartura",
+    "Fankriss the Unyielding",
+    "Viscidus",
+    "Princess Huhuran",
+    "Twin Emperors",
+    "Ouro",
+    "C'thun"
+   ],
+   "notableLoot": [],
+   "url": "https://foreverdb.net/dungeon/531-ahnqiraj-temple"
+  },
+  {
+   "id": 533,
+   "en": "Naxxramas",
+   "ru": "Наксрамас",
+   "kind": "raid",
+   "players": 40,
+   "levels": [
+    60,
+    60
+   ],
+   "new": false,
+   "open": false,
+   "bosses": [
+    "Anub'Rekhan",
+    "Grand Widow Faerlina",
+    "Maexxna",
+    "Noth the Plaguebringer",
+    "Heigan the Unclean",
+    "Loatheb",
+    "Instructor Razuvious",
+    "Gothik the Harvester",
+    "The Four Horsemen",
+    "Patchwerk",
+    "Grobbulus",
+    "Gluth",
+    "Thaddius",
+    "Sapphiron",
+    "Kel'Thuzad"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 23059,
+     "name": "Ring of the Dreadnaught",
+     "why": [
+      "Dreadnaught's Battlegear set"
+     ]
+    },
+    {
+     "itemId": 23060,
+     "name": "Bonescythe Ring",
+     "why": [
+      "Bonescythe Armor set"
+     ]
+    },
+    {
+     "itemId": 23061,
+     "name": "Ring of Faith",
+     "why": [
+      "Vestments of Faith set"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/533-naxxramas"
+  },
+  {
+   "id": 3109,
+   "en": "Manor Mistmantle",
+   "ru": "Manor Mistmantle",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": null,
+   "new": true,
+   "open": false,
+   "bosses": [],
+   "notableLoot": [],
+   "url": "https://foreverdb.net/dungeon/3109-manor-mistmantle"
+  },
+  {
+   "id": 389,
+   "en": "Ragefire Chasm",
+   "ru": "Огненная пропасть",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    13,
+    18
+   ],
+   "new": false,
+   "open": true,
+   "bosses": [
+    "Oggleflint",
+    "Taragaman the Hungerer",
+    "Jergosh the Invoker",
+    "Bazzalan"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 272996,
+     "name": "Trogg Scepter",
+     "why": [
+      "top pick for Holy Priest at level 20"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/389-ragefire-chasm"
+  },
+  {
+   "id": 3065,
+   "en": "The Hall of Thanes",
+   "ru": "Чертоги танов",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    13,
+    20
+   ],
+   "new": true,
+   "open": true,
+   "bosses": [
+    "Faldrim Anvilmar",
+    "Infurnus",
+    "Plunder",
+    "Durgen Dirgehammer"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 270227,
+     "name": "Ephemeral Choker",
+     "why": [
+      "top pick for Arcane Mage and 9 more specs at level 20"
+     ]
+    },
+    {
+     "itemId": 271096,
+     "name": "Aetherwisp Bracers",
+     "why": [
+      "top pick for Affliction Warlock and 7 more specs at level 20"
+     ]
+    },
+    {
+     "itemId": 271095,
+     "name": "Fang of Magmatus",
+     "why": [
+      "top pick for Arcane Mage and 3 more specs at level 20"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/3065-the-hall-of-thanes"
+  },
+  {
+   "id": 2999,
+   "en": "Ruins of Lordaeron",
+   "ru": "Руины Лордерона",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    15,
+    22
+   ],
+   "new": true,
+   "open": true,
+   "bosses": [
+    "Witherfang",
+    "The Abandoned",
+    "The Butcher",
+    "Lordaeron Captain",
+    "Viktor the Vile",
+    "Bjork",
+    "Rath'mael"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 271214,
+     "name": "Rotmender's Treads",
+     "why": [
+      "Rotmender's Raiment set",
+      "top pick for Affliction Warlock and 13 more specs at level 20/30"
+     ]
+    },
+    {
+     "itemId": 271210,
+     "name": "Tuskwrap Belt",
+     "why": [
+      "top pick for Affliction Warlock and 10 more specs at level 20"
+     ]
+    },
+    {
+     "itemId": 286978,
+     "name": "Rotmender's Garb",
+     "why": [
+      "Rotmender's Raiment set",
+      "top pick for Arcane Mage and 5 more specs at level 20"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/2999-ruins-of-lordaeron"
+  },
+  {
+   "id": 36,
+   "en": "Deadmines",
+   "ru": "Мертвые копи",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    17,
+    26
+   ],
+   "new": false,
+   "open": true,
+   "bosses": [
+    "Rhahk'Zor",
+    "Sneed",
+    "Miner Johnson",
+    "Gilnid",
+    "Captain Greenskin",
+    "Mr. Smite",
+    "Cookie",
+    "Edwin VanCleef"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 10403,
+     "name": "Blackened Defias Belt",
+     "why": [
+      "Defias Leather set",
+      "top pick for Arms Warrior and 9 more specs at level 20"
+     ]
+    },
+    {
+     "itemId": 1156,
+     "name": "Lavishly Jeweled Ring",
+     "why": [
+      "top pick for Balance Druid and 9 more specs at level 20"
+     ]
+    },
+    {
+     "itemId": 284715,
+     "name": "First Mate Band",
+     "why": [
+      "Partners in Crime set",
+      "top pick for Arms Warrior and 7 more specs at level 20"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/36-deadmines"
+  },
+  {
+   "id": 43,
+   "en": "Wailing Caverns",
+   "ru": "Пещеры Стенаний",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    15,
+    24
+   ],
+   "new": false,
+   "open": true,
+   "bosses": [
+    "Lady Anacondra",
+    "Lord Cobrahn",
+    "Kresh",
+    "Lord Pythas",
+    "Skum",
+    "Lord Serpentis",
+    "Verdan the Everliving",
+    "Mutanus the Devourer"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 5970,
+     "name": "Serpent Gloves",
+     "why": [
+      "top pick for Affliction Warlock and 13 more specs at level 20"
+     ]
+    },
+    {
+     "itemId": 10413,
+     "name": "Gloves of the Fang",
+     "why": [
+      "Embrace of the Viper set",
+      "top pick for Arms Warrior and 10 more specs at level 20"
+     ]
+    },
+    {
+     "itemId": 10410,
+     "name": "Leggings of the Fang",
+     "why": [
+      "Embrace of the Viper set",
+      "top pick for Assassination Rogue and 8 more specs at level 20"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/43-wailing-caverns"
+  },
+  {
+   "id": 33,
+   "en": "Shadowfang Keep",
+   "ru": "Крепость Темного Клыка",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    20,
+    30
+   ],
+   "new": false,
+   "open": true,
+   "bosses": [
+    "Rethilgore",
+    "Razorclaw the Butcher",
+    "Baron Silverlaine",
+    "Commander Springvale",
+    "Odo the Blindwatcher",
+    "Fenrus the Devourer",
+    "Wolf Master Nandos",
+    "Archmage Arugal"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 273457,
+     "name": "Sorcerer Collar",
+     "why": [
+      "top pick for Arcane Mage and 10 more specs at level 20"
+     ]
+    },
+    {
+     "itemId": 273643,
+     "name": "Worgenbane Talisman",
+     "why": [
+      "top pick for Arcane Mage and 9 more specs at level 30/40"
+     ]
+    },
+    {
+     "itemId": 6392,
+     "name": "Belt of Arugal",
+     "why": [
+      "top pick for Affliction Warlock and 7 more specs at level 30"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/33-shadowfang-keep"
+  },
+  {
+   "id": 48,
+   "en": "Blackfathom Deeps",
+   "ru": "Непроглядная Пучина",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    24,
+    32
+   ],
+   "new": false,
+   "open": true,
+   "bosses": [
+    "Ghamoo-ra",
+    "Lady Sarevess",
+    "Geilhast",
+    "Lorgus Jett",
+    "Old Serra'kis",
+    "Twilight Lord Kelris",
+    "Aku'mai"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 2567,
+     "name": "Evocator's Blade",
+     "why": [
+      "top pick for Arcane Mage and 6 more specs at level 20/30"
+     ]
+    },
+    {
+     "itemId": 888,
+     "name": "Naga Battle Gloves",
+     "why": [
+      "top pick for Holy Paladin and 2 more specs at level 30"
+     ]
+    },
+    {
+     "itemId": 6901,
+     "name": "Glowing Thresher Cape",
+     "why": [
+      "top pick for Discipline Priest and 2 more specs at level 30"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/48-blackfathom-deeps"
+  },
+  {
+   "id": 34,
+   "en": "Stormwind Stockade",
+   "ru": "Тюрьма",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    24,
+    32
+   ],
+   "new": false,
+   "open": true,
+   "bosses": [
+    "Targorr the Dread",
+    "Kam Deepfury",
+    "Hamhock",
+    "Dextren Ward",
+    "Bazil Thredd"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 273825,
+     "name": "Red Wool Cloak",
+     "why": [
+      "top pick for Arcane Mage and 8 more specs at level 30/40"
+     ]
+    },
+    {
+     "itemId": 3202,
+     "name": "Forest Leather Bracers",
+     "why": [
+      "top pick for Assassination Rogue and 5 more specs at level 20"
+     ]
+    },
+    {
+     "itemId": 273808,
+     "name": "Bridgebreaker Bindings",
+     "why": [
+      "top pick for Discipline Priest and 4 more specs at level 30"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/34-stormwind-stockade"
+  },
+  {
+   "id": 47,
+   "en": "Razorfen Kraul",
+   "ru": "Лабиринты Иглошкурых",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    29,
+    38
+   ],
+   "new": false,
+   "open": true,
+   "bosses": [
+    "Roogug",
+    "Aggem Thorncurse",
+    "Death Speaker Jargba",
+    "Overlord Ramtusk",
+    "Agathelos the Raging",
+    "Charlga Razorflank"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 6697,
+     "name": "Batwing Mantle",
+     "why": [
+      "top pick for Affliction Warlock and 13 more specs at level 30"
+     ]
+    },
+    {
+     "itemId": 6695,
+     "name": "Stygian Bone Amulet",
+     "why": [
+      "top pick for Affliction Warlock and 12 more specs at level 30"
+     ]
+    },
+    {
+     "itemId": 274152,
+     "name": "Roogug's Severed Head",
+     "why": [
+      "top pick for Arcane Mage and 9 more specs at level 30/40"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/47-razorfen-kraul"
+  },
+  {
+   "id": 90,
+   "en": "Gnomeregan",
+   "ru": "Гномреган",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    29,
+    38
+   ],
+   "new": false,
+   "open": true,
+   "bosses": [
+    "Viscous Fallout",
+    "Electrocutioner 6000",
+    "Crowd Pummeler 9-60",
+    "Mekgineer Thermaplugg",
+    "Grubbis"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 9448,
+     "name": "Spidertank Oilrag",
+     "why": [
+      "top pick for Affliction Warlock and 13 more specs at level 30/40"
+     ]
+    },
+    {
+     "itemId": 2059,
+     "name": "Sentry Cloak",
+     "why": [
+      "top pick for Assassination Rogue and 8 more specs at level 20"
+     ]
+    },
+    {
+     "itemId": 9456,
+     "name": "Glass Shooter",
+     "why": [
+      "top pick for Arms Warrior and 7 more specs at level 30"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/90-gnomeregan"
+  },
+  {
+   "id": 2998,
+   "en": "Excavation Site: Wetlands",
+   "ru": "Раскопки: Болотина",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    26,
+    33
+   ],
+   "new": true,
+   "open": true,
+   "bosses": [
+    "Saltspine",
+    "Shadetooth",
+    "Highland Horror",
+    "Relic Guardian"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 273030,
+     "name": "Ring of Power Regulation",
+     "why": [
+      "top pick for Arcane Mage and 6 more specs at level 30"
+     ]
+    },
+    {
+     "itemId": 273024,
+     "name": "Glinteye Slippers",
+     "why": [
+      "top pick for Affliction Warlock and 5 more specs at level 30"
+     ]
+    },
+    {
+     "itemId": 273027,
+     "name": "Raptor's Gaze",
+     "why": [
+      "top pick for Arcane Mage and 3 more specs at level 30"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/2998-excavation-site-wetlands"
+  },
+  {
+   "id": 2959,
+   "en": "City of Dalaran",
+   "ru": "Даларан",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    28,
+    35
+   ],
+   "new": true,
+   "open": true,
+   "bosses": [
+    "Arcane Anomaly",
+    "Fel Ancient",
+    "Mana Devourer",
+    "Mana Elemental",
+    "Unstable Sentinel",
+    "Lyn the Ignored",
+    "Atrexis the Grave Knight",
+    "Mana Wraith",
+    "Shade of the Archmage"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 286989,
+     "name": "Violet Sorcerer's Wraps",
+     "why": [
+      "Violet Sorcerer's Vestments set",
+      "top pick for Affliction Warlock and 18 more specs at level 30/40"
+     ]
+    },
+    {
+     "itemId": 273036,
+     "name": "Graveweave Bindings",
+     "why": [
+      "top pick for Affliction Warlock and 14 more specs at level 30"
+     ]
+    },
+    {
+     "itemId": 286995,
+     "name": "Guardian's Emblem",
+     "why": [
+      "top pick for Affliction Warlock and 14 more specs at level 30"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/2959-city-of-dalaran"
+  },
+  {
+   "id": 189,
+   "en": "Scarlet Monastery",
+   "ru": "Монастырь Алого ордена",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    30,
+    38
+   ],
+   "new": false,
+   "open": true,
+   "bosses": [
+    "Interrogator Vishas",
+    "Bloodmage Thalnos",
+    "Houndmaster Loksey",
+    "Arcanist Doan",
+    "Herod",
+    "High Inquisitor Fairbanks",
+    "High Inquisitor Whitemane"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 7684,
+     "name": "Bloodmage Mantle",
+     "why": [
+      "top pick for Affliction Warlock and 13 more specs at level 30/40"
+     ]
+    },
+    {
+     "itemId": 7691,
+     "name": "Embalmed Shroud",
+     "why": [
+      "top pick for Arcane Mage and 6 more specs at level 30"
+     ]
+    },
+    {
+     "itemId": 7685,
+     "name": "Orb of the Forgotten Seer",
+     "why": [
+      "top pick for Balance Druid and 5 more specs at level 40/50"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/189-scarlet-monastery"
+  },
+  {
+   "id": 129,
+   "en": "Razorfen Downs",
+   "ru": "Курганы Иглошкурых",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    37,
+    46
+   ],
+   "new": false,
+   "open": true,
+   "bosses": [
+    "Tuten'kash",
+    "Plaguemaw the Rotting",
+    "Mordresh Fire Eye",
+    "Ragglesnout",
+    "Glutton",
+    "Amnennar the Coldbringer"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 10769,
+     "name": "Glowing Eye of Mordresh",
+     "why": [
+      "top pick for Arcane Mage and 11 more specs at level 40/50"
+     ]
+    },
+    {
+     "itemId": 274385,
+     "name": "Abomination Chain",
+     "why": [
+      "top pick for Feral Combat Druid and 2 more specs at level 40"
+     ]
+    },
+    {
+     "itemId": 10764,
+     "name": "Deathchill Armor",
+     "why": [
+      "top pick for Holy Paladin and 1 more spec at level 40"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/129-razorfen-downs"
+  },
+  {
+   "id": 70,
+   "en": "Uldaman",
+   "ru": "Ульдаман",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    41,
+    51
+   ],
+   "new": false,
+   "open": true,
+   "bosses": [
+    "Revelosh",
+    "The Lost Dwarves",
+    "Ironaya",
+    "Obsidian Sentinel",
+    "Ancient Stone Keeper",
+    "Galgann Firehammer",
+    "Grimlok",
+    "Archaedas"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 9407,
+     "name": "Stoneweaver Leggings",
+     "why": [
+      "top pick for Discipline Priest and 2 more specs at level 40"
+     ]
+    },
+    {
+     "itemId": 274425,
+     "name": "White Obsidian Wand",
+     "why": [
+      "top pick for Demonology Warlock and 2 more specs at level 40"
+     ]
+    },
+    {
+     "itemId": 9398,
+     "name": "Worn Running Boots",
+     "why": [
+      "top pick for Beast Mastery Hunter and 1 more spec at level 40"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/70-uldaman"
+  },
+  {
+   "id": 209,
+   "en": "Zul'Farrak",
+   "ru": "Зул'Фаррак",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    44,
+    54
+   ],
+   "new": false,
+   "open": true,
+   "bosses": [
+    "Hydromancer Velratha",
+    "Gahz'rilla",
+    "Antu'sul",
+    "Theka the Martyr",
+    "Witch Doctor Zum'rah",
+    "Nekrum Gutchewer",
+    "Shadowpriest Sezz'ziz",
+    "Chief Ukorz Sandscalp"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 12471,
+     "name": "Desertwalker Cane",
+     "why": [
+      "top pick for Discipline Priest and 4 more specs at level 50"
+     ]
+    },
+    {
+     "itemId": 274641,
+     "name": "Theka's Last Breath",
+     "why": [
+      "top pick for Discipline Priest and 4 more specs at level 50"
+     ]
+    },
+    {
+     "itemId": 9474,
+     "name": "Jinxed Hoodoo Kilt",
+     "why": [
+      "top pick for Holy Paladin and 2 more specs at level 50"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/209-zulfarrak"
+  },
+  {
+   "id": 349,
+   "en": "Maraudon",
+   "ru": "Мародон",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    46,
+    55
+   ],
+   "new": false,
+   "open": true,
+   "bosses": [
+    "Noxxion",
+    "Razorlash",
+    "Tinkerer Gizlock",
+    "Lord Vyletongue",
+    "Celebras the Cursed",
+    "Landslide",
+    "Rotgrip",
+    "Princess Theradras"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 17713,
+     "name": "Blackstone Ring",
+     "why": [
+      "top pick for Affliction Warlock and 13 more specs at level 50"
+     ]
+    },
+    {
+     "itemId": 17732,
+     "name": "Rotgrip Mantle",
+     "why": [
+      "top pick for Affliction Warlock and 7 more specs at level 50"
+     ]
+    },
+    {
+     "itemId": 17728,
+     "name": "Albino Crocscale Boots",
+     "why": [
+      "top pick for Assassination Rogue and 5 more specs at level 50"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/349-maraudon"
+  },
+  {
+   "id": 109,
+   "en": "Sunken Temple",
+   "ru": "Затонувший храм",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    50,
+    60
+   ],
+   "new": false,
+   "open": true,
+   "bosses": [
+    "Atal'alarion",
+    "Avatar of Hakkar",
+    "Shade of Eranikus",
+    "Hazzas",
+    "Morphaz",
+    "Weaver",
+    "Dreamscythe",
+    "Jammal'an the Prophet"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 12465,
+     "name": "Nightfall Drape",
+     "why": [
+      "top pick for Affliction Warlock and 2 more specs at level 50"
+     ]
+    },
+    {
+     "itemId": 10838,
+     "name": "Might of Hakkar",
+     "why": [
+      "top pick for Protection Paladin and 1 more spec at level 50"
+     ]
+    },
+    {
+     "itemId": 10845,
+     "name": "Warrior's Embrace",
+     "why": [
+      "top pick for Protection Paladin and 1 more spec at level 50"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/109-sunken-temple"
+  },
+  {
+   "id": 230,
+   "en": "Blackrock Depths",
+   "ru": "Глубины Черной горы",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    52,
+    60
+   ],
+   "new": false,
+   "open": true,
+   "bosses": [
+    "High Interrogator Gerstahn",
+    "Lord Roccor",
+    "Houndmaster Grebmar",
+    "Ring of Law",
+    "Pyromancer Loregrain",
+    "Lord Incendius",
+    "Warder Stilgiss",
+    "Fineous Darkvire",
+    "Bael'Gar",
+    "General Angerforge",
+    "Golem Lord Argelmach",
+    "Hurley Blackbreath",
+    "Phalanx",
+    "Ribbly Screwspigot",
+    "Plugger Spazzring",
+    "The Vault",
+    "Ambassador Flamelash",
+    "The Seven",
+    "Magmus",
+    "Princess Moira Bronzebeard",
+    "Emperor Dagran Thaurissan"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 11623,
+     "name": "Spritecaster Cape",
+     "why": [
+      "top pick for Affliction Warlock and 8 more specs at level 50"
+     ]
+    },
+    {
+     "itemId": 11624,
+     "name": "Kentic Amice",
+     "why": [
+      "top pick for Affliction Warlock and 8 more specs at level 50"
+     ]
+    },
+    {
+     "itemId": 11626,
+     "name": "Blackveil Cape",
+     "why": [
+      "top pick for Arms Warrior and 7 more specs at level 50"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/230-blackrock-depths"
+  },
+  {
+   "id": 229,
+   "en": "Blackrock Spire",
+   "ru": "Вершина Черной горы",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    55,
+    60
+   ],
+   "new": false,
+   "open": true,
+   "bosses": [
+    "Highlord Omokk",
+    "Shadow Hunter Vosh'gajin",
+    "War Master Voone",
+    "Mother Smolderweb",
+    "Urok Doomhowl",
+    "Quartermaster Zigris",
+    "Halycon",
+    "Gizrul the Slavener",
+    "Overlord Wyrmthalak",
+    "Pyroguard Emberseer",
+    "Warchief Rend Blackhand",
+    "The Beast",
+    "General Drakkisath",
+    "Lord Valthalak"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 22267,
+     "name": "Spellweaver's Turban",
+     "why": [
+      "top pick for Affliction Warlock and 8 more specs at level 60"
+     ]
+    },
+    {
+     "itemId": 13213,
+     "name": "Smolderweb's Eye",
+     "why": [
+      "top pick for Affliction Warlock and 7 more specs at level 60"
+     ]
+    },
+    {
+     "itemId": 12927,
+     "name": "Truestrike Shoulders",
+     "why": [
+      "top pick for Arms Warrior and 3 more specs at level 60"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/229-blackrock-spire"
+  },
+  {
+   "id": 429,
+   "en": "Dire Maul",
+   "ru": "Забытый город",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    54,
+    60
+   ],
+   "new": false,
+   "open": true,
+   "bosses": [
+    "Zevrim Thornhoof",
+    "Hydrospawn",
+    "Lethtendris",
+    "Pusillin",
+    "Alzzin the Wildshaper",
+    "Tendris Warpwood",
+    "Illyanna Ravenoak",
+    "Magister Kalendris",
+    "Immol'thar",
+    "Prince Tortheldrin",
+    "Guard Mol'dar",
+    "Stomper Kreeg",
+    "Guard Fengus",
+    "Guard Slip'kik",
+    "Captain Kromcrush",
+    "Cho'Rush the Observer",
+    "King Gordok",
+    "Lord Hel'nurath",
+    "Tsu'zee"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 18327,
+     "name": "Whipvine Cord",
+     "why": [
+      "top pick for Discipline Priest and 4 more specs at level 60"
+     ]
+    },
+    {
+     "itemId": 18375,
+     "name": "Bracers of the Eclipse",
+     "why": [
+      "top pick for Assassination Rogue and 4 more specs at level 60"
+     ]
+    },
+    {
+     "itemId": 18386,
+     "name": "Padre's Trousers",
+     "why": [
+      "top pick for Discipline Priest and 4 more specs at level 60"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/429-dire-maul"
+  },
+  {
+   "id": 329,
+   "en": "Stratholme",
+   "ru": "Стратхольм",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    58,
+    60
+   ],
+   "new": false,
+   "open": true,
+   "bosses": [
+    "Hearthsinger Forresten",
+    "Timmy the Cruel",
+    "Malor the Zealous",
+    "Cannon Master Willey",
+    "Archivist Galford",
+    "Balnazzar",
+    "The Unforgiven",
+    "Baroness Anastari",
+    "Nerub'enkan",
+    "Maleki the Pallid",
+    "Magistrate Barthilas",
+    "Ramstein the Gorger",
+    "Baron Rivendare",
+    "Black Guard Swordsmith",
+    "Crimson Hammersmith",
+    "Ezra Grimm",
+    "Postmaster Malown",
+    "Skul",
+    "Stonespine"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 13340,
+     "name": "Cape of the Black Baron",
+     "why": [
+      "top pick for Arms Warrior and 8 more specs at level 60"
+     ]
+    },
+    {
+     "itemId": 22403,
+     "name": "Nacreous Shell Necklace",
+     "why": [
+      "top pick for Affliction Warlock and 8 more specs at level 60"
+     ]
+    },
+    {
+     "itemId": 280065,
+     "name": "Behemoth Bones",
+     "why": [
+      "top pick for Arms Warrior and 8 more specs at level 60"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/329-stratholme"
+  },
+  {
+   "id": 289,
+   "en": "Scholomance",
+   "ru": "Некроситет",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    58,
+    60
+   ],
+   "new": false,
+   "open": true,
+   "bosses": [
+    "Kirtonos",
+    "Jandice Barov",
+    "Rattlegore",
+    "Marduk Blackpool",
+    "Vectus",
+    "Kormok",
+    "Ras Frostwhisperer",
+    "Instructor Malicia",
+    "Doctor Theolen Krastinov",
+    "Lorekeeper Polkelt",
+    "The Ravenian",
+    "Lord Alexei Barov",
+    "Lady Illucia Barov",
+    "Darkmaster Gandling"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 13938,
+     "name": "Bonecreeper Stylus",
+     "why": [
+      "top pick for Affliction Warlock and 8 more specs at level 60"
+     ]
+    },
+    {
+     "itemId": 14616,
+     "name": "Bloodmail Boots",
+     "why": [
+      "Bloodmail Regalia set",
+      "top pick for Arms Warrior and 3 more specs at level 60"
+     ]
+    },
+    {
+     "itemId": 18681,
+     "name": "Burial Shawl",
+     "why": [
+      "top pick for Arcane Mage and 5 more specs at level 60"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/289-scholomance"
+  },
+  {
+   "id": 249,
+   "en": "Onyxia's Lair",
+   "ru": "Логово Ониксии",
+   "kind": "raid",
+   "players": 40,
+   "levels": [
+    60,
+    60
+   ],
+   "new": false,
+   "open": true,
+   "bosses": [
+    "Onyxia"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 11302,
+     "name": "Uther's Strength",
+     "why": [
+      "top pick for Discipline Priest and 4 more specs at level 50/60"
+     ]
+    },
+    {
+     "itemId": 13139,
+     "name": "Guttbuster",
+     "why": [
+      "top pick for Assassination Rogue and 2 more specs at level 50"
+     ]
+    },
+    {
+     "itemId": 1203,
+     "name": "Aegis of Stormwind",
+     "why": [
+      "top pick for Protection Paladin and 1 more spec at level 50"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/249-onyxias-lair"
+  },
+  {
+   "id": 309,
+   "en": "Zul'Gurub",
+   "ru": "Зул'Гуруб",
+   "kind": "raid",
+   "players": 20,
+   "levels": [
+    60,
+    60
+   ],
+   "new": false,
+   "open": false,
+   "bosses": [
+    "High Priestess Jeklik",
+    "High Priest Venoxis",
+    "High Priestess Mar'li",
+    "Bloodlord Mandokir",
+    "Edge of Madness",
+    "High Priest Thekal",
+    "Gahz'ranka",
+    "High Priestess Arlokk",
+    "Jin'do the Hexxer",
+    "Hakkar"
+   ],
+   "notableLoot": [],
+   "url": "https://foreverdb.net/dungeon/309-zulgurub"
+  },
+  {
+   "id": 409,
+   "en": "Molten Core",
+   "ru": "Огненные Недра",
+   "kind": "raid",
+   "players": 40,
+   "levels": [
+    60,
+    60
+   ],
+   "new": false,
+   "open": false,
+   "bosses": [
+    "Lucifron",
+    "Magmadar",
+    "Gehennas",
+    "Garr",
+    "Shazzrah",
+    "Baron Geddon",
+    "Sulfuron Harbinger",
+    "Golemagg the Incinerator",
+    "Majordomo Executus",
+    "Ragnaros",
+    "The Molten Core"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 11302,
+     "name": "Uther's Strength",
+     "why": [
+      "top pick for Discipline Priest and 4 more specs at level 50/60"
+     ]
+    },
+    {
+     "itemId": 13139,
+     "name": "Guttbuster",
+     "why": [
+      "top pick for Assassination Rogue and 2 more specs at level 50"
+     ]
+    },
+    {
+     "itemId": 1203,
+     "name": "Aegis of Stormwind",
+     "why": [
+      "top pick for Protection Paladin and 1 more spec at level 50"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/409-molten-core"
+  },
+  {
+   "id": 469,
+   "en": "Blackwing Lair",
+   "ru": "Логово Крыла Тьмы",
+   "kind": "raid",
+   "players": 40,
+   "levels": [
+    60,
+    60
+   ],
+   "new": false,
+   "open": false,
+   "bosses": [
+    "Razorgore the Untamed",
+    "Vaelastrasz the Corrupt",
+    "Broodlord Lashlayer",
+    "Firemaw",
+    "Ebonroc",
+    "Flamegor",
+    "Chromaggus",
+    "Nefarian"
+   ],
+   "notableLoot": [
+    {
+     "itemId": 11302,
+     "name": "Uther's Strength",
+     "why": [
+      "top pick for Discipline Priest and 4 more specs at level 50/60"
+     ]
+    },
+    {
+     "itemId": 13139,
+     "name": "Guttbuster",
+     "why": [
+      "top pick for Assassination Rogue and 2 more specs at level 50"
+     ]
+    },
+    {
+     "itemId": 1203,
+     "name": "Aegis of Stormwind",
+     "why": [
+      "top pick for Protection Paladin and 1 more spec at level 50"
+     ]
+    }
+   ],
+   "url": "https://foreverdb.net/dungeon/469-blackwing-lair"
+  },
+  {
+   "id": null,
+   "en": "The Shaper's Terrace",
+   "ru": "Терраса Создателя",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    60,
+    60
+   ],
+   "new": true,
+   "open": false,
+   "bosses": [],
+   "notableLoot": [],
+   "url": null
+  },
+  {
+   "id": null,
+   "en": "Blackmaw Hold",
+   "ru": "Крепость Черночревов",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    55,
+    55
+   ],
+   "new": true,
+   "open": false,
+   "bosses": [],
+   "notableLoot": [],
+   "url": null
+  },
+  {
+   "id": null,
+   "en": "Alcaz Prison",
+   "ru": "Тюрьма Алькац",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    48,
+    48
+   ],
+   "new": true,
+   "open": false,
+   "bosses": [],
+   "notableLoot": [],
+   "url": null
+  },
+  {
+   "id": null,
+   "en": "The Drowned City",
+   "ru": "Затонувший город",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    35,
+    35
+   ],
+   "new": true,
+   "open": false,
+   "bosses": [],
+   "notableLoot": [],
+   "url": null
+  },
+  {
+   "id": null,
+   "en": "Krol'dok Stronghold",
+   "ru": "Крепость Крол'док",
+   "kind": "dungeon",
+   "players": 5,
+   "levels": [
+    40,
+    40
+   ],
+   "new": true,
+   "open": false,
+   "bosses": [],
+   "notableLoot": [],
+   "url": null
+  }
+ ]
+}
