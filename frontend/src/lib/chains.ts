@@ -1,5 +1,6 @@
 /**
- * Quest chains walked on the map, in the order to do them (stages): keys, the Onyxia attunement of each faction,
+ * Quest chains walked on the map, in the order to do them (stages): the priest's class quests of 50–60 (Blood
+ * of Morphaz, the Dire Maul book; the Balance of Light and Shadow sits in the Benediction chain), keys, the Onyxia attunement of each faction,
  * and the original game's Molten Core, Blackwing Lair and Naxxramas chains a priest needs (not announced for
  * Forever yet). The chains added last (Scholomance key on) are marked `unverified` where a source was missing. Quest ids are the original ones, each checked against Forever's own quest data (the
  * names and texts on the pages come from there, in the page's language).
@@ -33,15 +34,17 @@ export interface ChainStep {
 /** The order to go through the chains in: what is needed first comes first. */
 export interface Stage { n: number; name: L; note: L; announced: boolean }
 export const STAGES: Stage[] = [
-  { n: 1, announced: true, name: { ru: "Подземелья и ключи", en: "Dungeons and keys" },
+  { n: 1, announced: true, name: { ru: "Классовые задания (50–60)", en: "Class quests (50–60)" },
+    note: { ru: "только для своего класса: начинаются с 50 уровня, награды держатся до рейдов", en: "for one's own class: they start at 50, the rewards last until the raids" } },
+  { n: 2, announced: true, name: { ru: "Подземелья и ключи", en: "Dungeons and keys" },
     note: { ru: "55–60 уровень: ключи открывают двери подземелий, где одеваются к рейдам", en: "levels 55–60: keys open the dungeon doors where you gear up for the raids" } },
-  { n: 2, announced: true, name: { ru: "Ониксия — 9 декабря", en: "Onyxia — 9 December" },
+  { n: 3, announced: true, name: { ru: "Ониксия — 9 декабря", en: "Onyxia — 9 December" },
     note: { ru: "открывается 9 декабря вместе с Barrow Deeps и Hyjal Summit (у тех допуска нет)", en: "opens on 9 December with Barrow Deeps and Hyjal Summit (those need no attunement)" } },
-  { n: 3, announced: false, name: { ru: "Огненные Недра", en: "Molten Core" },
+  { n: 4, announced: false, name: { ru: "Огненные Недра", en: "Molten Core" },
     note: { ru: "в классике — фаза 1; цепочки из классики, квесты есть в клиенте Forever", en: "phase 1 in the original game; chains from the original game, the quests are in Forever's client" } },
-  { n: 4, announced: false, name: { ru: "Логово Крыла Тьмы", en: "Blackwing Lair" },
+  { n: 5, announced: false, name: { ru: "Логово Крыла Тьмы", en: "Blackwing Lair" },
     note: { ru: "в классике — фаза 3; допуск можно получить заранее, задание есть в клиенте", en: "phase 3 in the original game; the attunement can be done early, the quest is in the client" } },
-  { n: 5, announced: false, name: { ru: "Наксрамас", en: "Naxxramas" },
+  { n: 6, announced: false, name: { ru: "Наксрамас", en: "Naxxramas" },
     note: { ru: "в классике — фаза 6, последний рейд; задания есть в клиенте", en: "phase 6 in the original game, the last raid; the quests are in the client" } },
 ];
 
@@ -102,9 +105,61 @@ const DITHERS: Place = { who: { ru: "Apothecary Dithers", en: "Apothecary Dither
 const KRINKLE: Place = { who: { ru: "Krinkle Goodsteel", en: "Krinkle Goodsteel" }, map: TANARIS, x: 51.5, y: 28.8, note: { ru: "Прибамбасск, кузнец", en: "Gadgetzan, the blacksmith" } };
 const ANACHRONOS: Place = { who: { ru: "Анахронос", en: "Anachronos" }, map: TANARIS, x: 65, y: 50, note: { ru: "≈ у входа в Пещеры Времени", en: "≈ by the Caverns of Time entrance" } };
 
+const UNDERCITY = 1458, FELWOOD = 1448, FERALAS = 1444;
+const AELTHALYSTE: Place = { who: { ru: "Aelthalyste", en: "Aelthalyste" }, map: UNDERCITY, x: 49.2, y: 17.2, note: { ru: "Военный квартал, наставники жрецов; у Альянса — любой главный наставник жрецов в столице", en: "the War Quarter, the priest trainers; for the Alliance, the head priest trainer of any capital" } };
+const OGTINC: Place = { who: { ru: "Ogtinc", en: "Ogtinc" }, map: AZSHARA, x: 42.4, y: 42.6, note: { ru: "на скалах к северо-востоку от руин Эльдарата", en: "atop the cliffs north-east of the Ruins of Eldarath" } };
+const GRETA: Place = { who: { ru: "Greta Mosshoof", en: "Greta Mosshoof" }, map: FELWOOD, x: 51.2, y: 82.1, note: { ru: "Изумрудное святилище", en: "the Emerald Sanctuary" } };
+const SUNKEN: Place = { who: { ru: "Затонувший храм", en: "The Sunken Temple" }, map: SWAMP, x: 69.5, y: 53.5, note: { ru: "вход в храм Атал'Хаккара — на острове посреди озера", en: "the way into the temple of Atal'Hakkar — the island in the middle of the lake" } };
+const DIREMAUL: Place = { who: { ru: "Забытый город", en: "Dire Maul" }, map: FERALAS, x: 59, y: 44, note: { ru: "≈ вход в Забытый город, Фералас", en: "≈ the way into Dire Maul, Feralas" } };
+
 export const CHAINS: Chain[] = [
   {
-    key: "onyxia-horde", faction: "HORDE", stage: 2, category: "attune", minLevel: 55,
+    key: "morphaz", faction: null, classes: [5], stage: 1, category: "class", minLevel: 50,
+    name: { ru: "Кровь Морфаза — Благословенные чётки", en: "Blood of Morphaz — Blessed Prayer Beads" },
+    about: { ru: "Классовая цепочка жреца на 50–52: от наставника жрецов к Огтинку в Азшару, две добычи по миру и Морфаз в Затонувшем храме. Награда на выбор — Благословенные чётки (аксессуар лекаря: на 20 секунд сильнее исцеление, лучшее до 60), посох Woestave или Круг надежды.", en: "The priest's class chain for 50–52: from the priest trainer to Ogtinc in Azshara, two things to gather and Morphaz in the Sunken Temple. A reward to choose: the Blessed Prayer Beads (a healer's trinket: stronger healing for 20 seconds, among the best until 60), the Woestave or the Circle of Hope." },
+    reward: { item: 19990, text: { ru: "на выбор: Благословенные чётки, Woestave или Круг надежды", en: "choose: Blessed Prayer Beads, the Woestave or the Circle of Hope" } },
+    needs: [
+      { text: { ru: "50 уровень (ForeverDB)", en: "level 50 (ForeverDB)" }, level: 50 },
+      { text: { ru: "группа на Затонувший храм", en: "a group for the Sunken Temple" } },
+    ],
+    level: { ru: "задания 52 уровня, берутся с 50 (ForeverDB)", en: "level 52 quests, taken from 50 (ForeverDB)" },
+    classic: { ru: "классика: с начала", en: "original game: from the start" }, group: { ru: "соло, Затонувший храм — 5 человек", en: "solo, the Sunken Temple — 5 players" },
+    unverified: { ru: "задания, NPC и места — из ForeverDB и базы классики; где искать курсеров — по месту их появления в классике", en: "the quests, NPCs and places from ForeverDB and the original game's database; where the coursers are is where the original game puts them" },
+    steps: [
+      { id: 8254, giver: AELTHALYSTE, min: { level: 50, sure: true },
+        todo: { ru: "Наставник жрецов отправляет к Огтинку в Азшару.", en: "The priest trainer sends you to Ogtinc in Azshara." }, turnin: OGTINC },
+      { id: 8255, group: "ogtinc", giver: OGTINC,
+        todo: { ru: "Добыть 4 здоровых железы курсеров: падают с Mosshoof Courser (≈ треть шанса) на севере Азшары.", en: "Get 4 Healthy Courser Glands: Mosshoof Coursers drop them (about a third of the time) in the north of Azshara." },
+        at: [{ who: { ru: "Mosshoof Courser", en: "Mosshoof Courser" }, map: AZSHARA, x: 63.3, y: 16.3, note: { ru: "≈ северная Азшара", en: "≈ northern Azshara" } }], turnin: OGTINC },
+      { id: 8256, group: "ogtinc", giver: OGTINC,
+        todo: { ru: "Добыть Ихор нежити: падает с нежити Чумных земель (призраки, упыри, агенты Отрекшихся — около 10%).", en: "Get an Ichor of Undeath: the Plaguelands' undead drop it (wraiths, ghouls, deathstalker agents — about 10%)." },
+        at: [{ who: { ru: "нежить Чумных земель", en: "the Plaguelands' undead" }, map: EPL, x: 50, y: 50, note: { ru: "≈ любая нежить Восточных или Западных Чумных земель", en: "≈ any undead of the Eastern or Western Plaguelands" } }], turnin: OGTINC },
+      { id: 8257, giver: OGTINC, size: 5,
+        todo: { ru: "Убить Морфаза в Затонувшем храме и отнести его кровь Грете Моховое Копыто в Оскверненный лес. Там — выбор награды.", en: "Kill Morphaz in the Sunken Temple and take his blood to Greta Mosshoof in Felwood. The reward is chosen there." },
+        at: [SUNKEN], turnin: GRETA },
+    ],
+  },
+  {
+    key: "holy-bologna", faction: null, classes: [5], stage: 1, category: "class", minLevel: 54,
+    name: { ru: "Книга жреца в Забытом городе", en: "The priest's book in Dire Maul" },
+    about: { ru: "В Забытом городе на полках появляются пыльные тома; один из них — книга жреца «Holy Bologna». Её относят хранителю знаний Джавону в библиотеке Забытого города и получают классовую награду — в классике Королевскую печать Эльдре'Таласа (аксессуар жреца).", en: "Dusty tomes turn up on the shelves of Dire Maul; one of them is the priest's book, Holy Bologna. Bring it to Lorekeeper Javon in Dire Maul's library for a class reward — in the original game the Royal Seal of Eldre'Thalas (a priest trinket)." },
+    reward: { item: 18469, text: { ru: "Королевская печать Эльдре'Таласа", en: "Royal Seal of Eldre'Thalas" } },
+    needs: [
+      { text: { ru: "54 уровень (ForeverDB)", en: "level 54 (ForeverDB)" }, level: 54 },
+      { text: { ru: "группа на Забытый город; книга появляется не каждый заход", en: "a group for Dire Maul; the book isn't there every run" } },
+    ],
+    level: { ru: "задание 60 уровня, берётся с 54 (ForeverDB)", en: "a level 60 quest, taken from 54 (ForeverDB)" },
+    classic: { ru: "классика: фаза 2 (Забытый город)", en: "original game: phase 2 (Dire Maul)" }, group: { ru: "5 человек", en: "5 players" },
+    unverified: { ru: "награду в Forever не проверял: в классике у книг класса был выбор из нескольких вещей", en: "the reward not checked in Forever: class books gave a choice of several things in the original game" },
+    steps: [
+      { id: -301, title: { ru: "Найти книгу", en: "Find the book" }, giver: DIREMAUL, size: 5,
+        todo: { ru: "Пройти Забытый город и осматривать «Пыльные тома» на полках: книга жреца — один из них, появляется случайно.", en: "Go through Dire Maul and look at the Dusty Tomes on the shelves: the priest's book is one of them, at random." }, turnin: DIREMAUL },
+      { id: 7504, giver: DIREMAUL, min: { level: 54, sure: true },
+        todo: { ru: "Отдать книгу хранителю знаний Джавону в библиотеке Забытого города.", en: "Give the book to Lorekeeper Javon in Dire Maul's library." }, turnin: DIREMAUL },
+    ],
+  },
+  {
+    key: "onyxia-horde", faction: "HORDE", stage: 3, category: "attune", minLevel: 55,
     about: { ru: "Допуск в Логово Ониксии: без Амулета Пламени дракона в сумке в рейд не пустят. Цепочка длинная — Нижняя и Верхняя части пика, четыре дракона по всему миру и Драккисат, — её стоит начать заранее, до 9 декабря.", en: "The attunement to Onyxia's Lair: without the Drakefire Amulet in your bags the raid won't let you in. A long chain — Lower and Upper Blackrock Spire, four dragons around the world and Drakkisath — worth starting well before 9 December." },
     reward: { item: 16309, text: { ru: "Амулет Пламени дракона — вход в Логово Ониксии", en: "Drakefire Amulet — entry to Onyxia's Lair" } },
     classic: { ru: "классика: фаза 1", en: "original game: phase 1" }, group: { ru: "группы на 5–10: пик и драконы", en: "groups of 5–10: the Spire and the dragons" },
@@ -148,7 +203,7 @@ export const CHAINS: Chain[] = [
     ],
   },
   {
-    key: "onyxia-alliance", faction: "ALLIANCE", stage: 2, category: "attune",
+    key: "onyxia-alliance", faction: "ALLIANCE", stage: 3, category: "attune",
     about: { ru: "Допуск в Логово Ониксии: без Амулета Пламени дракона в сумке в рейд не пустят. Цепочка длинная — Нижняя и Верхняя части пика, четыре дракона по всему миру и Драккисат, — её стоит начать заранее, до 9 декабря.", en: "The attunement to Onyxia's Lair: without the Drakefire Amulet in your bags the raid won't let you in. A long chain — Lower and Upper Blackrock Spire, four dragons around the world and Drakkisath — worth starting well before 9 December." },
     reward: { item: 16309, text: { ru: "Амулет Пламени дракона — вход в Логово Ониксии", en: "Drakefire Amulet — entry to Onyxia's Lair" } },
     classic: { ru: "классика: фаза 1", en: "original game: phase 1" }, group: { ru: "группы на 5–10: пик и драконы", en: "groups of 5–10: the Spire and the dragons" },
@@ -189,7 +244,7 @@ export const CHAINS: Chain[] = [
     ],
   },
   {
-    key: "keys", faction: null, stage: 1, category: "key", minLevel: 55,
+    key: "keys", faction: null, stage: 2, category: "key", minLevel: 55,
     about: { ru: "Два ключа Черной горы. Печать Вознесения открывает Верхнюю часть пика — без неё не пройти цепочку на Ониксию. Ключ Тенегорна открывает двери Глубин Черной горы: быстрее проходить подземелье и собирать вещи.", en: "The two keys of Blackrock Mountain. The Seal of Ascension opens Upper Blackrock Spire — the Onyxia chain can't be done without it. The Shadowforge Key opens the doors of Blackrock Depths: faster runs and gear." },
     reward: { item: 12344, text: { ru: "Печать Вознесения и Ключ Тенегорна", en: "Seal of Ascension and Shadowforge Key" } },
     needs: [{ text: { ru: "группа на Нижнюю часть пика и Глубины", en: "a group for the Lower Spire and the Depths" } }],
@@ -206,7 +261,7 @@ export const CHAINS: Chain[] = [
     ],
   },
   {
-    key: "scholo-key", faction: "HORDE", stage: 1, category: "key", minLevel: 55,
+    key: "scholo-key", faction: "HORDE", stage: 2, category: "key", minLevel: 55,
     name: { ru: "Ключ от Некроситета (Орда)", en: "The Key to Scholomance (Horde)" },
     about: { ru: "Скелетный ключ открывает дверь Некроситета без разбойника и сефориевых зарядов. Некроситет — одно из лучших подземелий для претир-вещей жреца (часть комплекта Хранителя Тайн и не только). Цепочка у Бастиона на границе Тирисфаля: лагеря Алого ордена и башни в Западных Чумных землях, слепок в Прибамбасске, ковка на Огненном Венце в Ун'Горо и Арадж Призыватель в Андорале.", en: "The Skeleton Key opens Scholomance's door without a rogue or Seaforium charges. Scholomance is one of the best dungeons for a priest's pre-raid gear. The chain starts at the Bulwark on the Tirisfal border: Scarlet camps and towers in the Western Plaguelands, a mold in Gadgetzan, forging at Fire Plume Ridge in Un'Goro, and Araj the Summoner in Andorhal." },
     reward: { item: 13704, text: { ru: "Скелетный ключ — вход в Некроситет", en: "Skeleton Key — entry to Scholomance" } },
@@ -235,7 +290,7 @@ export const CHAINS: Chain[] = [
     ],
   },
   {
-    key: "mc-attune", faction: null, stage: 3, category: "attune", minLevel: 55,
+    key: "mc-attune", faction: null, stage: 4, category: "attune", minLevel: 55,
     name: { ru: "Допуск к Огненным Недрам", en: "Attunement to the Core" },
     about: { ru: "Одно задание: осколок ядра из глубины Глубин Черной горы. После него Lothos Riftwaker в Черной горе переносит прямо ко входу в Огненные Недра — не надо каждый раз идти через все Глубины. В классике нужен каждому рейдеру ОН; без него цепочки Гидраксиса и Благословения теряют смысл.", en: "One quest: a Core Fragment from deep inside Blackrock Depths. Afterwards Lothos Riftwaker in Blackrock Mountain teleports you straight to the Molten Core entrance, no walk through the Depths each time. Every Molten Core raider needed it in the original game." },
     reward: { text: { ru: "Допуск к Огненным Недрам: телепорт от Lothos Riftwaker", en: "Attunement to Molten Core: Lothos Riftwaker's teleport" } },
@@ -249,7 +304,7 @@ export const CHAINS: Chain[] = [
     ],
   },
   {
-    key: "hydraxis", faction: null, stage: 3, category: "rep", minLevel: 55,
+    key: "hydraxis", faction: null, stage: 4, category: "rep", minLevel: 55,
     name: { ru: "Гидраксианские Повелители Вод", en: "Hydraxian Waterlords" },
     about: { ru: "Герцог Гидраксис на острове у Азшары воюет с Рагнаросом. Его цепочка ведёт в Чумные земли, Силитус, Верхнюю часть пика и в сами Огненные Недра. Главное — Акватическая квинтэссенция (с «Уважения»): ей тушат семь огненных рун в ОН, и только когда потушены все семь, появляется Мажордом Экзекутус. Без этого рейд не дойдёт до Рагнароса. На «Почтении» герцог даёт многоразовую Вечную квинтэссенцию. Работа для одного-двух человек рейда — жрецу по силам.", en: "Duke Hydraxis on an island off Azshara is at war with Ragnaros. His chain goes to the Plaguelands, Silithus, Upper Blackrock Spire and Molten Core itself. The point is the Aqual Quintessence (from Honored): it douses the seven fire runes in Molten Core, and only when all seven are out does Majordomo Executus appear. At Revered the Duke gives the reusable Eternal Quintessence." },
     reward: { item: 17333, text: { ru: "Акватическая квинтэссенция (с «Уважения»), Вечная (с «Почтения»), кольцо", en: "Aqual Quintessence (Honored), Eternal Quintessence (Revered), a ring" } },
@@ -281,7 +336,7 @@ export const CHAINS: Chain[] = [
     ],
   },
   {
-    key: "benediction", faction: null, classes: [5], stage: 3, category: "legendary", minLevel: 60,
+    key: "benediction", faction: null, classes: [5], stage: 4, category: "legendary", minLevel: 60,
     name: { ru: "Благословение / Анафема", en: "Benediction / Anathema" },
     about: { ru: "Эпический посох жреца: Благословение лечит, а в Анафему (посох Тьмы) превращается одним щелчком (раз в 30 минут). Нужны три части: Око Божественности из Тайника Повелителя Огня после Мажордома в Огненных Недрах (только для жрецов), Око Тени с Владыки Каззака или элитных демонов (продаётся) и Щепка Нордрассила — награда Эрис Огненный Приют за испытание в Восточных Чумных землях: спасти 50 крестьян, пока не погибнут 15. Испытание — в одиночку.", en: "The priest's epic staff: Benediction heals and turns into Anathema (a shadow staff) with a click (every 30 minutes). Three pieces: the Eye of Divinity from Majordomo's Cache of the Firelord in Molten Core (priests only), the Eye of Shadow from Lord Kazzak or elite demons (tradeable) and the Splinter of Nordrassil — Eris Havenfire's reward for her trial in the Eastern Plaguelands: save 50 peasants before 15 die. The trial is solo." },
     reward: { item: 18608, text: { ru: "Благословение / Анафема", en: "Benediction / Anathema" } },
@@ -306,7 +361,7 @@ export const CHAINS: Chain[] = [
     ],
   },
   {
-    key: "bwl-attune", faction: null, stage: 4, category: "attune", minLevel: 55,
+    key: "bwl-attune", faction: null, stage: 5, category: "attune", minLevel: 55,
     name: { ru: "Приказ Чернорука", en: "Blackhand's Command" },
     about: { ru: "Допуск в Логово Крыла Тьмы. Записку «Приказ Чернорука» роняет интендант Щитоносцев снаружи пика в самой Черной горе; она начинает задание. Нужно пройти Верхнюю часть пика, убить генерала Драккисата и коснуться Клейма Драккисата за ним. После этого Сфера Повиновения в Черной горе переносит прямо в Логово.", en: "The attunement to Blackwing Lair. The Scarshield Quartermaster outside the Spire in Blackrock Mountain drops Blackhand's Command, which starts the quest. Clear Upper Blackrock Spire, kill General Drakkisath and touch Drakkisath's Brand behind him. Afterwards the Orb of Command in the mountain takes you straight into the Lair." },
     reward: { text: { ru: "Допуск в Логово Крыла Тьмы (Сфера Повиновения)", en: "Attunement to Blackwing Lair (the Orb of Command)" } },
@@ -328,7 +383,7 @@ export const CHAINS: Chain[] = [
     ],
   },
   {
-    key: "atiesh", faction: null, classes: [5, 8, 9, 11], stage: 5, category: "legendary", minLevel: 60,
+    key: "atiesh", faction: null, classes: [5, 8, 9, 11], stage: 6, category: "legendary", minLevel: 60,
     name: { ru: "Атиеш, большой посох Стража", en: "Atiesh, Greatstaff of the Guardian" },
     about: { ru: "Легендарный посох заклинателей (у жреца, мага, чернокнижника и друида — свои версии). 40 Осколков Атиеша из Наксрамаса складываются в Каркас; Анахронос у Пещер Времени просит Навершие (с Кел'Тузада) и Основание (с К'Туна в Ан'Кираже); потом посох очищают в Стратхольме, убив вырвавшегося из него демона. Посох даёт ауру группе и портал в Каражан. Очень долго и только с поддержкой гильдии.", en: "The casters' legendary staff (priest, mage, warlock and druid have their own versions). 40 Splinters of Atiesh from Naxxramas make the Frame; Anachronos at the Caverns of Time wants the Staff Head (Kel'Thuzad) and the Base (C'Thun in Ahn'Qiraj); then the staff is cleansed in Stratholme by killing the demon that comes out of it. It gives the party an aura and a portal to Karazhan. Very long, needs a guild behind you." },
     reward: { item: 22631, text: { ru: "Атиеш, большой посох Стража (жреческий)", en: "Atiesh, Greatstaff of the Guardian (priest)" } },

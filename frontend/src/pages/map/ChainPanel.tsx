@@ -19,7 +19,8 @@ export function ChainPicker({ current, ids, who, pick }: { current: string; ids:
   return (
     <div className="cn-stages">
       {STAGES.map((st) => {
-        const list = CHAINS.filter((c) => c.stage === st.n && (!c.faction || !who.faction || c.faction === who.faction));
+        const list = CHAINS.filter((c) => c.stage === st.n && (!c.faction || !who.faction || c.faction === who.faction)
+          && (!c.classes || who.classId == null || c.classes.includes(who.classId)));
         if (!list.length) return null;
         return (
           <div key={st.n} className={`cn-stage ${st.announced ? "" : "later"}`}>
