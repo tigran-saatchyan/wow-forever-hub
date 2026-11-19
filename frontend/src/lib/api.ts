@@ -16,13 +16,13 @@ export async function req<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
   });
   if (!r.ok) {
-    let msg = r.statusText;
+    let msg = r.statusText || `HTTP ${r.status}`;  // HTTP/2 answers carry no status text
     try {
       msg = (await r.json()).detail ?? msg;
     } catch {
       /* not json */
     }
-    throw new ApiError(r.status, msg);
+    throw new ApiError(r.status, typeof msg === "string" && msg ? msg : `HTTP ${r.status}`);
   }
   return r.status === 204 ? (undefined as T) : r.json();
 }

@@ -396,6 +396,9 @@ async def instances(cid: int, user: CurrentUser, session: Session, lang: str = "
         cat = await asyncio.wait_for(inst.catalog(), 20)
     except asyncio.TimeoutError:
         cat = []
+    except Exception:  # noqa: BLE001 - ForeverDB out of its daily share or down: the kills still show
+        log.exception("instances: ForeverDB dungeons")
+        cat = []
     s = ((c.profile or {}).get("summary") or {}).get("en") or {}
     level = s.get("level") or 1
     up_ctx = None
@@ -412,14 +415,29 @@ async def instances(cid: int, user: CurrentUser, session: Session, lang: str = "
         mine = [k for k in killed if inst.norm(k["instance"]) == inst.norm(d["name"])
                 or inst.norm(k["boss"]) in {inst.norm(b) for b in d.get("bosses") or []}]
         names = item_sources_names(d["id"], d["name"], mine, lang)
-        ups = inst.upgrades(d["id"], d.get("notableLoot") or [], bis_routes.gear(), up_ctx[0], level, s.get("faction"),
-                            up_ctx[1], up_ctx[2], lang) if up_ctx else []
+        try:
+            ups = inst.upgrades(d["id"], d.get("notableLoot") or [], bis_routes.gear(), up_ctx[0], level, s.get("faction"),
+                                up_ctx[1], up_ctx[2], lang) if up_ctx else []
+        except Exception:  # noqa: BLE001 - one odd item must not take the tab down
+            log.exception("instances: upgrades in %s", d.get("id"))
+            ups = []
         rows.append({"id": d["id"], "name": names, "nameEn": d["name"], "kind": d.get("kind"), "players": d.get("players"),
                      "levels": d.get("levelRange"), "new": bool(d.get("newInForever")), "url": d.get("url"),
                      "bosses": d.get("bosses") or [],
                      "kills": [{"boss": k["bossLocal"] or k["boss"], "kills": k["kills"]} for k in mine],
                      "cleared": sum(k["kills"] for k in mine[:1]), "upgrades": ups[:6], "upgradeCount": len(ups),
                      "lootKnown": "classic" if d["id"] in INSTANCES else ("notable" if d.get("notableLoot") else "none")})
+    # what the statistics count but the list lacks (ForeverDB not reached): shown all the same
+    listed = {inst.norm(r["nameEn"]) for r in rows}
+    for k in killed:
+        if inst.norm(k["instance"]) not in listed:
+            listed.add(inst.norm(k["instance"]))
+            name = (k["instanceLocal"] or k["instance"]) if lang == "ru" else k["instance"]
+            same = [x for x in killed if inst.norm(x["instance"]) == inst.norm(k["instance"])]
+            rows.append({"id": -len(rows) - 1, "name": name[:1].upper() + name[1:], "nameEn": k["instance"], "kind": "dungeon",
+                         "players": None, "levels": None, "new": False, "url": None, "bosses": [],
+                         "kills": [{"boss": x["bossLocal"] or x["boss"], "kills": x["kills"]} for x in same],
+                         "cleared": same[0]["kills"], "upgrades": [], "upgradeCount": 0, "lootKnown": "none"})
     rows.sort(key=lambda r: ((r["levels"] or [99])[0], r["kind"] != "dungeon", r["nameEn"]))
     out = {"available": bool(stats_en), "status": err, "level": level, "spec": up_ctx[3] if up_ctx else None,
            "visited": inst.stat_value(stats_en, "Total 5-player dungeons entered"),
