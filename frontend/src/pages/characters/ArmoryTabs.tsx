@@ -1,9 +1,11 @@
 /** Armory tabs read from the character's profile sub-resources; each says plainly when Blizzard gives nothing. */
 import { useQuery } from "@tanstack/react-query";
-import { useState, type ReactNode } from "react";
+import { AnimatePresence } from "framer-motion";
+import { useRef, useState, type ReactNode } from "react";
+import { Compare } from "../throne/Bis";
 import { fmtDate, useI18n, type Key } from "../../lib/i18n";
 import { Model3D } from "../../components/Model3D";
-import { ItemHover, ItemIcon, Money } from "../../components/Wow";
+import { ItemIcon, Money } from "../../components/Wow";
 import { media, qColor, useCharacter, wowApi, type InstRow, type StatGroup } from "../../lib/wowApi";
 
 export function useTab<T>(cid: number, name: string) {
@@ -265,38 +267,7 @@ export function InstancesTab({ cid }: { cid: number }) {
           {r.cleared ? t("in_cleared", { n: r.cleared }) : t("in_not_cleared")}
         </span>
       </div>
-      {r.kills.length > 0 && (
-        <p className="mt-1 text-xs text-good">{r.kills.map((k) => t("in_kills", { b: k.boss, n: k.kills })).join(" · ")}</p>
-      )}
-      {!r.open ? null : r.upgrades.length > 0 ? (
-        <div className="mt-2">
-          <div className="text-xs text-muted">{t("in_upgrades", { n: r.upgradeCount })}</div>
-          <ul className="mt-1 space-y-1">
-            {r.upgrades.map((u) => (
-              <li key={u.id}>
-                <ItemHover id={u.id}>
-                  <span tabIndex={0} className="flex items-center gap-2 text-xs">
-                    <ItemIcon itemId={u.id} quality={Q_NAMES[u.q]} size={22} />
-                    <span className="min-w-0 flex-1 truncate">
-                      <span style={{ color: qColor(Q_NAMES[u.q]) }}>{u.name}</span>
-                      <span className="text-muted"> · {t(`slot_${u.slot}` as Key)}{u.boss ? ` · ${u.boss}` : ""}{u.req > lv ? ` · ${t("in_from_level", { n: u.req })}` : ""}</span>
-                    </span>
-                    <span className="font-mono text-good">{u.gain == null ? t("mk_bis_new") : `+${Math.round(u.gain)}%`}</span>
-                  </span>
-                </ItemHover>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : (
-        <p className="mt-2 text-xs text-muted">{r.lootKnown === "none" ? t("in_loot_unknown") : t("in_no_upgrades")}</p>
-      )}
-      {r.lootKnown === "notable" && <p className="mt-1 text-[11px] text-muted">{t("in_loot_notable")}</p>}
-      {r.bosses.length > 0 && <details className="mt-2 text-xs">
-        <summary className="cursor-pointer text-muted">{t("in_bosses", { n: r.bosses.length })}</summary>
-        <p className="mt-1 text-muted">{r.bosses.join(" · ")}</p>
-        {r.url && <a className="mt-1 inline-block underline" href={r.url} target="_blank" rel="noopener noreferrer">ForeverDB</a>}
-      </details>}
+      {!r.open ? null : <InstLoot r={r} level={lv} />}
     </li>
   );
   return (
@@ -323,6 +294,89 @@ export function InstancesTab({ cid }: { cid: number }) {
         {t("in_note")} <a className="underline" href="https://foreverdb.net" target="_blank" rel="noopener noreferrer">ForeverDB.net</a>
       </p>
     </div>
+  );
+}
+
+const bossKey = (x: string | null | undefined) => (x || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
+/** The bosses of a dungeon in order, each with what it drops that beats what is worn; loot no listed boss drops
+ *  (ForeverDB's notable loot of a new dungeon) after them. */
+function InstLoot({ r, level }: { r: InstRow; level: number }) {
+  const { t } = useI18n();
+  const byBoss = new Map<string, InstRow["upgrades"]>();
+  const listed = new Set(r.bosses.map((b) => bossKey(b.en)));
+  const other: InstRow["upgrades"] = [];
+  for (const u of r.upgrades) {
+    const k = bossKey(u.bossEn);
+    if (k && listed.has(k)) byBoss.set(k, [...(byBoss.get(k) || []), u]);
+    else other.push(u);
+  }
+  return (
+    <div className="mt-2 space-y-1.5">
+      <div className="text-xs text-muted">
+        {r.upgradeCount ? t("in_upgrades", { n: r.upgradeCount }) : r.lootKnown === "none" ? t("in_loot_unknown") : t("in_no_upgrades")}
+      </div>
+      <ul className="space-y-1">
+        {r.bosses.map((b, i) => {
+          const ups = byBoss.get(bossKey(b.en)) || [];
+          return (
+            <li key={b.en} className="text-xs">
+              <div className={`flex items-center gap-2 ${ups.length ? "" : "text-muted"}`}>
+                <span className="w-4 text-right font-mono text-muted">{i + 1}</span>
+                <BossFace model={b.model} name={b.name} killed={!!b.kills} />
+                <span className={ups.length ? "text-ink" : ""}>{b.name}</span>
+                {b.kills ? <span className="text-good">✓ ×{b.kills}</span> : null}
+              </div>
+              {ups.length > 0 && <ul className="ml-[3.75rem] mt-0.5 space-y-0.5">{ups.map((u) => <UpgradeItem key={u.id} u={u} level={level} />)}</ul>}
+            </li>
+          );
+        })}
+      </ul>
+      {other.length > 0 && (
+        <div className="text-xs">
+          <div className="text-muted">{t("in_other_loot")}</div>
+          <ul className="ml-6 mt-0.5 space-y-0.5">{other.map((u) => <UpgradeItem key={u.id} u={u} level={level} />)}</ul>
+        </div>
+      )}
+      {r.lootKnown === "notable" && <p className="text-[11px] text-muted">{t("in_loot_notable")}</p>}
+      {r.url && <a className="text-[11px] text-muted underline" href={r.url} target="_blank" rel="noopener noreferrer">ForeverDB</a>}
+    </div>
+  );
+}
+
+/** A boss's portrait: Wowhead's still of its model, framed like the game's encounter journal; a skull for the
+ *  bosses Forever added, whose models no source here names. */
+function BossFace({ model, name, killed }: { model: number | null; name: string; killed: boolean }) {
+  const [bad, setBad] = useState(false);
+  const src = model ? media(`https://wow.zamimg.com/modelviewer/classic/webthumbs/npc/${model & 255}/${model}.webp`) : undefined;
+  return (
+    <span className={`boss-face ${killed ? "killed" : ""}`} title={name}>
+      {src && !bad ? <img src={src} alt="" loading="lazy" onError={() => setBad(true)} /> : <span aria-hidden>☠</span>}
+    </span>
+  );
+}
+
+/** One upgrade: hovering shows the throne room's comparison with what is worn in its slot. */
+function UpgradeItem({ u, level }: { u: InstRow["upgrades"][number]; level: number }) {
+  const { t } = useI18n();
+  const [hover, setHover] = useState(false);
+  const anchor = useRef<HTMLSpanElement>(null);
+  return (
+    <li>
+      <span ref={anchor} tabIndex={0} className="flex items-center gap-2"
+        onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} onFocus={() => setHover(true)} onBlur={() => setHover(false)}>
+        <ItemIcon itemId={u.id} quality={Q_NAMES[u.q]} size={22} />
+        <span className="min-w-0 flex-1 truncate">
+          <span style={{ color: qColor(Q_NAMES[u.q]) }}>{u.name}</span>
+          <span className="text-muted"> · {t(`slot_${u.slot}` as Key)}{u.req > level ? ` · ${t("in_from_level", { n: u.req })}` : ""}
+            {u.chance != null ? ` · ${u.chance < 1 ? u.chance.toFixed(1) : Math.round(u.chance)}%` : ""}</span>
+        </span>
+        <span className="font-mono text-good">{u.gain == null ? t("mk_bis_new") : `+${Math.round(u.gain)}%`}</span>
+        <AnimatePresence>
+          {hover && u.full && anchor.current && <Compare a={u.full} b={u.worn ?? null} side="right" anchor={anchor.current} />}
+        </AnimatePresence>
+      </span>
+    </li>
   );
 }
 

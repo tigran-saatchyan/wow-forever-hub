@@ -72,8 +72,11 @@ export interface WatchCard {
 }
 export interface InstRow {
   id: number; name: string; nameEn: string; kind: "dungeon" | "raid"; players: number | null; levels: [number, number] | null;
-  new: boolean; open: boolean; url: string | null; bosses: string[]; kills: { boss: string; kills: number }[]; cleared: number;
-  upgrades: { id: number; name: string; q: number; req: number; slot: string; gain: number | null; boss: string | null; chance: number | null }[];
+  new: boolean; open: boolean; url: string | null; bosses: { en: string; name: string; kills: number | null; model: number | null }[];
+  kills: { boss: string; kills: number }[]; cleared: number;
+  upgrades: { id: number; name: string; q: number; req: number; slot: string; gain: number | null; boss: string | null;
+    bossEn: string | null; chance: number | null; full?: import("../pages/throne/Bis").BisItem | null;
+    worn?: import("../pages/throne/Bis").BisItem | null }[];
   upgradeCount: number; lootKnown: "classic" | "notable" | "none";
 }
 export interface Instances {

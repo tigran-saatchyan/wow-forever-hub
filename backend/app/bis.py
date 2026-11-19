@@ -212,6 +212,18 @@ def weights(cls: int, spec: str) -> dict[str, float]:
     return dict(WEIGHTS.get((cls, spec)) or WEIGHTS[(cls, CLASSES[cls]["specs"][0])])
 
 
+def fits(it: dict, slot: str, cls: int, spec: str) -> bool:
+    """Whether the item goes in the slot for this class and specialization: no weapon in the off hand of a
+    class that can't wield two (or a spec that wants a two-hander or a shield), wands only for casters."""
+    if it["slot"] not in SLOTS[slot]:
+        return False
+    if slot == "OFF_HAND" and it["slot"] in (13, 22) and (cls not in DUAL or (cls, spec) in NO_OFF_WEAPON):
+        return False
+    if slot == "RANGED" and it["cls"] == 2 and it["sub"] == 19 and cls not in (5, 8, 9):
+        return False
+    return True
+
+
 def choose(gear: dict[str, dict], cls: int, spec: str, level: int, faction: str | None, top: int = 3,
            w: dict[str, float] | None = None) -> dict:
     """For every slot, the best `top` items (ids, best first) with their scores; and whether a two-hand weapon
@@ -222,11 +234,7 @@ def choose(gear: dict[str, dict], cls: int, spec: str, level: int, faction: str 
     for slot, types in SLOTS.items():
         cands = []
         for i, it in pool:
-            if it["slot"] not in types:
-                continue
-            if slot == "OFF_HAND" and it["slot"] in (13, 22) and (cls not in DUAL or (cls, spec) in NO_OFF_WEAPON):
-                continue
-            if slot == "RANGED" and it["cls"] == 2 and it["sub"] == 19 and cls not in (5, 8, 9):
+            if not fits(it, slot, cls, spec):
                 continue
             cands.append({"id": i, "score": score(it, w, slot), "two": it["slot"] == 17})
         cands.sort(key=lambda x: (-x["score"], x["id"]))

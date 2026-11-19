@@ -1573,3 +1573,9 @@ button.order-line:hover { @apply text-gold; }
 
 .bis-weights-note { grid-column: 1 / -1; margin: 2px auto 0; font-size: 11px; color: rgb(var(--muted)); text-align: center; }
 .bis-weights-note a { text-decoration: underline; }
+
+.boss-face { position: relative; display: inline-grid; place-items: center; width: 34px; height: 34px; flex: none; overflow: hidden;
+  border-radius: 999px; border: 1px solid rgb(var(--gold) / 0.35); background: radial-gradient(circle at 50% 30%, #2a2416, #0b0a08);
+  color: rgb(var(--muted)); font-size: 14px; }
+.boss-face img { position: absolute; width: 230%; max-width: none; left: 50%; top: -12%; transform: translateX(-50%); }
+.boss-face.killed { border-color: rgb(110 200 110 / 0.7); box-shadow: 0 0 8px -2px rgb(110 200 110 / 0.6); }

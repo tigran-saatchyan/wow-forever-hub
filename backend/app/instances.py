@@ -109,7 +109,7 @@ def _by_instance() -> dict[int, list[tuple[int, int, float]]]:
 
 
 def upgrades(instance_id: int, notable: list[dict], gear: dict, cls: int, level: int, faction: str | None,
-             w: dict, worn: dict[str, float], lang: str, ahead: int = 5) -> list[dict]:
+             w: dict, worn: dict[str, float], lang: str, ahead: int = 5, spec: str = "") -> list[dict]:
     """Items of the instance better than what is worn (by the specialization's weights), best first: usable now
     or within `ahead` levels."""
     seen: dict[int, dict] = {}
@@ -120,8 +120,8 @@ def upgrades(instance_id: int, notable: list[dict], gear: dict, cls: int, level:
         if not it or item in seen or not bis.usable(it, cls, level + ahead, faction):
             continue
         best = None
-        for slot, types in bis.SLOTS.items():
-            if it["slot"] not in types:
+        for slot in bis.SLOTS:
+            if not bis.fits(it, slot, cls, spec):
                 continue
             base = worn.get(slot, 0.0)
             if it["slot"] == 17:  # a two-hander takes the off hand's place too
@@ -136,5 +136,29 @@ def upgrades(instance_id: int, notable: list[dict], gear: dict, cls: int, level:
         seen[item] = {"id": item, "name": it.get(lang) or it["en"], "q": it["q"], "req": it["req"], "slot": best[0],
                       "gain": None if best[1] == float("inf") else round(best[1], 1),
                       "boss": (boss.get("ru") if lang == "ru" else boss.get("en")) if boss else None,
+                      "bossEn": boss.get("en") if boss else None,
                       "chance": chance}
     return sorted(seen.values(), key=lambda x: -(x["gain"] if x["gain"] is not None else 1e9))
+
+
+@lru_cache(maxsize=1)
+def _creature_names() -> dict[str, str]:
+    """English creature name -> Russian, from the loot tables' creatures (bosses among them)."""
+    return {norm(c["en"]): c.get("ru") or c["en"] for c in item_sources._loot()["creatures"].values() if c.get("en")}
+
+
+def boss_name(en: str, lang: str) -> str:
+    if lang != "ru":
+        return en
+    return (_models().get(norm(en)) or {}).get("ru") or _creature_names().get(norm(en), en)
+
+
+@lru_cache(maxsize=1)
+def _models() -> dict[str, dict]:
+    p = item_sources.DATA / "boss_models.json"
+    return json.loads(p.read_text("utf-8")) if p.is_file() else {}
+
+
+def boss_model(en: str) -> int | None:
+    """The display id of a boss's model (tools/build_boss_models.py), for its portrait; none for Forever's new bosses."""
+    return (_models().get(norm(en)) or {}).get("m")
