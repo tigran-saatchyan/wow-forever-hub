@@ -439,7 +439,11 @@
     "ru": "Тотем источника маны"
    },
    "eff": {
-    "mp5": 25.0
+    "mp5": 25.0,
+    "tick": {
+     "n": 10,
+     "every": 2.0
+    }
    },
    "dur": 300000,
    "icon": "spell_nature_manaregentotem"
@@ -467,7 +471,11 @@
     "ru": "Великое благословение мудрости"
    },
    "eff": {
-    "mp5": 40.0
+    "mp5": 40.0,
+    "tick": {
+     "n": 40,
+     "every": 5.0
+    }
    },
    "dur": 3600000,
    "icon": "spell_holy_greaterblessingofwisdom"
@@ -756,7 +764,11 @@
     "ru": "Прилив маны"
    },
    "eff": {
-    "mp5": 146.67
+    "mp5": 146.67,
+    "tick": {
+     "n": 88,
+     "every": 3.0
+    }
    },
    "dur": 13000,
    "icon": "spell_frost_summonwaterelemental"
@@ -803,9 +815,10 @@
    "eff": {
     "mp5": 6.25
    },
-   "dur": 300000,
+   "dur": null,
    "icon": "spell_nature_manaregentotem",
-   "needs": "class:10497"
+   "needs": "class:10497",
+   "boost": 25
   }
  ]
 }

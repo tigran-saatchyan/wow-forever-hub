@@ -6,7 +6,7 @@
  * time left under them, and a tooltip with what each gives.
  */
 import { useEffect, useRef, useState } from "react";
-import { useI18n, type Key } from "../../lib/i18n";
+import { useI18n, type Key, type Lang } from "../../lib/i18n";
 import { store } from "../../lib/store";
 import { media, type PreBis, type SimBuff, type SimEffect, type SimStats } from "../../lib/wowApi";
 
@@ -72,10 +72,17 @@ function useDur() {
 }
 
 /** What a buff gives, line by line, in the game's wording. */
-export function effectLines(e: SimEffect, t: (k: Key, v?: Record<string, string | number>) => string): string[] {
+export function effectLines(e: SimEffect, t: (k: Key, v?: Record<string, string | number>) => string, b?: SimBuff, all?: SimBuff[], lang: Lang = "ru"): string[] {
   const out: string[] = [];
+  // a talent that strengthens another buff is not a buff of its own: say what it strengthens
+  if (b?.boost && b.needs) {
+    const of = all?.find((x) => x.key === b.needs);
+    return [t("sb_e_boost", { n: b.boost, s: of ? of.name[lang] : "" })];
+  }
+  if (e.tick) out.push(t("sb_e_tick", { n: e.tick.n, s: e.tick.every }));
   for (const k of ["sp", "int", "spi", "sta", "str", "agi", "crit", "hit", "mp5", "mana", "hp", "dmgPct"] as const) {
     const v = e[k];
+    if (k === "mp5" && e.tick) continue;
     if (v) out.push(t(`sb_e_${k}` as Key, { n: v }));
   }
   for (const [k, v] of Object.entries(e.school || {})) if (v) out.push(t("sb_e_school", { n: v, s: t(`sb_school_${k}` as Key) }));
@@ -85,13 +92,14 @@ export function effectLines(e: SimEffect, t: (k: Key, v?: Record<string, string 
   return out;
 }
 
-function Tip({ b }: { b: SimBuff }) {
+function Tip({ b, boosts }: { b: SimBuff; boosts: SimBuff[] }) {
   const { t, lang } = useI18n();
   const dur = useDur();
   return (
     <div className="sb-tip wow-tip" role="tooltip">
       <div className="text-[#ffd100]">{b.aura[lang]}</div>
       {effectLines(b.eff, t).map((l) => <div key={l} className="text-good">{l}</div>)}
+      {boosts.map((x) => <div key={x.key} className="text-good">{t("sb_boosted", { n: x.boost ?? 0, s: x.talentName?.[lang] ?? "" })}</div>)}
       <div className="mt-1 text-muted">{dur(b.dur) ? t("sb_left", { d: dur(b.dur) }) : t("sb_aura")}</div>
       {b.item && <div className="mt-1 text-xs text-muted">{t("sb_from_item", { n: b.name[lang] })}</div>}
       {b.class && b.group === "class" && <div className="mt-1 text-xs" style={{ color: b.class.color }}>{t("sb_from_class", { c: b.class.name[lang] })}</div>}
@@ -109,11 +117,11 @@ export function BuffBar({ r }: { r: SimResult }) {
   if (!r.active.length && !r.enchantSp) return null;
   return (
     <div className="sb-bar" aria-label={t("sb_bar")}>
-      {r.active.map((b) => (
+      {r.active.filter((b) => !b.boost).map((b) => (
         <span key={b.key} className="sb-buff" tabIndex={0}>
           <SpellIcon name={b.icon} size={34} />
           <span className="sb-time">{dur(b.dur)}</span>
-          <Tip b={b} />
+          <Tip b={b} boosts={r.active.filter((x) => x.boost && x.needs === b.key)} />
         </span>
       ))}
       {r.enchantSp > 0 && <span className="ml-2 self-center text-xs text-muted">{t("sb_ench_sum", { n: r.enchantSp })}</span>}
@@ -138,16 +146,18 @@ export function SimSettings({ d, cfg, set }: { d: PreBis; cfg: SimCfg; set: (c: 
   const on = new Set(cfg.on);
   const toggle = (b: SimBuff) => {
     const next = new Set(on);
-    if (next.has(b.key)) next.delete(b.key);
-    else {
+    if (next.has(b.key)) {
+      next.delete(b.key);
+      all.filter((x) => x.needs === b.key).forEach((x) => next.delete(x.key)); // no totem, nothing to strengthen
+    } else {
       if (ONE.has(b.group)) all.filter((x) => x.group === b.group).forEach((x) => next.delete(x.key));
       next.add(b.key);
+      if (b.needs) next.add(b.needs); // the talent comes with the totem it strengthens
     }
     set({ ...cfg, on: [...next] });
   };
   const dur = useDur();
   const row = (b: SimBuff) => {
-    const missing = b.needs && !on.has(b.needs);
     return (
       <label key={b.key} className={`sb-row ${on.has(b.key) ? "on" : ""}`}>
         <input type={ONE.has(b.group) ? "radio" : "checkbox"} name={ONE.has(b.group) ? `sb-${b.group}` : undefined}
@@ -156,13 +166,12 @@ export function SimSettings({ d, cfg, set }: { d: PreBis; cfg: SimCfg; set: (c: 
         <SpellIcon name={b.item ? b.itemIcon ?? b.icon : b.group === "talent" ? b.talentIcon ?? b.icon : b.icon} size={26} />
         <span className="grid min-w-0 leading-tight">
           <span>{b.name[lang]}{dur(b.dur) ? <span className="text-muted"> · {dur(b.dur)}</span> : null}</span>
-          <span className="text-xs text-good">{effectLines(b.eff, t).join(", ")}</span>
+          <span className="text-xs text-good">{effectLines(b.eff, t, b, all, lang).join(", ")}</span>
           {b.class && (
-            <span className="truncate text-xs" style={{ color: b.class.color }}>
+            <span className="text-xs" style={{ color: b.class.color }}>
               {b.group === "talent" ? t("sb_talent_line", { c: b.class.name[lang], s: b.spec!.name[lang], n: b.talentName![lang] }) : b.class.name[lang]}
             </span>
           )}
-          {missing && <span className="text-xs text-[#ffb070]">{t("sb_needs", { n: all.find((x) => x.key === b.needs)?.name[lang] ?? "" })}</span>}
         </span>
       </label>
     );

@@ -22,7 +22,8 @@ def test_forever_values():
     assert b["class:25898"]["eff"]["pct"] == {k: 10 for k in ("str", "agi", "sta", "int", "spi")}
     assert b["talent:105823"]["eff"] == {"pct": {"spi": 15}}  # Dark Inspiration: spirit, by the stat mask
     assert b["talent:105836"]["eff"] == {"dmgPct": 20}
-    assert b["class:10497"]["eff"] == {"mp5": 25.0}  # 10 mana every 2 sec
+    assert b["class:10497"]["eff"] == {"mp5": 25.0, "tick": {"n": 10, "every": 2.0}}  # 10 mana every 2 sec
+    assert b["talent:104730"]["boost"] == 25 and b["talent:104730"]["dur"] is None  # a talent, not a buff of its own
     assert b["talent:104730"]["needs"] == "class:10497"
 
 

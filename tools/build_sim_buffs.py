@@ -108,8 +108,9 @@ def effects(rows: list[dict], value: float | None = None) -> dict:
             add("hit", bp)
         elif a == 85:
             add("mp5", bp)
-        elif a == 24 and int(e["EffectAuraPeriod"] or 0):  # mana every few seconds
+        elif a == 24 and int(e["EffectAuraPeriod"] or 0):  # mana every few seconds: as the game says it, and per 5 sec
             add("mp5", round(bp * 5000 / int(e["EffectAuraPeriod"]), 2))
+            out["tick"] = {"n": bp, "every": int(e["EffectAuraPeriod"]) / 1000}
         elif a == 34:
             add("hp", bp)
         elif a == 418:
@@ -209,8 +210,8 @@ def main() -> None:
             pct = int(re.search(r"Mana Spring Totem by (\d+)%", t["ranks"][-1]).group(1))
             spring = next(x for x in out if x["key"] == "class:10497")
             row |= {"spell": t["spell"], "name": {lg: tal[lg][2]["name"] for lg in tal}, "aura": spring["aura"],
-                    "eff": {"mp5": round(spring["eff"]["mp5"] * pct / 100, 2)}, "dur": spring["dur"], "icon": t["icon"],
-                    "needs": "class:10497"}
+                    "eff": {"mp5": round(spring["eff"]["mp5"] * pct / 100, 2)}, "dur": None, "icon": t["icon"],
+                    "needs": "class:10497", "boost": pct}
         out.append(row)
     for x in out:
         if not x.get("eff"):

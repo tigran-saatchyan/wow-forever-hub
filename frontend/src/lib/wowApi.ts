@@ -271,12 +271,12 @@ export interface ItemSources {
  */
 export interface SimStats { sp: number; shadow: number; crit: number; hit: number; pen: number; int: number; spi: number; sta: number; mp5: number }
 export type SimEffect = Partial<Record<"sp" | "int" | "spi" | "sta" | "str" | "agi" | "crit" | "hit" | "mp5" | "mana" | "hp" | "dmgPct", number>>
-  & { pct?: Partial<Record<"int" | "spi" | "sta" | "str" | "agi", number>>; school?: Partial<Record<string, number>> };
+  & { pct?: Partial<Record<"int" | "spi" | "sta" | "str" | "agi", number>>; school?: Partial<Record<string, number>>; tick?: { n: number; every: number } };
 /** A buff the simulation can switch on, with its values from the game's files. */
 export interface SimBuff {
   key: string; group: "food" | "elixir" | "flask" | "potion" | "oil" | "class" | "talent";
   item?: number; itemIcon?: string | null; req?: number; spell: number; name: Record<Lang, string>; aura: Record<Lang, string>;
-  eff: SimEffect; dur: number | null; icon: string | null; needs?: string;
+  eff: SimEffect; dur: number | null; icon: string | null; needs?: string; boost?: number;
   class?: { id: number; token: string; name: Record<Lang, string>; color: string; icon: string };
   talent?: number; talentName?: Record<Lang, string>; talentIcon?: string; spec?: { tab: number; name: Record<Lang, string> };
   text?: Record<Lang, string>;
