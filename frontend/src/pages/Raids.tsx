@@ -3,6 +3,7 @@
  * keys, reputations, legendaries) in the order to do them against every character, from the quests Blizzard
  * says are done. The chains themselves are walked on the map page.
  */
+import { useActiveChar } from "../lib/activeChar";
 import { useQueries } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
@@ -11,7 +12,7 @@ import { ClassIcon } from "./Characters";
 import { ChainLink } from "./map/ChainPanel";
 import { useI18n, type Key } from "../lib/i18n";
 import { store } from "../lib/store";
-import { fullName, useCharacters, wowApi, type Character } from "../lib/wowApi";
+import { fullName, wowApi, type Character } from "../lib/wowApi";
 import { useTab } from "./characters/ArmoryTabs";
 import { PreRaid } from "./raids/PreRaid";
 import { ConsumablesPane } from "./raids/PreRaidTabs";
@@ -39,7 +40,11 @@ function useCountdown() {
 export function Raids() {
   const { t } = useI18n();
   const cd = useCountdown();
-  const chars = (useCharacters().data || []).filter((c) => !c.error);
+  const { chars: all, char } = useActiveChar();
+  const [favOn, setFavOn] = useState(() => store.get("raidsFavs", false));
+  const favToggle = () => (store.set("raidsFavs", !favOn), setFavOn(!favOn));
+  // the menu's character, or with the switch on, the starred ones (the picked one too, first)
+  const chars = !char ? [] : favOn ? [char, ...all.filter((c) => c.favorite && c.id !== char.id)] : [char];
   return (
     <div className="space-y-5">
       <motion.section className="raid-hero" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -60,7 +65,12 @@ export function Raids() {
         <p className="mt-3 text-xs text-muted">{t("rd_note")}</p>
       </motion.section>
 
-      <PreRaid chars={chars} />
+      <PreRaid char={char} />
+      {all.length > 1 && (
+        <div className="flex justify-end">
+          <button className={favOn ? "btn-primary" : "btn"} aria-pressed={favOn} onClick={favToggle} title={t("rd_favs_h")}>{t("rd_favs")}</button>
+        </div>
+      )}
       <Matrix chars={chars} />
       <Prep chars={chars} />
       {!chars.length && <p className="text-muted">{t("tr_none")}</p>}

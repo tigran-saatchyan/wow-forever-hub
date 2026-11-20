@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { setActiveChar, useActiveCharId } from "../lib/activeChar";
 import { useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { SourcePanel } from "../components/SourcePanel";
@@ -269,7 +270,7 @@ function BisOnSale({ onAdd, listName }: { onAdd: (id: number) => void; listName?
   const icons = useIcons();
   const chars = useCharacters();
   const all = (chars.data || []).filter((x) => !x.error && x.summary);
-  const [sel, setSel] = useState<number | null>(() => store.get<number | null>("ahBisChar", null));
+  const sel = useActiveCharId();
   const cid = (all.find((x) => x.id === sel) ?? all[0])?.id ?? null;
   const c = useCharacter(cid).data;
   const trees = useTrees(c);
@@ -289,7 +290,7 @@ function BisOnSale({ onAdd, listName }: { onAdd: (id: number) => void; listName?
   if (!all.length) return null;
   return (
     <Fold id="bis" title={t("mk_bis")} extra={<>
-        <select className="input w-auto" value={cid ?? ""} onChange={(e) => (setSel(+e.target.value), store.set("ahBisChar", +e.target.value), setSpec(null))}>
+        <select className="input w-auto" value={cid ?? ""} onChange={(e) => (setActiveChar(+e.target.value), setSpec(null))}>
           {all.map((x) => <option key={x.id} value={x.id}>{x.summary?.[lang]?.name ?? x.name} · {x.summary?.[lang]?.level ?? "?"}</option>)}
         </select>
         {d?.level != null && <span className="text-sm text-muted">{t("mk_bis_level", { n: d.level })}</span>}

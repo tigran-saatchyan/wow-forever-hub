@@ -4,7 +4,7 @@
  * character: the spell hit it has (talents and worn gear), what of the list it has (worn, or marked by hand), and
  * the items to go for next. Shown only for a character of that class playing that specialization.
  */
-import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence } from "framer-motion";
 import { useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
@@ -20,19 +20,17 @@ const TABS = ["items", "talents", "guide", "consumables", "enchants"] as const;
 
 const Q = ["POOR", "COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY"];
 
-export function PreRaid({ chars }: { chars: Character[] }) {
+export function PreRaid({ char }: { char: Character | null }) {
   const { t, lang } = useI18n();
-  const qs = useQueries({
-    queries: chars.map((c) => ({ queryKey: ["prebis", c.id, lang], queryFn: () => wowApi.prebis(c.id, lang), staleTime: 5 * 60e3, retry: false })),
+  const q = useQuery({
+    queryKey: ["prebis", char?.id, lang], enabled: !!char, queryFn: () => wowApi.prebis(char!.id, lang), staleTime: 5 * 60e3, retry: false,
   });
-  const fit = chars.map((c, i) => ({ c, d: qs[i].data })).filter((x) => x.d?.available);
-  const [sel, setSel] = useState<number | null>(() => store.get<number | null>("prebisChar", null));
   const [open, setOpen] = useState(() => store.get("prebisOpen", true));
   const [tab, setTab] = useState<string>(() => store.get("prebisTab", "items"));
   const [sim, setSim] = useState(false);
-  const cur = fit.find((x) => x.c.id === sel) ?? fit[0];
-  if (!cur) return null;
-  const d = cur.d!;
+  if (!char || !q.data?.available) return null;
+  const d = q.data;
+  const cur = { c: char };
   const toggle = () => { store.set("prebisOpen", !open); setOpen(!open); };
   return (
     <section className="panel prebis p-4">
@@ -41,11 +39,7 @@ export function PreRaid({ chars }: { chars: Character[] }) {
           <span className={`text-gold transition-transform ${open ? "" : "-rotate-90"}`} aria-hidden>▾</span>
           <h2 className="font-display text-xl text-gold">{t(`pr_title_${d.spec}` as Key)}</h2>
         </button>
-        {fit.length > 1 ? (
-          <select className="input w-auto" value={cur.c.id} onChange={(e) => (setSel(+e.target.value), store.set("prebisChar", +e.target.value))}>
-            {fit.map((x) => <option key={x.c.id} value={x.c.id}>{fullName(x.c, lang)}</option>)}
-          </select>
-        ) : <span className="text-sm text-muted">{fullName(cur.c, lang)}</span>}
+        <span className="text-sm text-muted">{fullName(cur.c, lang)}</span>
         <span className="ml-auto text-sm text-muted">{t("pr_have", { n: d.owned, t: d.total })}</span>
         <button className={sim ? "btn-primary" : "btn"} onClick={() => setSim(!sim)} title={t("pr_sim_h")}>{t(sim ? "pr_sim_off" : "pr_sim")}</button>
       </div>

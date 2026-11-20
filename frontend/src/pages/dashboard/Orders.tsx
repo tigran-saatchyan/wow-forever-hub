@@ -1,4 +1,5 @@
 /** Orders of the day in the throne room: what each favourite servant can do now, and what waits for all. */
+import { useActiveChar } from "../../lib/activeChar";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -7,7 +8,7 @@ import { useI18n, type Key } from "../../lib/i18n";
 import { nextReset } from "../../lib/status";
 import { useNewSignals } from "../../lib/signals";
 import { store } from "../../lib/store";
-import { fullName, useCharacter, useCharacters, wowApi, type Character } from "../../lib/wowApi";
+import { fullName, useCharacter, wowApi, type Character } from "../../lib/wowApi";
 import { need } from "../characters/ProfessionsTab";
 
 function useLearnable(c?: Character) {
@@ -74,9 +75,10 @@ function Order({ id, delay }: { id: number; delay: number }) {
 export function Orders() {
   const { t } = useI18n();
   const nav = useNavigate();
-  const chars = useCharacters();
+  const { chars: all, char } = useActiveChar();
   const watch = useQuery({ queryKey: ["ah-lists", "orders"], queryFn: () => wowApi.lists("ru"), staleTime: 5 * 60e3, retry: false });
-  const servants = (chars.data || []).filter((c) => !c.error).slice(0, 3);
+  // the menu's character first, then the starred ones
+  const servants = [...(char ? [char] : []), ...all.filter((c) => c.favorite && c.id !== char?.id)].slice(0, 3);
   const alerts = (watch.data || []).flatMap((l) => l.items).filter((w) => w.alert).length;
   const newSignals = useNewSignals();
   const ms = nextReset("eu") - Date.now();

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { setActiveChar, useActiveCharId } from "../lib/activeChar";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { ApiError } from "../lib/api";
@@ -21,7 +22,7 @@ export function Characters() {
   const [params, setParams] = useSearchParams();
   const [name, setName] = useState("");
   const [region, setRegion] = useState<Region>(() => store.get<Region>("chRegion", "eu"));
-  const [sel, setSel] = useState<number | null>(() => store.get<number | null>("chSel", null));
+  const sel = useActiveCharId();
   const [msg, setMsg] = useState<string | null>(null);
   const [listOpen, setListOpen] = useState(() => store.get<boolean>("chListOpen", true));
   const toggleList = (v: boolean) => (store.set("chListOpen", v), setListOpen(v));
@@ -41,8 +42,7 @@ export function Characters() {
     if (name.trim().length < 2) return;
     try {
       const c = await acts.add.mutateAsync({ name: name.trim(), region });
-      setSel(c.id);
-      store.set("chSel", c.id);
+      setActiveChar(c.id);
       setName("");
     } catch (err) {
       setMsg(err instanceof ApiError ? err.message : String(err));
@@ -81,7 +81,7 @@ export function Characters() {
                 </button>
                 <CharacterList
                   chars={chars} cur={cur?.id}
-                  onSelect={(id) => (setSel(id), store.set("chSel", id))}
+                  onSelect={(id) => setActiveChar(id)}
                   icon={(c) => <ClassIcon classId={c.summary?.[lang]?.classId ?? null} />}
                 />
               </div>

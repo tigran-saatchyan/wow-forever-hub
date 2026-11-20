@@ -3,6 +3,7 @@
  * matter, every zone, and a quest chain walked step by step: where to take a quest, where to do it, where
  * to hand it in, and what comes next. A character's completed quests mark how far they have come.
  */
+import { setActiveChar, useActiveCharId } from "../lib/activeChar";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -113,7 +114,8 @@ export function WorldMap() {
   const { t, lang } = useI18n();
   const [sp, setSp] = useSearchParams();
   const chars = (useCharacters().data || []).filter((c) => !c.error);
-  const [cid, setCid] = useState<number | null>(() => store.get<number | null>("mapChar", null));
+  const cid = useActiveCharId();
+  const setCid = setActiveChar;
   const char = chars.find((c) => c.id === cid) ?? chars[0];
   const sum = char?.summary?.[lang];
   const faction = sum?.faction === "ALLIANCE" ? "ALLIANCE" : "HORDE";
@@ -182,7 +184,7 @@ export function WorldMap() {
           ))}
         </div>
         {chars.length > 0 && (
-          <select className="input ml-auto w-auto py-1 text-sm" value={char?.id} onChange={(e) => (store.set("mapChar", Number(e.target.value)), setCid(Number(e.target.value)))}>
+          <select className="input ml-auto w-auto py-1 text-sm" value={char?.id} onChange={(e) => setCid(Number(e.target.value))}>
             {chars.map((c) => <option key={c.id} value={c.id}>{fullName(c, lang)}</option>)}
           </select>
         )}
@@ -203,7 +205,7 @@ export function WorldMap() {
             <Route step={step} phase={phase} setPhase={look} />
             <div className="grid gap-3 lg:grid-cols-[1.5fr_1fr]">
               <ChainInfo c={chain} ids={ids} who={who} />
-              <ChainChars c={chain} chars={chars} current={char?.id} choose={(id) => (store.set("mapChar", id), setCid(id))} />
+              <ChainChars c={chain} chars={chars} current={char?.id} choose={(id) => setCid(id)} />
             </div>
           </div>
           <aside className="space-y-3">

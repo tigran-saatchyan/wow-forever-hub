@@ -55,6 +55,7 @@ export interface Character {
   account?: Record<string, unknown> | null; tried?: string[] | null;
   model?: string | null;
   favorite?: boolean;
+  profs?: Record<Lang, Pick<CharProfession, "id" | "name" | "kind" | "skill" | "max">[]> | null;
   stats?: Record<Lang, Record<string, number | string>> | null;
   professions?: Record<Lang, CharProfession[]> | null;
   xpLog?: { t: number; l: number; x: number | null }[];

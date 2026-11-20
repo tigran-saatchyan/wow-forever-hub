@@ -8,13 +8,14 @@ import { motion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { CharProfPicker, profKey } from "../components/CharProfPicker";
+import { CharProfPicker, ProfIcon, profKey } from "../components/CharProfPicker";
+import { ClassIcon } from "./Characters";
 import { SourcePanel } from "../components/SourcePanel";
 import { Money, parseMoney } from "../components/Wow";
 import { markSeen, signalKey, useSeen, useSignals } from "../lib/signals";
 import { fmtDate, useI18n, type Key } from "../lib/i18n";
 import { store } from "../lib/store";
-import { wowApi, type RefItem } from "../lib/wowApi";
+import { fullName, useCharacters, wowApi, type RefItem } from "../lib/wowApi";
 import { Item } from "./characters/ProfessionsTab";
 
 interface Part extends RefItem { count: number; unit: number | null; src: "ah" | "vendor" | null }
@@ -59,6 +60,7 @@ export function Craft() {
       )}
       {!d || d.status === "building" ? <p className="text-muted">{t("pf_building")}</p> : (
         <>
+          <ProfOverview />
           <SignalsBlock onOpen={setPanel} />
           <Profitable rows={d.rows || []} onOpen={setPanel} />
           <Leveling rows={d.rows || []} onOpen={setPanel} />
@@ -67,6 +69,46 @@ export function Craft() {
       )}
       <SourcePanel item={panel} onClose={() => setPanel(null)} />
     </div>
+  );
+}
+
+/** Every character's professions at a glance: skill against the cap, primary first. */
+function ProfOverview() {
+  const { t, lang } = useI18n();
+  const chars = (useCharacters().data || []).filter((c) => !c.error && c.profs?.[lang]?.length);
+  if (!chars.length) return null;
+  const sorted = [...chars.filter((c) => c.favorite), ...chars.filter((c) => !c.favorite)];
+  return (
+    <Section id="overview" title={t("cr_over_t")} hint={t("cr_over_h")}>
+      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        {sorted.map((c) => {
+          const s = c.summary?.[lang];
+          const ps = [...(c.profs?.[lang] || [])].sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "primary" ? -1 : 1));
+          return (
+            <div key={c.id} className="cr-over">
+              <div className="flex items-center gap-2">
+                <ClassIcon classId={s?.classId ?? null} size={22} />
+                <b className="truncate">{c.favorite && <span className="text-[#ffd100]">★ </span>}{fullName(c, lang)}</b>
+                <span className="ml-auto text-xs text-muted">{t("ch_level", { l: s?.level ?? "?" })}</span>
+              </div>
+              <ul className="mt-2 space-y-1.5">
+                {ps.map((p) => {
+                  const pct = p.skill != null && p.max ? Math.min(100, (p.skill / p.max) * 100) : 0;
+                  return (
+                    <li key={`${p.id}-${p.name}`} className={`flex items-center gap-2 text-sm ${p.kind === "secondary" ? "opacity-75" : ""}`}>
+                      {p.id ? <ProfIcon id={p.id} size={18} /> : null}
+                      <span className="w-28 truncate">{p.name}</span>
+                      <span className="cr-over-bar"><span style={{ width: `${pct}%` }} className={p.skill != null && p.max && p.skill >= p.max ? "full" : ""} /></span>
+                      <span className="w-16 text-right tabular-nums text-xs text-muted">{p.skill ?? "?"}/{p.max ?? "?"}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
+    </Section>
   );
 }
 

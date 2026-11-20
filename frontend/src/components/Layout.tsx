@@ -1,6 +1,7 @@
 import { useNewSignals } from "../lib/signals";
 import type { ReactNode } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
+import { ActiveCharPicker } from "./ActiveCharPicker";
 import { useLogout, useMe } from "../lib/auth";
 import { useIndex } from "../lib/gameData";
 import { LANGS, useI18n } from "../lib/i18n";
@@ -16,6 +17,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const me = useMe();
   const logout = useLogout();
   const idx = useIndex();
+  const loc = useLocation();
 
   const link = ({ isActive }: { isActive: boolean }) =>
     `font-display tracking-wider px-3 py-1.5 rounded-md transition ${
@@ -50,6 +52,7 @@ export function Layout({ children }: { children: ReactNode }) {
             </nav>
           )}
           <div className="ml-auto flex flex-wrap items-center gap-2 text-sm">
+            {me.data && !loc.pathname.startsWith("/craft") && <ActiveCharPicker />}
             {idx.data && <span className="chip hidden sm:inline">{idx.data.latest}</span>}
             <select
               aria-label={t("theme")}

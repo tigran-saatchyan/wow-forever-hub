@@ -2,6 +2,7 @@
  * ForeverDB on the news page: Blizzard's posts about Forever, ForeverDB's articles, and the buffs and nerfs of my
  * characters' classes, build by build (app/routers/fdb.py). ForeverDB is credited with a link, as its terms ask.
  */
+import { useActiveChar } from "../../lib/activeChar";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { req } from "../../lib/api";
@@ -22,7 +23,8 @@ export function FdbNews() {
   const chars = (useCharacters().data || []).filter((c) => !c.error);
   const classes = [...new Map(chars.map((c) => [c.summary?.[lang]?.classId, c.summary?.[lang]?.className])).entries()].filter(([id]) => id) as [number, string][];
   const [cls, setCls] = useState<number | null>(null);
-  const cur = cls ?? classes[0]?.[0] ?? null;
+  const mine = useActiveChar().char?.summary?.[lang]?.classId ?? null;
+  const cur = cls ?? mine ?? classes[0]?.[0] ?? null;
   const news = useQuery({ queryKey: ["fdb-news"], queryFn: () => req<News>("/api/fdb/news"), staleTime: 30 * 60e3 });
   const changes = useQuery({ queryKey: ["fdb-changes", cur], enabled: tab === "changes" && !!cur, staleTime: 60 * 60e3,
     queryFn: () => req<Change[]>(`/api/fdb/changes/${cur}`) });

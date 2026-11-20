@@ -40,6 +40,10 @@ def _out(c: Character, full: bool = False) -> dict:
         "summary": p.get("summary"),
         "error": c.error,
         "fetched": c.fetched,
+        "avatar": p.get("avatar"),
+        # the list carries the professions without the recipe ids: the menu and the crafting overview need levels only
+        "profs": {lg: [{k: x.get(k) for k in ("id", "name", "kind", "skill", "max")} for x in (v or [])]
+                  for lg, v in (p.get("professions") or {}).items()} or None,
     }
     if full:
         d |= {"equipment": p.get("equipment"), "talents": p.get("talents"), "avatar": p.get("avatar"),

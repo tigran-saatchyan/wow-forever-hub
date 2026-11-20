@@ -4,6 +4,7 @@
  * banners from the game client, plague braziers and the mist of the Royal Quarter. Below, their chronicle,
  * strength, professions and the orders of the day.
  */
+import { setActiveChar, useActiveCharId } from "../lib/activeChar";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform, type MotionValue } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -203,7 +204,7 @@ export function ThroneRoom() {
   const D = useTalents(lang);
   const icons = useIcons();
   const list = (chars.data || []).filter((x) => !x.error);
-  const [sel, setSel] = useState<number | null>(() => store.get<number | null>("throneSel", null));
+  const sel = useActiveCharId();
   const mainId = (list.find((x) => x.id === sel) ?? list[0])?.id ?? null;
   const q = useCharacter(mainId);
   const c = q.data;
@@ -241,7 +242,7 @@ export function ThroneRoom() {
   const k = D.data?.classes.find((x) => x.id === s?.classId);
   const eq = new Map((c?.equipment?.[lang] || []).map((x) => [x.slot, x]));
   const st = c?.stats?.[lang] as Record<string, number | string> | undefined;
-  const pick = (id: number) => (setSel(id), store.set("throneSel", id));
+  const pick = (id: number) => setActiveChar(id);
   const gi = useGearSize();
 
   // BiS mode: one switch for the hall; the specialization is the character's own (most talent points) until
