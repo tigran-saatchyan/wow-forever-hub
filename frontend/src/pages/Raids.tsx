@@ -6,7 +6,7 @@
 import { useActiveChar } from "../lib/activeChar";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { ORDERED, STAGES, fits, progress, type Chain } from "../lib/chains";
 import { ClassIcon } from "./Characters";
 import { ChainLink } from "./map/ChainPanel";
@@ -65,12 +65,9 @@ export function Raids() {
       </motion.section>
 
       <PreRaid char={char} />
-      {all.length > 1 && (
-        <div className="flex justify-end">
-          <button className={favOn ? "btn-primary" : "btn"} aria-pressed={favOn} onClick={favToggle} title={t("rd_favs_h")}>{t("rd_favs")}</button>
-        </div>
-      )}
-      <Matrix chars={chars} />
+      <Matrix chars={chars} extra={all.length > 1 && (
+        <button className={`${favOn ? "btn-primary" : "btn"} shrink-0 py-1 text-sm`} aria-pressed={favOn} onClick={favToggle} title={t("rd_favs_h")}>{t("rd_favs")}</button>
+      )} />
       <Prep chars={chars} />
       {!chars.length && <p className="text-muted">{t("tr_none")}</p>}
     </div>
@@ -79,13 +76,31 @@ export function Raids() {
 
 /** Every chain, stage by stage, as cards: each chain with its progress for the character picked in the menu (and
  * the starred ones with the switch on); a progress opens the chain on the map with that character. */
-function Matrix({ chars }: { chars: Character[] }) {
+/** A section's title as a switch that folds it; the choice is kept in this browser. */
+function useFold(key: string): [boolean, (title: string, extra?: ReactNode) => ReactNode] {
+  const [open, setOpen] = useState(() => store.get(key, true));
+  // anything else in the title row (a switch) sits on the right, outside the folding button
+  const head = (title: string, extra?: ReactNode) => (
+    <div className="flex items-center gap-3">
+      <button type="button" className="cr-toggle min-w-0 flex-1" aria-expanded={open} onClick={() => (store.set(key, !open), setOpen(!open))}>
+        <h2 className="panel-title">{title}</h2>
+        <span className="cr-chev" aria-hidden>▾</span>
+      </button>
+      {extra}
+    </div>
+  );
+  return [open, head];
+}
+
+function Matrix({ chars, extra }: { chars: Character[]; extra?: ReactNode }) {
   const { t, lang } = useI18n();
+  const [open, head] = useFold("raidsChainsOpen");
   if (!chars.length) return null;
   const multi = chars.length > 1;
   return (
     <motion.section className="panel p-4" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-      <h2 className="panel-title">{t("cn_matrix")}</h2>
+      {head(t("cn_matrix"), extra)}
+      {open && <>
       <p className="mt-1 text-xs text-muted">{t("cn_matrix_h")}</p>
       {multi && (
         <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted">
@@ -120,6 +135,7 @@ function Matrix({ chars }: { chars: Character[] }) {
           );
         })}
       </div>
+      </>}
     </motion.section>
   );
 }
@@ -151,11 +167,12 @@ function Cell({ c, ch, multi }: { c: Chain; ch: Character; multi: boolean }) {
  * its own, then repairs and reagents (ticks kept in this browser, cleared with one button for the next raid). */
 function Prep({ chars }: { chars: Character[] }) {
   const { t } = useI18n();
+  const [open, head] = useFold("raidsPrepOpen");
   if (!chars.length) return null;
   return (
     <motion.section className="panel p-4" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-      <h2 className="panel-title">{t("rd_prep")}</h2>
-      <div className="mt-3 space-y-4">{chars.map((c) => <PrepChar key={c.id} c={c} multi={chars.length > 1} />)}</div>
+      {head(t("rd_prep"))}
+      {open && <div className="mt-3 space-y-4">{chars.map((c) => <PrepChar key={c.id} c={c} multi={chars.length > 1} />)}</div>}
     </motion.section>
   );
 }
