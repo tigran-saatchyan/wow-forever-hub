@@ -55,6 +55,8 @@ def source(src: dict, lang: str) -> dict:
     d = _dungeons().get(src.get("dungeon")) if src.get("dungeon") else None
     if d:
         out["dungeonName"] = d["ru"] if lang == "ru" else d["en"]
+        out["levels"] = d.get("levels")
+        out["entrance"] = (d.get("entranceParts") or {}).get(src.get("part") or "") or d.get("entrance")
     if src.get("boss"):  # Forever's own bosses are named in the dungeon list (the game's encounter table)
         out["bossName"] = ((d or {}).get("bossRu") or {}).get(src["boss"]) if lang == "ru" else None
         out["bossName"] = out["bossName"] or instances.boss_name(src["boss"], lang)
@@ -164,6 +166,12 @@ async def prebis(cid: int, user: CurrentUser, session: Session, lang: str = "ru"
     return {"available": True, "class": cls, "spec": spec, "level": level, "hit": {**hit, "cap": g["hitCap"],
             "planned": round(planned, 2), "need": round(need, 2)},
             "slots": slots, "author": g["author"], "owned": owned_slots,
+            "summary": {
+                "worn": summary([x.get("statv") or {} for x in eq.values()], t_hit),
+                # the best combination, with the hit talents at full rank
+                "sim": summary([(gear.get(str(i)) or {}).get("stats") or {} for i in g["author"]],
+                               sum(h["full"] for h in hit_tal)),
+            },
             "talents": g.get("talents"), "stats": g.get("stats"), "rotation": g.get("rotation"),
             "consumables": g.get("consumables"), "enchants": enchant_state(g, eq),
             "total": sum(r["count"] for r in slots if r["slot"] != "TWO_HAND")}
@@ -203,6 +211,21 @@ def enchant_state(g: dict, eq: dict) -> list[dict]:
         for o in feet:
             o["covered"] = True
     return out
+
+
+STAT_KEYS = {"sp": ("SPELL_POWER", "SPELL_DAMAGE_DONE"), "shadow": ("BONUS_STAT_SHADOW_DAMAGE_DONE",),
+             "crit": ("CRIT_RATING", "CRIT_SPELL_RATING", "SPELL_CRIT_RATING"), "hit": bis.HIT_KEYS,
+             "pen": ("SPELL_PENETRATION",), "int": ("INTELLECT",), "spi": ("SPIRIT",), "sta": ("STAMINA",),
+             "mp5": ("MANA_REGENERATION",)}
+
+
+def summary(stats_list: list[dict], talent_hit: float) -> dict:
+    """The stats a set of items adds up to, as the game shows them: spell power and Shadow damage, crit and hit in
+    per cent (14 and 10 rating a per cent; hit with the talents), spell penetration, intellect, spirit, stamina."""
+    tot = {k: sum(sum(st.get(n, 0) for n in names) for st in stats_list) for k, names in STAT_KEYS.items()}
+    return {"sp": tot["sp"], "shadow": tot["sp"] + tot["shadow"], "crit": round(tot["crit"] / 14, 2),
+            "hit": round(talent_hit + tot["hit"] / 10, 2), "pen": tot["pen"], "int": tot["int"], "spi": tot["spi"],
+            "sta": tot["sta"], "mp5": tot["mp5"]}
 
 
 class OwnedIn(BaseModel):

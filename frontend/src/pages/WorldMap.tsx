@@ -131,7 +131,12 @@ export function WorldMap() {
   const stepIdx = sp.get("step") ? idx : Math.max(0, firstOpen);
   const step = chain.steps[stepIdx];
   const [phase, setPhase] = useState<Phase>("giver");
-  const [view, setView] = useState<"chain" | "world">(() => (sp.get("chain") ? "chain" : store.get("mapView", "chain")));
+  const [view, setView] = useState<"chain" | "world">(() => (sp.get("chain") ? "chain" : sp.get("pin") ? "world" : store.get("mapView", "chain")));
+  // a place sent from another page (a dungeon's way in): "map,x,y" and its name
+  const pinAt = useMemo(() => {
+    const p = (sp.get("pin") || "").split(",").map(Number);
+    return p.length === 3 && p.every((n) => !Number.isNaN(n)) ? { map: p[0], x: p[1], y: p[2], label: sp.get("label") || "" } : null;
+  }, [sp]);
   const [continent, setContinent] = useState<number>(EK);
   const [zone, setZone] = useState<number | null>(null);
   useEffect(() => setPhase("giver"), [chain.key, step.id]);
@@ -184,7 +189,7 @@ export function WorldMap() {
       </div>
 
       {view === "world" ? (
-        <World continent={continent} setContinent={setContinent} zone={zone} setZone={setZone} faction={faction} />
+        <World continent={continent} setContinent={setContinent} zone={zone} setZone={setZone} faction={faction} pinAt={pinAt} />
       ) : (
         <div className="space-y-4">
         <ChainPicker current={chain.key} ids={ids} who={who} pick={setChain} cid={char?.id ?? null} />
@@ -288,7 +293,7 @@ function focusOf(p: Place, tick: number): Focus {
 }
 
 /** The seamless world: the places that matter, every zone named on the map; the list flies to a zone. */
-function World({ continent, setContinent, zone, setZone, faction }: { continent: number; setContinent: (m: number) => void; zone: number | null; setZone: (m: number | null) => void; faction: string }) {
+function World({ continent, setContinent, zone, setZone, faction, pinAt }: { continent: number; setContinent: (m: number) => void; zone: number | null; setZone: (m: number | null) => void; faction: string; pinAt?: { map: number; x: number; y: number; label: string } | null }) {
   const { t, lang } = useI18n();
   // any quest by ForeverDB: where to take it and where to hand it in; the vendors of the player's side
   const [quest, setQuest] = useState<FdbQuest | null>(null);
@@ -296,8 +301,16 @@ function World({ continent, setContinent, zone, setZone, faction }: { continent:
   const vendors = useQuery({ queryKey: ["fdb-vendors"], queryFn: () => req<FdbVendorPin[]>("/api/fdb/vendors"), enabled: showVendors, staleTime: 3600e3 });
   const zones = ALL.filter((m) => m.parent === continent && m.type === 3).sort((a, b) => a.name[lang].localeCompare(b.name[lang]));
   const [focus, setFocus] = useState<Focus>(null);
+  useEffect(() => {  // a place sent from another page: fly to it
+    const w = pinAt ? toWorld(pinAt.map, pinAt.x, pinAt.y) : null;
+    if (w) setFocus({ ...w, zoom: 5, tick: Date.now() });
+  }, [pinAt?.map, pinAt?.x, pinAt?.y]); // eslint-disable-line react-hooks/exhaustive-deps
   const pins = useMemo(() => {
     const out: WPin[] = [];
+    if (pinAt) {
+      const w = toWorld(pinAt.map, pinAt.x, pinAt.y);
+      if (w) out.push({ ...w, kind: "dungeon", glyph: "⚑", hot: true, label: pinAt.label, onClick: () => setFocus({ ...w, zoom: 5, tick: Date.now() }) });
+    }
     for (const p of PLACES) {
       const w = toWorld(p.map, p.x, p.y);
       if (w) out.push({ ...w, kind: p.kind, glyph: GLYPH[p.kind], label: p.name[lang], onClick: () => setFocus({ ...w, zoom: 5, tick: Date.now() }) });
@@ -317,7 +330,7 @@ function World({ continent, setContinent, zone, setZone, faction }: { continent:
       }
     }
     return out;
-  }, [lang, showVendors, vendors.data, quest, faction]);
+  }, [lang, showVendors, vendors.data, quest, faction, pinAt]);
   const pick = (id: number) => { setZone(id); setFocus({ map: id, tick: Date.now() }); };
   const showQuest = (q: FdbQuest) => {
     setQuest(q);

@@ -89,7 +89,8 @@ export interface PreBisItem {
   id: number; name: string; q: number; ilvl: number | null; req: number | null; bind: number | null; alt: boolean;
   note: string | null; hit: number; worn: boolean; marked: boolean; owned: boolean; author: boolean; focus: boolean;
   src: { kind: string; boss?: string; bossName?: string; bosses?: string[]; bossNames?: string[]; dungeon?: number | null;
-    dungeonName?: string; part?: string | null; note?: string | null; profession?: string; currency?: string; auction?: boolean };
+    dungeonName?: string; part?: string | null; note?: string | null; profession?: string; currency?: string; auction?: boolean;
+    levels?: [number, number] | null; entrance?: { map: number; x: number; y: number } | null };
   full: import("../pages/throne/Bis").BisItem | null; wornItem: import("../pages/throne/Bis").BisItem | null;
 }
 export interface PreBis {
@@ -97,6 +98,7 @@ export interface PreBis {
   hit: { cap: number; talent: number; talents: string[]; gear: number; total: number; planned: number; need: number;
     talentList: { id: number; name: string; en: string; tab: number; max: number; full: number; icon: string; rank: number }[] };
   slots: { slot: string; count: number; center: PreBisItem[]; damage: PreBisItem[]; hit: PreBisItem[] }[];
+  summary?: Record<"worn" | "sim", { sp: number; shadow: number; crit: number; hit: number; pen: number; int: number; spi: number; sta: number; mp5: number }>;
   talents?: { ranks: Record<string, number>; swap: { from: number; to: number }; split: number[]; fromLevel: number };
   stats?: string[]; rotation?: { icon: string; spell: string; do: string }[];
   consumables?: { id: number; group: string; req: number }[];

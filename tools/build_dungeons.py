@@ -42,6 +42,14 @@ ALIAS = {"stormwind stockades": "stormwind stockade", "zulfarak": "zulfarrak", "
 SKIP_TYPES = {"4", "5"}  # zones and battlegrounds in the group finder's table
 # dungeons seen played in Forever though ForeverDB doesn't list them: open, whatever the lists say
 SEEN_OPEN = {"blackmaw hold"}
+# the original game's ways in (zone map, x, y), for "show it on the map"; Forever keeps these zones, a point may be a
+# few steps off. Dungeons with doors on two sides name each part.
+ENTRANCE = {389: (1454, 52, 58), 43: (1413, 46, 36), 36: (1436, 42, 72), 33: (1421, 45, 68), 48: (1440, 14, 14),
+            34: (1453, 40, 54), 47: (1413, 42, 90), 90: (1426, 24, 40), 189: (1420, 84, 30), 129: (1441, 47, 23),
+            70: (1418, 44, 12), 209: (1446, 39, 20), 349: (1443, 29, 62), 109: (1435, 69, 53), 230: (1428, 29, 38),
+            229: (1428, 29, 38), 429: (1444, 59, 45), 329: (1423, 31, 15), 289: (1422, 69, 73), 249: (1445, 52, 76)}
+ENTRANCE_PARTS = {329: {"live": (1423, 31, 15), "undead": (1423, 47, 23)},
+                  429: {"north": (1444, 62, 26), "east": (1444, 65, 34), "west": (1444, 59, 45)}}
 
 
 def norm(s: str) -> str:
@@ -119,6 +127,12 @@ def main() -> None:
             out.append({"id": mid, "en": c["en"], "ru": c["ru"], "kind": "dungeon", "players": 5,
                         "levels": [c["min"], c["min"]] if c.get("min") else None, "new": True, "open": k in SEEN_OPEN,
                         "bosses": cb, "bossRu": cru, "notableLoot": [], "url": None})
+    for x in out:
+        if x.get("id") in ENTRANCE:
+            m, ex, ey = ENTRANCE[x["id"]]
+            x["entrance"] = {"map": m, "x": ex, "y": ey}
+            if x["id"] in ENTRANCE_PARTS:
+                x["entranceParts"] = {k: {"map": v[0], "x": v[1], "y": v[2]} for k, v in ENTRANCE_PARTS[x["id"]].items()}
     OUT.write_text(json.dumps({"source": "ForeverDB.net (https://foreverdb.net) and the game's files", "build": a.build,
                                "at": time.strftime("%Y-%m-%d"), "dungeons": out}, ensure_ascii=False, indent=1), "utf-8")
     print("wrote", OUT, len(out))

@@ -1656,3 +1656,8 @@ button.order-line:hover { @apply text-gold; }
 .prebis-rot { display: grid; justify-items: center; gap: 4px; width: 96px; text-align: center; }
 .prebis-rot .ico { width: 56px; height: 56px; border-radius: 8px; background-size: cover; box-shadow: 0 0 0 1px rgb(var(--gold) / 0.4); }
 .prebis-rot b { font-size: 12px; color: rgb(var(--gold)); }
+
+.prebis-sum { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+.prebis-sum .cell { border: 1px solid rgb(var(--edge) / 0.5); border-radius: 8px; padding: 8px 10px; background: rgb(0 0 0 / 0.2); }
+.prebis-place { color: inherit; text-decoration: underline dotted; text-underline-offset: 2px; }
+.prebis-place:hover { color: rgb(var(--gold)); }

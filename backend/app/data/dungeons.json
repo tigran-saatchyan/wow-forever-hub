@@ -189,7 +189,12 @@
      ]
     }
    ],
-   "url": "https://foreverdb.net/dungeon/389-ragefire-chasm"
+   "url": "https://foreverdb.net/dungeon/389-ragefire-chasm",
+   "entrance": {
+    "map": 1454,
+    "x": 52,
+    "y": 58
+   }
   },
   {
    "id": 3065,
@@ -354,7 +359,12 @@
      ]
     }
    ],
-   "url": "https://foreverdb.net/dungeon/36-deadmines"
+   "url": "https://foreverdb.net/dungeon/36-deadmines",
+   "entrance": {
+    "map": 1436,
+    "x": 42,
+    "y": 72
+   }
   },
   {
    "id": 43,
@@ -413,7 +423,12 @@
      ]
     }
    ],
-   "url": "https://foreverdb.net/dungeon/43-wailing-caverns"
+   "url": "https://foreverdb.net/dungeon/43-wailing-caverns",
+   "entrance": {
+    "map": 1413,
+    "x": 46,
+    "y": 36
+   }
   },
   {
    "id": 33,
@@ -470,7 +485,12 @@
      ]
     }
    ],
-   "url": "https://foreverdb.net/dungeon/33-shadowfang-keep"
+   "url": "https://foreverdb.net/dungeon/33-shadowfang-keep",
+   "entrance": {
+    "map": 1421,
+    "x": 45,
+    "y": 68
+   }
   },
   {
    "id": 48,
@@ -527,7 +547,12 @@
      ]
     }
    ],
-   "url": "https://foreverdb.net/dungeon/48-blackfathom-deeps"
+   "url": "https://foreverdb.net/dungeon/48-blackfathom-deeps",
+   "entrance": {
+    "map": 1440,
+    "x": 14,
+    "y": 14
+   }
   },
   {
    "id": 34,
@@ -578,7 +603,12 @@
      ]
     }
    ],
-   "url": "https://foreverdb.net/dungeon/34-stormwind-stockade"
+   "url": "https://foreverdb.net/dungeon/34-stormwind-stockade",
+   "entrance": {
+    "map": 1453,
+    "x": 40,
+    "y": 54
+   }
   },
   {
    "id": 47,
@@ -631,7 +661,12 @@
      ]
     }
    ],
-   "url": "https://foreverdb.net/dungeon/47-razorfen-kraul"
+   "url": "https://foreverdb.net/dungeon/47-razorfen-kraul",
+   "entrance": {
+    "map": 1413,
+    "x": 42,
+    "y": 90
+   }
   },
   {
    "id": 90,
@@ -683,7 +718,12 @@
      ]
     }
    ],
-   "url": "https://foreverdb.net/dungeon/90-gnomeregan"
+   "url": "https://foreverdb.net/dungeon/90-gnomeregan",
+   "entrance": {
+    "map": 1426,
+    "x": 24,
+    "y": 40
+   }
   },
   {
    "id": 2998,
@@ -847,7 +887,12 @@
      ]
     }
    ],
-   "url": "https://foreverdb.net/dungeon/189-scarlet-monastery"
+   "url": "https://foreverdb.net/dungeon/189-scarlet-monastery",
+   "entrance": {
+    "map": 1420,
+    "x": 84,
+    "y": 30
+   }
   },
   {
    "id": 129,
@@ -900,7 +945,12 @@
      ]
     }
    ],
-   "url": "https://foreverdb.net/dungeon/129-razorfen-downs"
+   "url": "https://foreverdb.net/dungeon/129-razorfen-downs",
+   "entrance": {
+    "map": 1441,
+    "x": 47,
+    "y": 23
+   }
   },
   {
    "id": 70,
@@ -957,7 +1007,12 @@
      ]
     }
    ],
-   "url": "https://foreverdb.net/dungeon/70-uldaman"
+   "url": "https://foreverdb.net/dungeon/70-uldaman",
+   "entrance": {
+    "map": 1418,
+    "x": 44,
+    "y": 12
+   }
   },
   {
    "id": 209,
@@ -1014,7 +1069,12 @@
      ]
     }
    ],
-   "url": "https://foreverdb.net/dungeon/209-zulfarrak"
+   "url": "https://foreverdb.net/dungeon/209-zulfarrak",
+   "entrance": {
+    "map": 1446,
+    "x": 39,
+    "y": 20
+   }
   },
   {
    "id": 349,
@@ -1071,7 +1131,12 @@
      ]
     }
    ],
-   "url": "https://foreverdb.net/dungeon/349-maraudon"
+   "url": "https://foreverdb.net/dungeon/349-maraudon",
+   "entrance": {
+    "map": 1443,
+    "x": 29,
+    "y": 62
+   }
   },
   {
    "id": 109,
@@ -1133,7 +1198,12 @@
      ]
     }
    ],
-   "url": "https://foreverdb.net/dungeon/109-sunken-temple"
+   "url": "https://foreverdb.net/dungeon/109-sunken-temple",
+   "entrance": {
+    "map": 1435,
+    "x": 69,
+    "y": 53
+   }
   },
   {
    "id": 230,
@@ -1216,7 +1286,12 @@
      ]
     }
    ],
-   "url": "https://foreverdb.net/dungeon/230-blackrock-depths"
+   "url": "https://foreverdb.net/dungeon/230-blackrock-depths",
+   "entrance": {
+    "map": 1428,
+    "x": 29,
+    "y": 38
+   }
   },
   {
    "id": 229,
@@ -1285,7 +1360,12 @@
      ]
     }
    ],
-   "url": "https://foreverdb.net/dungeon/229-blackrock-spire"
+   "url": "https://foreverdb.net/dungeon/229-blackrock-spire",
+   "entrance": {
+    "map": 1428,
+    "x": 29,
+    "y": 38
+   }
   },
   {
    "id": 429,
@@ -1364,7 +1444,29 @@
      ]
     }
    ],
-   "url": "https://foreverdb.net/dungeon/429-dire-maul"
+   "url": "https://foreverdb.net/dungeon/429-dire-maul",
+   "entrance": {
+    "map": 1444,
+    "x": 59,
+    "y": 45
+   },
+   "entranceParts": {
+    "north": {
+     "map": 1444,
+     "x": 62,
+     "y": 26
+    },
+    "east": {
+     "map": 1444,
+     "x": 65,
+     "y": 34
+    },
+    "west": {
+     "map": 1444,
+     "x": 59,
+     "y": 45
+    }
+   }
   },
   {
    "id": 329,
@@ -1443,7 +1545,24 @@
      ]
     }
    ],
-   "url": "https://foreverdb.net/dungeon/329-stratholme"
+   "url": "https://foreverdb.net/dungeon/329-stratholme",
+   "entrance": {
+    "map": 1423,
+    "x": 31,
+    "y": 15
+   },
+   "entranceParts": {
+    "live": {
+     "map": 1423,
+     "x": 31,
+     "y": 15
+    },
+    "undead": {
+     "map": 1423,
+     "x": 47,
+     "y": 23
+    }
+   }
   },
   {
    "id": 289,
@@ -1513,7 +1632,12 @@
      ]
     }
    ],
-   "url": "https://foreverdb.net/dungeon/289-scholomance"
+   "url": "https://foreverdb.net/dungeon/289-scholomance",
+   "entrance": {
+    "map": 1422,
+    "x": 69,
+    "y": 73
+   }
   },
   {
    "id": 249,
@@ -1556,7 +1680,12 @@
      ]
     }
    ],
-   "url": "https://foreverdb.net/dungeon/249-onyxias-lair"
+   "url": "https://foreverdb.net/dungeon/249-onyxias-lair",
+   "entrance": {
+    "map": 1445,
+    "x": 52,
+    "y": 76
+   }
   },
   {
    "id": 309,

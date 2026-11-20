@@ -7,6 +7,7 @@
 import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence } from "framer-motion";
 import { useRef, useState, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 import { ItemIcon } from "../../components/Wow";
 import { iconStyle, useIcons } from "../../lib/gameData";
 import { useI18n, type Key } from "../../lib/i18n";
@@ -28,6 +29,7 @@ export function PreRaid({ chars }: { chars: Character[] }) {
   const [sel, setSel] = useState<number | null>(() => store.get<number | null>("prebisChar", null));
   const [open, setOpen] = useState(() => store.get("prebisOpen", true));
   const [tab, setTab] = useState<string>(() => store.get("prebisTab", "items"));
+  const [sim, setSim] = useState(false);
   const cur = fit.find((x) => x.c.id === sel) ?? fit[0];
   if (!cur) return null;
   const d = cur.d!;
@@ -45,10 +47,12 @@ export function PreRaid({ chars }: { chars: Character[] }) {
           </select>
         ) : <span className="text-sm text-muted">{fullName(cur.c, lang)}</span>}
         <span className="ml-auto text-sm text-muted">{t("pr_have", { n: d.owned, t: d.total })}</span>
+        <button className={sim ? "btn-primary" : "btn"} onClick={() => setSim(!sim)} title={t("pr_sim_h")}>{t(sim ? "pr_sim_off" : "pr_sim")}</button>
       </div>
       {open && (
         <div className="mt-4 space-y-4">
-          <HitBar d={d} />
+          <HitBar d={d} sim={sim} />
+          <StatSummary d={d} sim={sim} />
           <div className="prebis-tabs" role="tablist">
             {TABS.map((k) => (
               <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""}
@@ -58,7 +62,7 @@ export function PreRaid({ chars }: { chars: Character[] }) {
           {tab === "items" && <>
             <Legend />
             <div className="grid gap-3 lg:grid-cols-2">
-              {d.slots.map((r) => <SlotCard key={r.slot} r={r} cid={cur.c.id} />)}
+              {d.slots.map((r) => <SlotCard key={r.slot} r={r} cid={cur.c.id} sim={sim} />)}
             </div>
           </>}
           {tab === "talents" && <TalentsPane d={d} cid={cur.c.id} />}
@@ -72,10 +76,13 @@ export function PreRaid({ chars }: { chars: Character[] }) {
 }
 
 /** The spell hit: talents (at their real ranks) and worn gear now, with the list's items the character has, against the cap. */
-function HitBar({ d }: { d: PreBis }) {
+function HitBar({ d, sim }: { d: PreBis; sim: boolean }) {
   const { t } = useI18n();
   const icons = useIcons();
-  const h = d.hit;
+  const full = d.hit.talentList.reduce((a, x) => a + x.full, 0);
+  // the simulation: the best combination worn, the hit talents at full rank
+  const h = sim && d.summary ? { ...d.hit, talent: full, planned: d.summary.sim.hit, total: d.summary.sim.hit, gear: +(d.summary.sim.hit - full).toFixed(2),
+    need: Math.max(0, +(d.hit.cap - d.summary.sim.hit).toFixed(2)), talentList: d.hit.talentList.map((x) => ({ ...x, rank: x.max })) } : d.hit;
   const pct = (v: number) => `${Math.min(100, (v / h.cap) * 100)}%`;
   const done = h.planned >= h.cap;
   return (
@@ -114,13 +121,13 @@ function Legend() {
   );
 }
 
-function SlotCard({ r, cid }: { r: PreBis["slots"][number]; cid: number }) {
+function SlotCard({ r, cid, sim }: { r: PreBis["slots"][number]; cid: number; sim: boolean }) {
   const { t } = useI18n();
   const name = t((["FINGER", "TRINKET", "TWO_HAND"].includes(r.slot) ? `pr_slot_${r.slot}` : `slot_${r.slot}`) as Key);
   const group = (k: "center" | "damage" | "hit", label: string, cls: string): ReactNode => r[k].length > 0 && (
     <div className={`prebis-group ${cls}`}>
       <div className="prebis-glabel">{label}</div>
-      <ul className="space-y-1.5">{r[k].map((x) => <Row key={x.id} x={x} cid={cid} />)}</ul>
+      <ul className="space-y-1.5">{r[k].map((x) => <Row key={x.id} x={x} cid={cid} sim={sim} />)}</ul>
     </div>
   );
   return (
@@ -140,7 +147,7 @@ function SlotCard({ r, cid }: { r: PreBis["slots"][number]; cid: number }) {
   );
 }
 
-function Row({ x, cid }: { x: PreBisItem; cid: number }) {
+function Row({ x, cid, sim }: { x: PreBisItem; cid: number; sim: boolean }) {
   const { t, lang } = useI18n();
   const qc = useQueryClient();
   const [hover, setHover] = useState(false);
@@ -150,7 +157,7 @@ function Row({ x, cid }: { x: PreBisItem; cid: number }) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["prebis", cid, lang] }),
   });
   return (
-    <li className={`prebis-item ${x.owned ? "owned" : ""} ${x.focus ? "focus" : ""} ${x.alt ? "alt" : ""}`}>
+    <li className={`prebis-item ${sim ? (x.author ? "owned" : "alt") : `${x.owned ? "owned" : ""} ${x.focus ? "focus" : ""} ${x.alt ? "alt" : ""}`}`}>
       <span ref={anchor} tabIndex={0} className="inline-flex min-w-0 flex-1 items-center gap-2.5"
         onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} onFocus={() => setHover(true)} onBlur={() => setHover(false)}>
         <ItemIcon itemId={x.id} quality={Q[x.q]} size={34} />
@@ -158,7 +165,8 @@ function Row({ x, cid }: { x: PreBisItem; cid: number }) {
           <span className="truncate text-[15px]" style={{ color: qColor(Q[x.q]) }}>
             {x.author && <span className="prebis-best" title={t("pr_lg_best")}>★</span>}{x.name}
           </span>
-          <span className="truncate text-xs text-muted"><Src x={x} /></span>
+          <span className="text-xs text-[#ffd100]/80">{t("pr_ilvl", { i: x.ilvl ?? "?" })}{x.req ? ` · ${t("pr_req", { n: x.req })}` : ""}</span>
+          <span className="relative z-[1] text-xs text-muted"><Src x={x} /></span>
         </span>
       </span>
       <span className="flex shrink-0 items-center gap-2">
@@ -178,15 +186,42 @@ function Row({ x, cid }: { x: PreBisItem; cid: number }) {
 /** Where the item comes from, in a line: the boss and the dungeon (and its part), a crafting profession, the vendor. */
 function Src({ x }: { x: PreBisItem }) {
   const { t } = useI18n();
+  const nav = useNavigate();
   const s = x.src;
   const part = s.part ? ` (${t(`pr_part_${s.part}` as Key)})` : "";
-  const where = s.dungeonName ? `${s.dungeonName}${part}` : "";
+  const lv = s.levels ? ` ${s.levels[0] === s.levels[1] ? s.levels[0] : `${s.levels[0]}–${s.levels[1]}`}` : "";
+  const where = s.dungeonName ? `${s.dungeonName}${part}${lv}` : "";
+  const go = s.entrance ? () => nav(`/map?pin=${s.entrance!.map},${s.entrance!.x},${s.entrance!.y}&label=${encodeURIComponent(s.dungeonName ?? "")}`) : null;
+  const place = (txt: string) => go
+    ? <button type="button" className="prebis-place" onClick={go} title={t("pr_on_map")}>{txt}</button> : <>{txt}</>;
   const extra = [s.note && t(`pr_note_${s.note}` as Key), x.note && t(`pr_note_${x.note}` as Key)].filter(Boolean).join(" · ");
-  let main = "";
-  if (s.kind === "boss") main = [s.bossName, where].filter(Boolean).join(" · ");
-  else if (s.kind === "bosses") main = s.note === "various" ? t("pr_src_various") : [t("pr_src_bosses", { n: (s.bossNames || []).length }), where].filter(Boolean).join(" · ");
+  let main: ReactNode = "";
+  if (s.kind === "boss") main = <>{s.bossName}{where ? <> · {place(where)}</> : null}</>;
+  else if (s.kind === "bosses") main = s.note === "various" ? t("pr_src_various") : <>{t("pr_src_bosses", { n: (s.bossNames || []).length })}{where ? <> · {place(where)}</> : null}</>;
   else if (s.kind === "vendor") main = t("pr_src_vendor");
   else if (s.kind === "craft") main = t("pr_src_craft", { p: t(`pr_prof_${s.profession}` as Key) });
-  else if (s.kind === "trash") main = t("pr_src_trash", { d: where });
+  else if (s.kind === "trash") main = <>{t("pr_src_trash_a")} {place(where)}{t("pr_src_trash_b")}</>;
   return <>{main}{extra ? ` · ${extra}` : ""}{s.bossNames && s.kind === "bosses" && s.bossNames.length ? <span className="hidden sm:inline"> — {s.bossNames.join(", ")}</span> : null}</>;
+}
+
+/** What the gear adds up to: worn now, and with the simulation on the best combination beside it. */
+function StatSummary({ d, sim }: { d: PreBis; sim: boolean }) {
+  const { t } = useI18n();
+  if (!d.summary) return null;
+  const a = d.summary.worn, b = d.summary.sim;
+  const rows: [keyof typeof a, string][] = [["hit", "%"], ["crit", "%"], ["shadow", ""], ["sp", ""], ["pen", ""], ["int", ""], ["spi", ""], ["sta", ""]];
+  return (
+    <div className="prebis-sum">
+      {rows.map(([k, u]) => {
+        const diff = +(b[k] - a[k]).toFixed(2);
+        return (
+          <div key={k} className="cell">
+            <div className="eyebrow">{t(`pr_sum_${k}` as Key)}</div>
+            <div className="font-mono text-lg">{a[k]}{u}</div>
+            {sim && <div className="text-xs">→ <b className="text-gold">{b[k]}{u}</b> <span className={diff > 0 ? "text-good" : diff < 0 ? "text-bad" : "text-muted"}>({diff > 0 ? "+" : ""}{diff}{u})</span></div>}
+          </div>
+        );
+      })}
+    </div>
+  );
 }
