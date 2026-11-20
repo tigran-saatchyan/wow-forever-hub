@@ -15,7 +15,7 @@ import { store } from "../../lib/store";
 import { fullName, qColor, wowApi, type Character, type PreBis, type PreBisItem } from "../../lib/wowApi";
 import { Compare } from "../throne/Bis";
 import { ConsumablesPane, EnchantsPane, GuidePane, TalentsPane } from "./PreRaidTabs";
-import { applySim, BuffBar, SimSettings, useSimCfg, type SimResult } from "./SimBuffs";
+import { applySim, BuffBar, fmt1, SimSettings, useSimCfg, type SimResult } from "./SimBuffs";
 
 const TABS = ["items", "talents", "guide", "consumables", "enchants"] as const;
 
@@ -206,7 +206,7 @@ function Src({ x }: { x: PreBisItem }) {
 /** What the character has now (their base and worn gear), and with the simulation the best combination with all
  * that is switched on in its settings. */
 function StatSummary({ d, r }: { d: PreBis; r: SimResult | null }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   if (!d.summary) return null;
   const a = d.summary.worn;
   const manaNow = d.summary.base ? d.summary.base.mana + 15 * a.int : null;
@@ -224,8 +224,8 @@ function StatSummary({ d, r }: { d: PreBis; r: SimResult | null }) {
           return (
             <div key={k} className="cell">
               <div className="eyebrow">{t(`pr_sum_${k}` as Key)}</div>
-              <div className="font-mono text-lg">{x ?? "—"}{x != null ? u : ""}</div>
-              {r && y != null && <div className="text-xs">→ <b className="text-gold">{y}{u}</b>{diff != null && <> <span className={diff > 0 ? "text-good" : diff < 0 ? "text-bad" : "text-muted"}>({diff > 0 ? "+" : ""}{diff}{u})</span></>}</div>}
+              <div className="font-mono text-lg">{x != null ? fmt1(x) : "—"}{x != null ? u : ""}</div>
+              {r && y != null && <div className="text-xs">→ <b className="text-gold">{fmt1(y)}{u}</b>{diff != null && <> <span className={diff > 0 ? "text-good" : diff < 0 ? "text-bad" : "text-muted"}>({diff > 0 ? "+" : ""}{diff}{u})</span></>}</div>}
             </div>
           );
         })}
@@ -237,6 +237,10 @@ function StatSummary({ d, r }: { d: PreBis; r: SimResult | null }) {
           </div>
         )}
       </div>
+      {r?.bursts.map(({ b, total }) => (
+        <p key={b.key} className="text-xs text-good">{t("pr_sum_burst", { n: b.name[lang], t: total, d: Math.round((b.dur ?? 0) / 1000) })}</p>
+      ))}
+      <p className="text-xs text-muted">{t("pr_sum_mp5_h")}</p>
       {!d.summary.base && <p className="text-xs text-muted">{t("pr_sum_nobase")}</p>}
       {r && d.summary.base && <p className="text-xs text-muted">{t("pr_sum_base", { l: d.level ?? "?" })}</p>}
     </div>

@@ -26,7 +26,14 @@ export function useSimCfg(): [SimCfg, (c: SimCfg) => void] {
   return [c, (v) => (store.set("prebisSimCfg", v), setC(v))];
 }
 
-export interface SimResult extends SimStats { mana: number | null; dmg: number; active: SimBuff[]; enchantSp: number }
+export interface SimResult extends SimStats { mana: number | null; dmg: number; active: SimBuff[]; enchantSp: number; bursts: { b: SimBuff; total: number }[] }
+
+/** A short burst (Mana Tide: 13 sec) is mana once, not a lasting regeneration: counted apart. */
+const isBurst = (b: SimBuff) => b.dur != null && b.dur > 0 && b.dur < 60000 && !!b.eff.mp5;
+/** All the mana a burst gives over its time. */
+const burstTotal = (b: SimBuff) => (b.eff.tick ? b.eff.tick.n * Math.floor(b.dur! / 1000 / b.eff.tick.every) : Math.round((b.eff.mp5 ?? 0) * b.dur! / 5000));
+/** One decimal when there is one: 31.25 shows as 31.3, not 31. */
+export const fmt1 = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(1));
 
 /** The best combination with the chosen buffs: flat values first, then the per-cent ones on the totals. */
 export function applySim(d: PreBis, cfg: SimCfg): SimResult | null {
@@ -35,7 +42,7 @@ export function applySim(d: PreBis, cfg: SimCfg): SimResult | null {
   const all = d.buffs || [];
   const on = new Set(cfg.on);
   const active = all.filter((b) => on.has(b.key) && (!b.needs || on.has(b.needs)));
-  const add = (k: keyof SimEffect) => active.reduce((a, b) => a + ((b.eff[k] as number | undefined) ?? 0), 0);
+  const add = (k: keyof SimEffect) => active.reduce((a, b) => a + (k === "mp5" && isBurst(b) ? 0 : ((b.eff[k] as number | undefined) ?? 0)), 0);
   const pct = (k: "int" | "spi" | "sta") => active.reduce((a, b) => a * (1 + (b.eff.pct?.[k] ?? 0) / 100), 1);
   const enchantSp = cfg.enchants ? (d.summary.enchants || []).reduce((a, e) => a + (e.sp ?? 0), 0) : 0;
   const shadowOnly = active.reduce((a, b) => a + (b.eff.school?.shadow ?? 0), 0);
@@ -48,10 +55,10 @@ export function applySim(d: PreBis, cfg: SimCfg): SimResult | null {
     ...s, sp, int, spi, sta,
     shadow: s.shadow - s.sp + sp + shadowOnly,
     crit: +(s.crit + add("crit")).toFixed(2), hit: +(s.hit + add("hit")).toFixed(2),
-    mp5: Math.round(s.mp5 + add("mp5")),
+    mp5: +(s.mp5 + add("mp5")).toFixed(2),
     mana: base ? base.mana + 15 * int + add("mana") : null,
     dmg: active.reduce((a, b) => a * (1 + (b.eff.dmgPct ?? 0) / 100), 1),
-    active, enchantSp,
+    active, enchantSp, bursts: active.filter(isBurst).map((b) => ({ b, total: burstTotal(b) })),
   };
 }
 
@@ -79,7 +86,12 @@ export function effectLines(e: SimEffect, t: (k: Key, v?: Record<string, string 
     const of = all?.find((x) => x.key === b.needs);
     return [t("sb_e_boost", { n: b.boost, s: of ? of.name[lang] : "" })];
   }
-  if (e.tick) out.push(t("sb_e_tick", { n: e.tick.n, s: e.tick.every }));
+  if (e.tick) {
+    const per5 = fmt1(+(e.tick.n * 5 / e.tick.every).toFixed(2));
+    if (b && isBurst(b)) out.push(t("sb_e_tick_burst", { n: e.tick.n, s: e.tick.every, t: burstTotal(b), d: Math.round(b.dur! / 1000) }));
+    else if (e.tick.every === 5) out.push(t("sb_e_mp5", { n: e.tick.n }));
+    else out.push(t("sb_e_tick", { n: e.tick.n, s: e.tick.every, m: per5 }));
+  }
   for (const k of ["sp", "int", "spi", "sta", "str", "agi", "crit", "hit", "mp5", "mana", "hp", "dmgPct"] as const) {
     const v = e[k];
     if (k === "mp5" && e.tick) continue;
@@ -98,7 +110,7 @@ function Tip({ b, boosts }: { b: SimBuff; boosts: SimBuff[] }) {
   return (
     <div className="sb-tip wow-tip" role="tooltip">
       <div className="text-[#ffd100]">{b.aura[lang]}</div>
-      {effectLines(b.eff, t).map((l) => <div key={l} className="text-good">{l}</div>)}
+      {effectLines(b.eff, t, b).map((l) => <div key={l} className="text-good">{l}</div>)}
       {boosts.map((x) => <div key={x.key} className="text-good">{t("sb_boosted", { n: x.boost ?? 0, s: x.talentName?.[lang] ?? "" })}</div>)}
       <div className="mt-1 text-muted">{dur(b.dur) ? t("sb_left", { d: dur(b.dur) }) : t("sb_aura")}</div>
       {b.item && <div className="mt-1 text-xs text-muted">{t("sb_from_item", { n: b.name[lang] })}</div>}
