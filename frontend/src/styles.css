@@ -1718,3 +1718,8 @@ button.order-line:hover { @apply text-gold; }
 .prebis { position: relative; z-index: 5; }
 .prebis-fold-chip { padding: .15rem .55rem; border: 1px solid rgb(var(--edge)); border-radius: .35rem; background: rgb(var(--bg) / .4); white-space: nowrap; }
 button.prebis-fold-chip:hover { border-color: rgb(var(--gold) / .5); }
+
+/* the recipe behind a consumable: a line, the details on hover */
+.rc-badge { position: relative; display: inline-flex; align-items: center; gap: .3rem; font-size: 11px; outline: none; cursor: help; }
+.rc-tip { position: absolute; left: 0; top: calc(100% + 4px); z-index: 70; width: max-content; max-width: 22rem; display: none; text-align: left; font-size: 13px; }
+.rc-badge:hover .rc-tip, .rc-badge:focus .rc-tip { display: block; }

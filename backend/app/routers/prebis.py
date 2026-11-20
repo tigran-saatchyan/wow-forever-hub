@@ -180,7 +180,7 @@ async def prebis(cid: int, user: CurrentUser, session: Session, lang: str = "ru"
             "summary": summaries(c, lang, eq, g, gear, t_hit, sum(h["full"] for h in hit_tal), slots),
             "buffs": sim_buffs(),
             "talents": g.get("talents"), "stats": g.get("stats"), "rotation": g.get("rotation"),
-            "consumables": [{**x, "ah": tradeable(x.get("bind"), ah["items"].get(x["id"]))} for x in g.get("consumables") or []],
+            "consumables": await consumables(c, s, g, lang, ah),
             "market": ah["configured"], "enchants": enchant_state(g, eq),
             "total": sum(r["count"] for r in slots if r["slot"] != "TWO_HAND")}
 
@@ -225,6 +225,44 @@ STAT_KEYS = {"sp": ("SPELL_POWER", "SPELL_DAMAGE_DONE"), "shadow": ("BONUS_STAT_
              "crit": ("CRIT_RATING", "CRIT_SPELL_RATING", "SPELL_CRIT_RATING"), "hit": bis.HIT_KEYS,
              "pen": ("SPELL_PENETRATION",), "int": ("INTELLECT",), "spi": ("SPIRIT",), "sta": ("STAMINA",),
              "mp5": ("MANA_REGENERATION",)}
+
+
+async def consumables(c, s: dict, g: dict, lang: str, ah: dict) -> list[dict]:
+    """The guide's consumables, each with its auction house state and, when a profession makes it, the recipe: the
+    profession and skill it needs, the character's skill and whether they know it, where to learn it (the vendors
+    of the character's side, by ForeverDB) and the reagents."""
+    from .. import craft, fdb_sources
+    from .craft import _namer, _reference
+
+    try:
+        ds = await _reference()
+    except Exception:  # noqa: BLE001 - the recipe reference is still being built
+        ds = None
+    item = _namer(ds, lang) if ds else None
+    profs = {pr.get("id"): pr for pr in (((c.profile or {}).get("professions") or {}).get(lang) or [])}
+    side = "alliance" if (s.get("faction") or "").upper() == "ALLIANCE" else "horde"
+    out = []
+    for x in g.get("consumables") or []:
+        row = {**x, "ah": tradeable(x.get("bind"), ah["items"].get(x["id"])), "recipe": None}
+        for pid, p in ((ds or {}).get("professions") or {}).items():
+            r = next((r for r in p["recipes"] if r.get("item") == x["id"]), None)
+            if not r:
+                continue
+            pr = profs.get(int(pid))
+            known = set((pr or {}).get("known") or [])
+            fdb = fdb_sources.learn(r.get("spell") or 0)
+            row["recipe"] = {
+                "profession": {"id": int(pid), "name": (p.get("name") or {}).get(lang) or (p.get("name") or {}).get("en")},
+                "name": r["name"].get(lang) or r["name"]["en"], "skill": craft.need(r)[0],
+                "have": pr.get("skill") if pr else None, "known": bool(pr) and (r["id"] in known or r["spell"] in known),
+                "source": r.get("source"), "recipeItem": item(r.get("recipeItem")) if item else None,
+                "learn": {"ways": fdb["ways"], "skill": fdb.get("skill"), "vendors": (fdb.get("vendors") or {}).get(side, [])[:3]}
+                if fdb else None,
+                "reagents": [{**(item(i) or {"id": i}), "count": n} for i, n in r.get("reagents") or []] if item else [],
+            }
+            break
+        out.append(row)
+    return out
 
 
 def tradeable(bind: int | None, ah: dict | None) -> dict | None:

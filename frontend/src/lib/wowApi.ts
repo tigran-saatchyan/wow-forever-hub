@@ -95,6 +95,14 @@ export interface PreBisItem {
   full: import("../pages/throne/Bis").BisItem | null; wornItem: import("../pages/throne/Bis").BisItem | null;
   ah?: AhState | null;
 }
+/** The recipe that makes a consumable, against the character: skill needed and theirs, known or not, where to learn it. */
+export interface ConsRecipe {
+  profession: { id: number; name: string }; name: string; skill: number; have: number | null; known: boolean;
+  source?: string | null; recipeItem: { id: number; name: string; q?: number } | null;
+  learn: { ways: string[]; skill: number | null; vendors: { npc: number; name: string; zone: string | null; x: number | null; y: number | null;
+    price: number | null; seen: boolean | null; costs: { name: string; amount: number }[] }[] } | null;
+  reagents: { id: number; name?: string; count: number }[];
+}
 /** An item on the chosen auction house: its latest price (none when no lot is up) and whether a list follows it. */
 export interface AhState { price: { min: number; median: number; quantity: number; ts: string } | null; tracked: boolean }
 export interface PreBis {
@@ -110,7 +118,7 @@ export interface PreBis {
   buffs?: SimBuff[];
   talents?: { ranks: Record<string, number>; swap: { from: number; to: number }; split: number[]; fromLevel: number };
   stats?: string[]; rotation?: { icon: string; spell: string; do: string }[];
-  consumables?: { id: number; group: string; req: number; ah?: AhState | null }[];
+  consumables?: { id: number; group: string; req: number; ah?: AhState | null; recipe?: ConsRecipe | null }[];
   market?: boolean;
   enchants?: { key: string; slot: string; alt: boolean; covered?: boolean; state: "ok" | "other" | "none"; have: string[];
     item: number | null; maker: string; value: number | null; itemName: string }[];

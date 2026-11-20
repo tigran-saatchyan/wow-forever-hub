@@ -1,6 +1,7 @@
 /** The pre-raid section's other tabs: the talent build against the character's, the stat priority and the
  *  rotation, the consumables, and the enchantments the character's gear still lacks. */
 import { AhChip } from "../../components/AhChip";
+import { RecipeBadge } from "./RecipeBadge";
 import { useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
@@ -120,15 +121,18 @@ export function ConsumablesPane({ d, level }: { d: PreBis; level?: number }) {
       <ul className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 26rem), 1fr))" }}>
         {(d.consumables || []).map((x) => (
           <li key={x.id} className="prebis-item">
-            <ItemHover id={x.id}>
-              <span tabIndex={0} className="inline-flex min-w-0 items-center gap-2.5">
-                <ItemIcon itemId={x.id} size={34} />
-                <span className="grid min-w-0 leading-tight">
-                  <span className="truncate text-[15px]">{t(`pr_c_${x.id}` as Key)}</span>
-                  <span className="truncate text-xs text-muted">{t(`pr_c_${x.id}_h` as Key)}</span>
+            <span className="grid min-w-0 gap-0.5">
+              <ItemHover id={x.id}>
+                <span tabIndex={0} className="inline-flex min-w-0 items-center gap-2.5">
+                  <ItemIcon itemId={x.id} size={34} />
+                  <span className="grid min-w-0 leading-tight">
+                    <span className="truncate text-[15px]">{t(`pr_c_${x.id}` as Key)}</span>
+                    <span className="truncate text-xs text-muted">{t(`pr_c_${x.id}_h` as Key)}</span>
+                  </span>
                 </span>
-              </span>
-            </ItemHover>
+              </ItemHover>
+              {x.recipe && <span className="pl-[44px]"><RecipeBadge r={x.recipe} /></span>}
+            </span>
             <span className={`ml-auto shrink-0 text-xs ${level != null && x.req > level ? "text-[#ffb070]" : "text-muted"}`}>
               {x.req ? t("pr_from_lvl", { n: x.req }) : ""}
             </span>

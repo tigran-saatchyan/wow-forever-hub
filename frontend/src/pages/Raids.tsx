@@ -12,9 +12,10 @@ import { ClassIcon } from "./Characters";
 import { ChainLink } from "./map/ChainPanel";
 import { useI18n, type Key } from "../lib/i18n";
 import { store } from "../lib/store";
-import { fullName, useCharacter, wowApi, type AhState, type Character } from "../lib/wowApi";
+import { fullName, useCharacter, wowApi, type AhState, type Character, type ConsRecipe } from "../lib/wowApi";
+import { RecipeBadge } from "./raids/RecipeBadge";
 import { AhChip } from "../components/AhChip";
-import { ItemIcon } from "../components/Wow";
+import { ItemHover, ItemIcon } from "../components/Wow";
 import { useTab } from "./characters/ArmoryTabs";
 import { PreRaid } from "./raids/PreRaid";
 
@@ -187,8 +188,8 @@ function PrepChar({ c, multi }: { c: Character; multi: boolean }) {
   const d = pre.data?.available ? pre.data : null;
   const fire = full?.stats?.[lang]?.fire_resistance;
   // what to have on you: the list's consumables when the class has one, then repairs and reagents
-  const manual: { k: string; id?: number; label: string; hint?: string; ah?: AhState | null }[] = [
-    ...(d?.consumables || []).map((x) => ({ k: `c:${x.id}`, id: x.id, label: t(`pr_c_${x.id}` as Key), hint: t(`pr_c_${x.id}_h` as Key), ah: x.ah })),
+  const manual: { k: string; id?: number; label: string; hint?: string; ah?: AhState | null; recipe?: ConsRecipe | null }[] = [
+    ...(d?.consumables || []).map((x) => ({ k: `c:${x.id}`, id: x.id, label: t(`pr_c_${x.id}` as Key), hint: t(`pr_c_${x.id}_h` as Key), ah: x.ah, recipe: x.recipe })),
     ...(d?.consumables?.length || pre.isLoading || pre.isError ? [] : [{ k: "rp_consum", label: t("rp_consum") }]),
     { k: "rp_repair", label: t("rp_repair") },
   ];
@@ -226,16 +227,23 @@ function PrepChar({ c, multi }: { c: Character; multi: boolean }) {
         </div>
         <ul className="grid gap-1.5" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 24rem), 1fr))" }}>
           {manual.map((x) => (
-            <li key={x.k} className={`cn-row ${ticks[x.k] ? "rp-done" : ""}`}>
+            <li key={x.k} className={`cn-row flex-wrap gap-y-0.5 ${ticks[x.k] ? "rp-done" : ""}`}>
               <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5">
                 <input type="checkbox" checked={!!ticks[x.k]} onChange={() => save({ ...ticks, [x.k]: !ticks[x.k] })} />
-                {x.id && <ItemIcon itemId={x.id} size={28} />}
-                <span className="grid min-w-0 leading-tight">
-                  <span className="truncate text-sm">{x.label}</span>
-                  {x.hint && <span className="truncate text-xs text-muted">{x.hint}</span>}
-                </span>
+                {x.id ? (
+                  <ItemHover id={x.id}>
+                    <span className="inline-flex min-w-0 items-center gap-2.5">
+                      <ItemIcon itemId={x.id} size={28} />
+                      <span className="grid min-w-0 leading-tight">
+                        <span className="truncate text-sm">{x.label}</span>
+                        {x.hint && <span className="truncate text-xs text-muted">{x.hint}</span>}
+                      </span>
+                    </span>
+                  </ItemHover>
+                ) : <span className="truncate text-sm">{x.label}</span>}
               </label>
               {d?.market && x.id && x.ah && <AhChip id={x.id} ah={x.ah} />}
+              {x.recipe && <span className="basis-full pl-[64px]"><RecipeBadge r={x.recipe} /></span>}
             </li>
           ))}
         </ul>
