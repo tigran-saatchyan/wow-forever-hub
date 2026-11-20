@@ -162,7 +162,7 @@ function Prep({ chars }: { chars: Character[] }) {
 
 function PrepChar({ c, multi }: { c: Character; multi: boolean }) {
   const { t, lang } = useI18n();
-  const pre = useQuery({ queryKey: ["prebis", c.id, lang], queryFn: () => wowApi.prebis(c.id, lang), staleTime: 5 * 60e3, retry: false });
+  const pre = useQuery({ queryKey: ["prebis", c.id, lang], queryFn: () => wowApi.prebis(c.id, lang), staleTime: 5 * 60e3, retry: 3, retryDelay: (n) => 2000 * (n + 1) });
   const full = useCharacter(c.id).data;
   const key = `raidPrep:${c.id}`;
   const [ticks, setTicks] = useState<Record<string, boolean>>(() => store.get<Record<string, boolean>>(key, {}));
@@ -172,12 +172,12 @@ function PrepChar({ c, multi }: { c: Character; multi: boolean }) {
   // what to have on you: the list's consumables when the class has one, then repairs and reagents
   const manual: { k: string; id?: number; label: string; hint?: string; ah?: AhState | null }[] = [
     ...(d?.consumables || []).map((x) => ({ k: `c:${x.id}`, id: x.id, label: t(`pr_c_${x.id}` as Key), hint: t(`pr_c_${x.id}_h` as Key), ah: x.ah })),
-    ...(d?.consumables?.length ? [] : [{ k: "rp_consum", label: t("rp_consum") }]),
+    ...(d?.consumables?.length || pre.isLoading || pre.isError ? [] : [{ k: "rp_consum", label: t("rp_consum") }]),
     { k: "rp_repair", label: t("rp_repair") },
   ];
   const done = manual.filter((x) => ticks[x.k]).length;
   return (
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
+    <div className="grid gap-4 xl:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
       <div>
         <div className="prebis-glabel flex items-center gap-2">
           {multi && <ClassIcon classId={c.summary?.[lang]?.classId ?? null} size={16} />}{t("rp_auto")}{multi ? ` — ${fullName(c, lang)}` : ""}
@@ -190,7 +190,9 @@ function PrepChar({ c, multi }: { c: Character; multi: boolean }) {
               <span className={`text-sm tabular-nums ${d.owned >= d.total ? "text-good" : "text-[#ffb070]"}`}>
                 {d.owned >= d.total ? `✓ ${d.owned}/${d.total}` : t("rp_have", { n: d.owned, t: d.total })}
               </span>
-            </> : <span className="text-xs text-muted">{t("rp_gear_none")}</span>}
+            </> : pre.isLoading ? <span className="text-xs text-muted">…</span>
+              : pre.isError ? <button className="whitespace-nowrap text-xs text-[#ffb070] underline" onClick={() => pre.refetch()}>{t("rp_gear_err")}</button>
+              : <span className="whitespace-nowrap text-xs text-muted" title={t("rp_gear_none_h")}>{t("rp_gear_none")}</span>}
           </li>
           <li className="cn-row">
             <span className="min-w-0 flex-1 text-sm">{t("rp_fire")}</span>

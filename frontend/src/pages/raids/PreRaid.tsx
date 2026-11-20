@@ -25,12 +25,19 @@ const Q = ["POOR", "COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY"];
 export function PreRaid({ char }: { char: Character | null }) {
   const { t, lang } = useI18n();
   const q = useQuery({
-    queryKey: ["prebis", char?.id, lang], enabled: !!char, queryFn: () => wowApi.prebis(char!.id, lang), staleTime: 5 * 60e3, retry: false,
+    queryKey: ["prebis", char?.id, lang], enabled: !!char, queryFn: () => wowApi.prebis(char!.id, lang), staleTime: 5 * 60e3, retry: 3, retryDelay: (n) => 2000 * (n + 1),
   });
   const [open, setOpen] = useState(() => store.get("prebisOpen", true));
   const [tab, setTab] = useState<string>(() => store.get("prebisTab", "items"));
   const [sim, setSim] = useState(false);
   const [cfg, setCfg] = useSimCfg();
+  // a failed load (the server restarting on a deploy) says so instead of hiding the section
+  if (char && q.isError) return (
+    <section className="panel flex flex-wrap items-center gap-3 p-4 text-sm">
+      <span className="text-[#ffb070]">{t("pr_load_err")}</span>
+      <button className="btn" onClick={() => q.refetch()}>{t("pr_retry")}</button>
+    </section>
+  );
   if (!char || !q.data?.available) return null;
   const d = q.data;
   const cur = { c: char };
