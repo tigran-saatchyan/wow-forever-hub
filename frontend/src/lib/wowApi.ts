@@ -85,6 +85,19 @@ export interface Instances {
   available: boolean; status: number | null; level: number; spec: string | null; visited: number | null; deaths: number | null;
   fdb: boolean; rows: InstRow[];
 }
+export interface PreBisItem {
+  id: number; name: string; q: number; ilvl: number | null; req: number | null; bind: number | null; alt: boolean;
+  note: string | null; hit: number; worn: boolean; marked: boolean; owned: boolean; author: boolean; focus: boolean;
+  src: { kind: string; boss?: string; bossName?: string; bosses?: string[]; bossNames?: string[]; dungeon?: number | null;
+    dungeonName?: string; part?: string | null; note?: string | null; profession?: string; currency?: string; auction?: boolean };
+  full: import("../pages/throne/Bis").BisItem | null; wornItem: import("../pages/throne/Bis").BisItem | null;
+}
+export interface PreBis {
+  available: boolean; class?: number; spec: string; level?: number; owned: number; total: number; author: number[];
+  hit: { cap: number; talent: number; talents: string[]; gear: number; total: number; planned: number; need: number;
+    talentList: { id: number; name: string; en: string; tab: number; max: number; full: number; icon: string; rank: number }[] };
+  slots: { slot: string; count: number; center: PreBisItem[]; damage: PreBisItem[]; hit: PreBisItem[] }[];
+}
 export interface AhList { id: number; name: string; items: WatchCard[]; pinned?: boolean }
 export interface BisSale {
   status: string; level?: number; spec?: string; specs?: string[]; customSet?: boolean; checked?: number; configured?: boolean;
@@ -147,6 +160,9 @@ export const wowApi = {
   bisCompare: (cid: number, ids: number[], lang: Lang) =>
     req<{ id: number; gear: boolean; slot?: string; full?: import("../pages/throne/Bis").BisItem | null;
       worn?: import("../pages/throne/Bis").BisItem | null }[]>(`/api/bis/${cid}/compare?ids=${ids.join(",")}&lang=${lang}`),
+  prebis: (cid: number, lang: Lang) => req<PreBis>(`/api/prebis/${cid}?lang=${lang}`),
+  prebisOwned: (cid: number, item_id: number, owned: boolean) =>
+    req<{ owned: number[] }>(`/api/prebis/${cid}/owned`, { method: "PUT", body: JSON.stringify({ item_id, owned }) }),
   instances: (cid: number, lang: Lang) => req<Instances>(`/api/characters/${cid}/instances?lang=${lang}`),
   lists: (lang: Lang) => req<AhList[]>(`/api/market/lists?lang=${lang}`),
   addList: (name: string) => req<AhList>("/api/market/lists", { method: "POST", body: JSON.stringify({ name }) }),

@@ -147,3 +147,32 @@ def spell_hit(cls: int, specs: list[str], spec: str, level: int, rows: list[dict
             total += float(m.groups()[-1])
             names.append(local_name(cls, name, "ru"))
     return total, names
+
+
+def spell_hit_taken(cls: int, rows: list[dict] | None) -> tuple[float, list[str], float]:
+    """Spell hit from the talents the character really has (their ranks), the names, and what full ranks of those
+    talents would give — to tell "Shadow Focus 2/5: 3 % more from three ranks"."""
+    ranks, _ = _taken(cls, rows or [])
+    flat = [t for x in tabs(cls) for t in x["talents"]]
+    have, names = 0.0, []
+    for i, rk in ranks.items():
+        t = flat[i]
+        txt = re.sub(r"\s+", " ", t["ranks"][rk - 1]) if t["ranks"] else ""
+        m = HIT_TEXT[1].search(txt) or HIT_TEXT[0].search(txt) or HIT_TEXT[2].search(txt)
+        if m:
+            have += float(m.groups()[-1])
+            names.append(local_name(cls, t["name"], "ru"))
+    return have, names, 0.0
+
+
+def hit_talents(cls: int, lang: str = "ru") -> list[dict]:
+    """Every talent of the class that gives spell hit: name, tree, ranks and hit at full rank."""
+    out = []
+    for ti, tab in enumerate(tabs(cls)):
+        for t in tab["talents"]:
+            txt = re.sub(r"\s+", " ", t["ranks"][-1]) if t["ranks"] else ""
+            m = HIT_TEXT[1].search(txt) or HIT_TEXT[0].search(txt) or HIT_TEXT[2].search(txt)
+            if m:
+                out.append({"id": t["id"], "name": local_name(cls, t["name"], lang), "en": t["name"], "tab": ti,
+                            "max": t["max"], "full": float(m.groups()[-1]), "icon": t.get("icon")})
+    return out

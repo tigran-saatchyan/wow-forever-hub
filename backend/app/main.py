@@ -13,6 +13,7 @@ from .db import init_db
 from .routers import bnet as bnet_routes
 from .routers import bis as bis_routes
 from .routers import fdb as fdb_routes
+from .routers import prebis as prebis_routes
 from .routers import builds, characters, collections, craft, items, live, market, media, professions, quests, sources
 
 
@@ -68,6 +69,7 @@ def create_app() -> FastAPI:
     app.include_router(craft.router)
     app.include_router(bis_routes.router)
     app.include_router(fdb_routes.router)
+    app.include_router(prebis_routes.router)
 
     @app.get("/api/health")
     async def health():

@@ -12,6 +12,7 @@ import { useI18n, type Key } from "../lib/i18n";
 import { store } from "../lib/store";
 import { fullName, useCharacters, type Character } from "../lib/wowApi";
 import { useTab } from "./characters/ArmoryTabs";
+import { PreRaid } from "./raids/PreRaid";
 
 const OPENS = Date.UTC(2026, 11, 9, 4, 0); // 9 December, the weekly reset in Europe (Wednesday morning)
 
@@ -57,6 +58,7 @@ export function Raids() {
         <p className="mt-3 text-xs text-muted">{t("rd_note")}</p>
       </motion.section>
 
+      <PreRaid chars={chars} />
       <Matrix chars={chars} />
       <Prep chars={chars} />
       {!chars.length && <p className="text-muted">{t("tr_none")}</p>}

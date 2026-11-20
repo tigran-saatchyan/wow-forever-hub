@@ -224,3 +224,43 @@ def test_bis_compare_any_items(client):
             await s.delete(await s.get(Character, cid))
             await s.commit()
     asyncio.run(clean())
+
+
+def test_prebis_for_a_shadow_priest_only(client):
+    import asyncio
+
+    from app.db import Character, SessionLocal, User
+    from sqlalchemy import select
+
+    login(client)
+    me = client.get("/api/auth/me").json()
+
+    async def seed():
+        async with SessionLocal() as s:
+            uid = (await s.execute(select(User.id).where(User.email == me["email"]))).scalar_one()
+            c = Character(user_id=uid, region="eu", slug="p", name="P", profile={
+                "summary": {"en": {"classId": 5, "level": 60, "faction": "HORDE"}},
+                "talents": [{"name": "Shadow Focus", "rank": 3}, {"name": "Shadowform", "rank": 1}, {"name": "Mind Flay", "rank": 1}],
+                "equipment": {"ru": [{"slot": "HEAD", "id": 22267, "statv": {"HIT_RATING": 10, "SPELL_POWER": 33}}]}})
+            s.add(c)
+            await s.commit()
+            return c.id
+    cid = asyncio.run(seed())
+    d = client.get(f"/api/prebis/{cid}").json()
+    assert d["available"] and d["spec"] == "shadow" and d["total"] == 17
+    assert d["hit"]["talent"] == 3 and d["hit"]["gear"] == 1 and d["hit"]["talentList"][0]["rank"] == 3
+    head = d["slots"][0]["center"][0]
+    assert head["id"] == 22267 and head["worn"] and head["owned"] and not head["focus"]
+    assert client.put(f"/api/prebis/{cid}/owned", json={"item_id": 12103, "owned": True}).json() == {"owned": [12103]}
+    d = client.get(f"/api/prebis/{cid}").json()
+    neck = d["slots"][1]
+    assert any(x["marked"] for x in neck["hit"]) and not any(x["focus"] for k in ("center", "damage", "hit") for x in neck[k])
+    assert d["hit"]["planned"] == round(3 + 1 + 1.3, 2)
+    client.put(f"/api/bis/{cid}/spec", json={"spec": "holy"})
+    assert client.get(f"/api/prebis/{cid}").json()["available"] is False  # not for another specialization
+
+    async def clean():
+        async with SessionLocal() as s:
+            await s.delete(await s.get(Character, cid))
+            await s.commit()
+    asyncio.run(clean())

@@ -1,0 +1,574 @@
+{
+ "class": 5,
+ "spec": "shadow",
+ "hitCap": 17,
+ "slots": [
+  {
+   "slot": "HEAD",
+   "center": [
+    {
+     "id": 22267,
+     "src": {
+      "kind": "boss",
+      "boss": "General Drakkisath",
+      "dungeon": 229,
+      "part": "upper",
+      "note": null
+     },
+     "alt": false,
+     "note": null
+    }
+   ]
+  },
+  {
+   "slot": "NECK",
+   "damage": [
+    {
+     "id": 18691,
+     "src": {
+      "kind": "boss",
+      "boss": "Vectus",
+      "dungeon": 289,
+      "part": null,
+      "note": null
+     },
+     "alt": false,
+     "note": null
+    }
+   ],
+   "hit": [
+    {
+     "id": 12103,
+     "src": {
+      "kind": "boss",
+      "boss": "Balnazzar",
+      "dungeon": 329,
+      "part": "live",
+      "note": null
+     },
+     "alt": false,
+     "note": null
+    },
+    {
+     "id": 22403,
+     "src": {
+      "kind": "boss",
+      "boss": "Cannon Master Willey",
+      "dungeon": 329,
+      "part": "live",
+      "note": null
+     },
+     "alt": false,
+     "note": null
+    }
+   ]
+  },
+  {
+   "slot": "SHOULDER",
+   "damage": [
+    {
+     "id": 18681,
+     "src": {
+      "kind": "bosses",
+      "dungeon": 289,
+      "bosses": [
+       "Instructor Malicia",
+       "Doctor Theolen Krastinov",
+       "Lorekeeper Polkelt",
+       "The Ravenian",
+       "Lord Alexei Barov",
+       "Lady Illucia Barov"
+      ]
+     },
+     "alt": false,
+     "note": null
+    }
+   ],
+   "hit": [
+    {
+     "id": 13374,
+     "src": {
+      "kind": "boss",
+      "boss": "Ramstein the Gorger",
+      "dungeon": 329,
+      "part": "undead",
+      "note": null
+     },
+     "alt": false,
+     "note": null
+    }
+   ]
+  },
+  {
+   "slot": "BACK",
+   "center": [
+    {
+     "id": 272411,
+     "src": {
+      "kind": "vendor",
+      "currency": "Tarnished Undermine Real",
+      "note": null
+     },
+     "alt": false,
+     "note": null
+    }
+   ]
+  },
+  {
+   "slot": "CHEST",
+   "center": [
+    {
+     "id": 280057,
+     "src": {
+      "kind": "boss",
+      "boss": "Impaan the Imprisoner",
+      "dungeon": 2974,
+      "part": null,
+      "note": null
+     },
+     "alt": false,
+     "note": null
+    }
+   ],
+   "damage": [
+    {
+     "id": 14136,
+     "src": {
+      "kind": "craft",
+      "profession": "tailoring",
+      "auction": true,
+      "note": null
+     },
+     "alt": true,
+     "note": "damage_only"
+    }
+   ]
+  },
+  {
+   "slot": "WRIST",
+   "center": [
+    {
+     "id": 18497,
+     "src": {
+      "kind": "bosses",
+      "dungeon": 429,
+      "part": "north",
+      "bosses": [
+       "Guard Mol'dar",
+       "Guard Fengus",
+       "Guard Slip'kik"
+      ]
+     },
+     "alt": false,
+     "note": "no_hit_wrists"
+    }
+   ]
+  },
+  {
+   "slot": "HANDS",
+   "damage": [
+    {
+     "id": 18407,
+     "src": {
+      "kind": "craft",
+      "profession": "tailoring",
+      "auction": true,
+      "note": "dm_tribute_recipe"
+     },
+     "alt": false,
+     "note": null
+    },
+    {
+     "id": 13253,
+     "src": {
+      "kind": "boss",
+      "boss": "Quartermaster Zigris",
+      "dungeon": 229,
+      "part": "lower",
+      "note": null
+     },
+     "alt": true,
+     "note": null
+    }
+   ],
+   "hit": [
+    {
+     "id": 276395,
+     "src": {
+      "kind": "boss",
+      "boss": "Ezra Grimm",
+      "dungeon": 329,
+      "part": "live",
+      "note": null
+     },
+     "alt": false,
+     "note": null
+    }
+   ]
+  },
+  {
+   "slot": "WAIST",
+   "damage": [
+    {
+     "id": 18405,
+     "src": {
+      "kind": "craft",
+      "profession": "tailoring",
+      "auction": true,
+      "note": "dm_tribute_recipe"
+     },
+     "alt": false,
+     "note": null
+    }
+   ],
+   "hit": [
+    {
+     "id": 11662,
+     "src": {
+      "kind": "boss",
+      "boss": "Ok'thor the Breaker",
+      "dungeon": 230,
+      "part": null,
+      "note": "arena"
+     },
+     "alt": false,
+     "note": null
+    }
+   ]
+  },
+  {
+   "slot": "LEGS",
+   "damage": [
+    {
+     "id": 22342,
+     "src": {
+      "kind": "boss",
+      "boss": "Lord Valthalak",
+      "dungeon": 229,
+      "part": "upper",
+      "note": "summoned"
+     },
+     "alt": false,
+     "note": null
+    },
+    {
+     "id": 13170,
+     "src": {
+      "kind": "boss",
+      "boss": "Highlord Omokk",
+      "dungeon": 229,
+      "part": "lower",
+      "note": null
+     },
+     "alt": true,
+     "note": null
+    }
+   ],
+   "hit": [
+    {
+     "id": 16687,
+     "src": {
+      "kind": "bosses",
+      "dungeon": null,
+      "bosses": [],
+      "note": "various"
+     },
+     "alt": false,
+     "note": null
+    }
+   ]
+  },
+  {
+   "slot": "FEET",
+   "damage": [
+    {
+     "id": 11822,
+     "src": {
+      "kind": "boss",
+      "boss": "Golem Lord Argelmach",
+      "dungeon": 230,
+      "part": null,
+      "note": null
+     },
+     "alt": false,
+     "note": null
+    }
+   ],
+   "hit": [
+    {
+     "id": 22231,
+     "src": {
+      "kind": "boss",
+      "boss": "Warmaster Voone",
+      "dungeon": 229,
+      "part": "lower",
+      "note": null
+     },
+     "alt": false,
+     "note": null
+    }
+   ]
+  },
+  {
+   "slot": "FINGER",
+   "count": 2,
+   "center": [
+    {
+     "id": 22339,
+     "src": {
+      "kind": "boss",
+      "boss": "Lord Valthalak",
+      "dungeon": 229,
+      "part": "upper",
+      "note": "summoned"
+     },
+     "alt": false,
+     "note": null
+    }
+   ],
+   "damage": [
+    {
+     "id": 22433,
+     "src": {
+      "kind": "boss",
+      "boss": "Darkmaster Gandling",
+      "dungeon": 289,
+      "part": null,
+      "note": null
+     },
+     "alt": false,
+     "note": null
+    }
+   ],
+   "hit": [
+    {
+     "id": 272406,
+     "src": {
+      "kind": "vendor",
+      "currency": "Tarnished Undermine Real",
+      "note": null
+     },
+     "alt": false,
+     "note": null
+    }
+   ]
+  },
+  {
+   "slot": "TRINKET",
+   "count": 2,
+   "damage": [
+    {
+     "id": 12930,
+     "src": {
+      "kind": "boss",
+      "boss": "Jed Runewatcher",
+      "dungeon": 229,
+      "part": "upper",
+      "note": "rare"
+     },
+     "alt": false,
+     "note": null
+    },
+    {
+     "id": 272438,
+     "src": {
+      "kind": "vendor",
+      "currency": "Tarnished Undermine Real",
+      "note": "one_undermine_trinket"
+     },
+     "alt": false,
+     "note": null
+    }
+   ],
+   "hit": [
+    {
+     "id": 13213,
+     "src": {
+      "kind": "boss",
+      "boss": "Mother Smolderweb",
+      "dungeon": 229,
+      "part": "lower",
+      "note": null
+     },
+     "alt": false,
+     "note": null
+    },
+    {
+     "id": 13382,
+     "src": {
+      "kind": "boss",
+      "boss": "Cannon Master Willey",
+      "dungeon": 329,
+      "part": "live",
+      "note": null
+     },
+     "alt": false,
+     "note": null
+    }
+   ]
+  },
+  {
+   "slot": "MAIN_HAND",
+   "damage": [
+    {
+     "id": 13349,
+     "src": {
+      "kind": "boss",
+      "boss": "Baron Rivendare",
+      "dungeon": 329,
+      "part": "undead",
+      "note": null
+     },
+     "alt": false,
+     "note": null
+    },
+    {
+     "id": 18372,
+     "src": {
+      "kind": "boss",
+      "boss": "Immol'thar",
+      "dungeon": 429,
+      "part": "west",
+      "note": null
+     },
+     "alt": false,
+     "note": null
+    },
+    {
+     "id": 13964,
+     "src": {
+      "kind": "boss",
+      "boss": "Darkmaster Gandling",
+      "dungeon": 289,
+      "part": null,
+      "note": null
+     },
+     "alt": true,
+     "note": null
+    }
+   ],
+   "hit": [
+    {
+     "id": 18048,
+     "src": {
+      "kind": "boss",
+      "boss": "Goraluk Anvilcrack",
+      "dungeon": 229,
+      "part": "upper",
+      "note": null
+     },
+     "alt": false,
+     "note": null
+    }
+   ]
+  },
+  {
+   "slot": "OFF_HAND",
+   "damage": [
+    {
+     "id": 18316,
+     "src": {
+      "kind": "boss",
+      "boss": "Pusillin",
+      "dungeon": 429,
+      "part": "east",
+      "note": "runs"
+     },
+     "alt": false,
+     "note": null
+    }
+   ],
+   "hit": [
+    {
+     "id": 13524,
+     "src": {
+      "kind": "boss",
+      "boss": "Maleki the Pallid",
+      "dungeon": 329,
+      "part": "undead",
+      "note": null
+     },
+     "alt": false,
+     "note": null
+    }
+   ]
+  },
+  {
+   "slot": "TWO_HAND",
+   "center": [
+    {
+     "id": 22335,
+     "src": {
+      "kind": "boss",
+      "boss": "Lord Valthalak",
+      "dungeon": 229,
+      "part": "upper",
+      "note": "summoned"
+     },
+     "alt": false,
+     "note": null
+    }
+   ]
+  },
+  {
+   "slot": "RANGED",
+   "damage": [
+    {
+     "id": 13396,
+     "src": {
+      "kind": "boss",
+      "boss": "Skul",
+      "dungeon": 329,
+      "part": "live",
+      "note": "rare"
+     },
+     "alt": false,
+     "note": null
+    },
+    {
+     "id": 13938,
+     "src": {
+      "kind": "boss",
+      "boss": "Darkmaster Gandling",
+      "dungeon": 289,
+      "part": null,
+      "note": null
+     },
+     "alt": true,
+     "note": null
+    }
+   ],
+   "hit": [
+    {
+     "id": 287036,
+     "src": {
+      "kind": "trash",
+      "dungeon": 2974,
+      "auction": true
+     },
+     "alt": false,
+     "note": null
+    }
+   ]
+  }
+ ],
+ "author": [
+  22267,
+  12103,
+  13374,
+  272411,
+  280057,
+  18497,
+  18407,
+  18405,
+  22342,
+  22231,
+  272406,
+  22339,
+  272438,
+  13213,
+  18048,
+  13524,
+  287036
+ ]
+}
