@@ -319,6 +319,9 @@ _STATS = [
     ("spirit", "e"), ("armor", "e"), ("attack_power", "n"), ("melee_crit", "p"), ("ranged_crit", "p"),
     ("spell_crit", "p"), ("spell_power", "n"), ("mana_regen", "n"), ("dodge", "p"), ("parry", "p"), ("block", "p"),
     ("defense", "e"), ("melee_haste", "p"), ("spell_haste", "p"), ("versatility", "n"), ("mastery", "p"),
+    # classic's sheet carries the resistances (fire for Onyxia and Molten Core)
+    ("fire_resistance", "e"), ("frost_resistance", "e"), ("nature_resistance", "e"), ("shadow_resistance", "e"),
+    ("arcane_resistance", "e"), ("holy_resistance", "e"),
 ]
 
 

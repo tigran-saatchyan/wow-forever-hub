@@ -1708,3 +1708,7 @@ button.order-line:hover { @apply text-gold; }
 .ah-chip { display: inline-flex; align-items: center; gap: .3rem; padding: .1rem .45rem; font-size: 12px; border: 1px dashed rgb(var(--edge)); border-radius: .3rem; white-space: nowrap; }
 .ah-chip:hover { border-color: rgb(var(--gold) / .6); }
 .ah-chip.on { border-style: solid; border-color: rgb(var(--gold) / .45); color: #ffd100; background: rgb(var(--accent) / .1); }
+.cn-row.rp-done { background: rgb(64 192 64 / .08); }
+.cn-row.rp-done .text-sm { color: rgb(var(--muted)); text-decoration: line-through; text-decoration-color: rgb(64 192 64 / .6); }
+.cn-row.rp-done { background: rgb(64 192 64 / .08); }
+.cn-row.rp-done .text-sm { color: rgb(var(--muted)); text-decoration: line-through; text-decoration-color: rgb(64 192 64 / .6); }

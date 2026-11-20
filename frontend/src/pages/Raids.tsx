@@ -4,7 +4,7 @@
  * says are done. The chains themselves are walked on the map page.
  */
 import { useActiveChar } from "../lib/activeChar";
-import { useQueries } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { ORDERED, STAGES, fits, progress, type Chain } from "../lib/chains";
@@ -12,10 +12,11 @@ import { ClassIcon } from "./Characters";
 import { ChainLink } from "./map/ChainPanel";
 import { useI18n, type Key } from "../lib/i18n";
 import { store } from "../lib/store";
-import { fullName, wowApi, type Character } from "../lib/wowApi";
+import { fullName, useCharacter, wowApi, type AhState, type Character } from "../lib/wowApi";
+import { AhChip } from "../components/AhChip";
+import { ItemIcon } from "../components/Wow";
 import { useTab } from "./characters/ArmoryTabs";
 import { PreRaid } from "./raids/PreRaid";
-import { ConsumablesPane } from "./raids/PreRaidTabs";
 
 const OPENS = Date.UTC(2026, 11, 9, 4, 0); // 9 December, the weekly reset in Europe (Wednesday morning)
 
@@ -24,8 +25,6 @@ const RAIDS: { key: string; size: number; bosses: number | null; attune: boolean
   { key: "hyjal", size: 20, bosses: 13, attune: false },
   { key: "onyxia", size: 40, bosses: null, attune: true },
 ];
-
-const PREP = ["rp_fire", "rp_consum", "rp_gear", "rp_repair"] as const;
 
 function useCountdown() {
   const [now, setNow] = useState(Date.now());
@@ -147,57 +146,81 @@ function Cell({ c, ch, multi }: { c: Chain; ch: Character; multi: boolean }) {
   );
 }
 
-/** Getting ready for Onyxia: a short checklist per character (kept in this browser), the consumables beside it. */
+/** Getting ready for the raid, per character: what the hub checks by itself (the pre-raid gear against its list,
+ * the fire resistance on the character sheet), and the shopping list to tick before the raid — each consumable on
+ * its own, then repairs and reagents (ticks kept in this browser, cleared with one button for the next raid). */
 function Prep({ chars }: { chars: Character[] }) {
-  const { t, lang } = useI18n();
-  const [prep, setPrep] = useState<Record<number, Record<string, boolean>>>(() =>
-    Object.fromEntries(chars.map((c) => [c.id, store.get<Record<string, boolean>>(`raidPrep:${c.id}`, {})])));
+  const { t } = useI18n();
   if (!chars.length) return null;
-  const multi = chars.length > 1;
-  const toggle = (id: number, k: string) => {
-    const v = { ...(prep[id] || {}), [k]: !(prep[id] || {})[k] };
-    setPrep({ ...prep, [id]: v });
-    store.set(`raidPrep:${id}`, v);
-  };
   return (
     <motion.section className="panel p-4" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
       <h2 className="panel-title">{t("rd_prep")}</h2>
-      <div className="mt-3 grid gap-4 xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
-        <ul className="space-y-1.5">
-          {PREP.map((k) => (
-            <li key={k} className="cn-row">
-              <span className="min-w-0 flex-1 text-sm">{t(k)}</span>
-              <span className="flex shrink-0 gap-2">
-                {chars.map((c) => (
-                  <label key={c.id} className="flex cursor-pointer items-center gap-1" title={fullName(c, lang)}>
-                    {multi && <ClassIcon classId={c.summary?.[lang]?.classId ?? null} size={14} />}
-                    <input type="checkbox" checked={!!prep[c.id]?.[k]} onChange={() => toggle(c.id, k)} />
-                  </label>
-                ))}
-              </span>
-            </li>
-          ))}
-        </ul>
-        <PrepConsumables chars={chars} />
-      </div>
+      <div className="mt-3 space-y-4">{chars.map((c) => <PrepChar key={c.id} c={c} multi={chars.length > 1} />)}</div>
     </motion.section>
   );
 }
 
-/** The consumables of the pre-raid list, for the characters that have one (cached with the section above). */
-function PrepConsumables({ chars }: { chars: Character[] }) {
+function PrepChar({ c, multi }: { c: Character; multi: boolean }) {
   const { t, lang } = useI18n();
-  const qs = useQueries({ queries: chars.map((c) => ({ queryKey: ["prebis", c.id, lang], queryFn: () => wowApi.prebis(c.id, lang), staleTime: 5 * 60e3, retry: false })) });
-  const fit = chars.map((c, i) => ({ c, d: qs[i].data })).filter((x) => x.d?.available && x.d.consumables?.length);
-  if (!fit.length) return null;
+  const pre = useQuery({ queryKey: ["prebis", c.id, lang], queryFn: () => wowApi.prebis(c.id, lang), staleTime: 5 * 60e3, retry: false });
+  const full = useCharacter(c.id).data;
+  const key = `raidPrep:${c.id}`;
+  const [ticks, setTicks] = useState<Record<string, boolean>>(() => store.get<Record<string, boolean>>(key, {}));
+  const save = (v: Record<string, boolean>) => (setTicks(v), store.set(key, v));
+  const d = pre.data?.available ? pre.data : null;
+  const fire = full?.stats?.[lang]?.fire_resistance;
+  // what to have on you: the list's consumables when the class has one, then repairs and reagents
+  const manual: { k: string; id?: number; label: string; hint?: string; ah?: AhState | null }[] = [
+    ...(d?.consumables || []).map((x) => ({ k: `c:${x.id}`, id: x.id, label: t(`pr_c_${x.id}` as Key), hint: t(`pr_c_${x.id}_h` as Key), ah: x.ah })),
+    ...(d?.consumables?.length ? [] : [{ k: "rp_consum", label: t("rp_consum") }]),
+    { k: "rp_repair", label: t("rp_repair") },
+  ];
+  const done = manual.filter((x) => ticks[x.k]).length;
   return (
-    <div className="space-y-3">
-      {fit.map(({ c, d }) => (
-        <div key={c.id}>
-          <div className="prebis-glabel">{t("pr_tab_consumables")} — {fullName(c, lang)}</div>
-          <ConsumablesPane d={d!} level={d!.level} />
+    <div className="grid gap-4 xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
+      <div>
+        <div className="prebis-glabel flex items-center gap-2">
+          {multi && <ClassIcon classId={c.summary?.[lang]?.classId ?? null} size={16} />}{t("rp_auto")}{multi ? ` — ${fullName(c, lang)}` : ""}
         </div>
-      ))}
+        <ul className="space-y-1.5">
+          <li className="cn-row">
+            <span className="min-w-0 flex-1 text-sm">{t("rp_gear")}</span>
+            {d ? <>
+              <span className="cn-bar"><span style={{ width: `${d.total ? (d.owned / d.total) * 100 : 0}%` }} /></span>
+              <span className={`text-sm tabular-nums ${d.owned >= d.total ? "text-good" : "text-[#ffb070]"}`}>
+                {d.owned >= d.total ? `✓ ${d.owned}/${d.total}` : t("rp_have", { n: d.owned, t: d.total })}
+              </span>
+            </> : <span className="text-xs text-muted">{t("rp_gear_none")}</span>}
+          </li>
+          <li className="cn-row">
+            <span className="min-w-0 flex-1 text-sm">{t("rp_fire")}</span>
+            <span className="text-sm tabular-nums">{typeof fire === "number" ? fire : <span className="whitespace-nowrap text-xs text-muted" title={t("rp_fire_none_h")}>{t("rp_fire_none")}</span>}</span>
+          </li>
+        </ul>
+        {d && <p className="mt-1.5 text-xs text-muted">{t("rp_auto_h")}</p>}
+      </div>
+      <div>
+        <div className="prebis-glabel flex items-center gap-2">
+          {t("rp_manual")}
+          <span className={done === manual.length ? "text-good" : "text-muted"}>{done}/{manual.length}</span>
+          {done > 0 && <button className="btn ml-auto py-0.5 text-xs" onClick={() => save({})}>{t("rp_reset")}</button>}
+        </div>
+        <ul className="grid gap-1.5" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 24rem), 1fr))" }}>
+          {manual.map((x) => (
+            <li key={x.k} className={`cn-row ${ticks[x.k] ? "rp-done" : ""}`}>
+              <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5">
+                <input type="checkbox" checked={!!ticks[x.k]} onChange={() => save({ ...ticks, [x.k]: !ticks[x.k] })} />
+                {x.id && <ItemIcon itemId={x.id} size={28} />}
+                <span className="grid min-w-0 leading-tight">
+                  <span className="truncate text-sm">{x.label}</span>
+                  {x.hint && <span className="truncate text-xs text-muted">{x.hint}</span>}
+                </span>
+              </label>
+              {d?.market && x.id && x.ah && <AhChip id={x.id} ah={x.ah} />}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
