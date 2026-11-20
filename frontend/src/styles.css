@@ -1712,3 +1712,9 @@ button.order-line:hover { @apply text-gold; }
 .cn-row.rp-done .text-sm { color: rgb(var(--muted)); text-decoration: line-through; text-decoration-color: rgb(64 192 64 / .6); }
 .cn-row.rp-done { background: rgb(64 192 64 / .08); }
 .cn-row.rp-done .text-sm { color: rgb(var(--muted)); text-decoration: line-through; text-decoration-color: rgb(64 192 64 / .6); }
+
+/* the pre-raid section folded: its summary in the title row; the section sits above the next ones so the
+   simulation's settings open over them, not under */
+.prebis { position: relative; z-index: 5; }
+.prebis-fold-chip { padding: .15rem .55rem; border: 1px solid rgb(var(--edge)); border-radius: .35rem; background: rgb(var(--bg) / .4); white-space: nowrap; }
+button.prebis-fold-chip:hover { border-color: rgb(var(--gold) / .5); }

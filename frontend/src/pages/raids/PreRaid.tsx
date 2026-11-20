@@ -51,9 +51,11 @@ export function PreRaid({ char }: { char: Character | null }) {
           <h2 className="font-display text-xl text-gold">{t(`pr_title_${d.spec}` as Key)}</h2>
         </button>
         <span className="text-sm text-muted">{fullName(cur.c, lang)}</span>
-        <span className="ml-auto text-sm text-muted">{t("pr_have", { n: d.owned, t: d.total })}</span>
-        <button className={sim ? "btn-primary" : "btn"} onClick={() => setSim(!sim)} title={t("pr_sim_h")}>{t(sim ? "pr_sim_off" : "pr_sim")}</button>
-        <SimSettings d={d} cfg={cfg} set={(c) => (setCfg(c), setSim(true))} />
+        {open ? <>
+          <span className="ml-auto text-sm text-muted">{t("pr_have", { n: d.owned, t: d.total })}</span>
+          <button className={sim ? "btn-primary" : "btn"} onClick={() => setSim(!sim)} title={t("pr_sim_h")}>{t(sim ? "pr_sim_off" : "pr_sim")}</button>
+          <SimSettings d={d} cfg={cfg} set={(c) => (setCfg(c), setSim(true))} />
+        </> : <Folded d={d} open={toggle} />}
       </div>
       {open && (
         <div className="mt-4 space-y-4">
@@ -79,6 +81,30 @@ export function PreRaid({ char }: { char: Character | null }) {
         </div>
       )}
     </section>
+  );
+}
+
+/** The section folded: what matters at a glance — hit against the cap, the list's items had, Shadow damage, the
+ * enchantments missing, and the next items to go for (a click opens the section). */
+function Folded({ d, open }: { d: PreBis; open: () => void }) {
+  const { t } = useI18n();
+  const next = d.slots.flatMap((r) => [...r.center, ...r.hit, ...r.damage]).filter((x) => x.focus);
+  const missing = (d.enchants || []).filter((x) => x.state !== "ok" && !x.alt && !x.covered).length;
+  const capped = d.hit.total >= d.hit.cap;
+  return (
+    <div className="ml-auto flex flex-wrap items-center gap-2 text-sm">
+      <span className={`prebis-fold-chip ${capped ? "text-good" : "text-[#ffb070]"}`}>{t("pr_f_hit", { n: d.hit.total, c: d.hit.cap })}</span>
+      <span className="prebis-fold-chip">{t("pr_have", { n: d.owned, t: d.total })}</span>
+      {d.summary && <span className="prebis-fold-chip">{t("pr_f_shadow", { n: d.summary.worn.shadow })}</span>}
+      {missing > 0 && <span className="prebis-fold-chip text-[#ffb070]">{t("pr_f_ench", { n: missing })}</span>}
+      {next.length > 0 && (
+        <button type="button" className="prebis-fold-chip flex items-center gap-1.5" onClick={open} title={next.map((x) => x.name).join(", ")}>
+          <span className="text-muted">{t("pr_f_next")}</span>
+          {next.slice(0, 6).map((x) => <ItemIcon key={x.id} itemId={x.id} quality={Q[x.q]} size={22} />)}
+          {next.length > 6 && <span className="text-muted">+{next.length - 6}</span>}
+        </button>
+      )}
+    </div>
   );
 }
 
