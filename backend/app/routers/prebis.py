@@ -164,7 +164,45 @@ async def prebis(cid: int, user: CurrentUser, session: Session, lang: str = "ru"
     return {"available": True, "class": cls, "spec": spec, "level": level, "hit": {**hit, "cap": g["hitCap"],
             "planned": round(planned, 2), "need": round(need, 2)},
             "slots": slots, "author": g["author"], "owned": owned_slots,
+            "talents": g.get("talents"), "stats": g.get("stats"), "rotation": g.get("rotation"),
+            "consumables": g.get("consumables"), "enchants": enchant_state(g, eq),
             "total": sum(r["count"] for r in slots if r["slot"] != "TWO_HAND")}
+
+
+def enchant_state(g: dict, eq: dict) -> list[dict]:
+    """Every slot the guide enchants against what the character's gear carries (Blizzard gives the enchantment as
+    its text, in the page's language): the right one, another one, or none; nothing to check on an empty slot."""
+    import re
+
+    two = (eq.get("MAIN_HAND") or {}).get("inv") == "TWOHWEAPON"
+    out = []
+    for e in g.get("enchants") or []:
+        if "twoHand" in e and e["twoHand"] != two:
+            continue
+        for slot in e["slots"]:
+            x = eq.get(slot)
+            if not x or (slot == "OFF_HAND" and two):
+                continue
+            texts = [str(t) for t in x.get("enchants") or []]
+            m = e["match"]
+
+            def ok(t: str) -> bool:
+                if m.get("sp"):
+                    return bool(re.search(rf"\b{m['sp']}\b", t)) and bool(re.search(r"spell|заклин", t, re.I))
+                if m.get("speed"):
+                    return bool(re.search(r"speed|скорост", t, re.I))
+                if m.get("wisdom"):
+                    return bool(re.search(r"intellect|интеллект", t, re.I)) and bool(re.search(r"spirit|дух", t, re.I))
+                return False
+            state = "ok" if any(ok(t) for t in texts) else ("other" if texts else "none")
+            out.append({"key": e["key"], "slot": slot, "alt": bool(e.get("alt")), "state": state, "have": texts,
+                        "item": e.get("item"), "maker": e["maker"], "value": e.get("value"), "itemName": x.get("name")})
+    # the boots: speed instead of the armor kit is a choice, either one counts
+    feet = [o for o in out if o["slot"] == "FEET"]
+    if any(o["state"] == "ok" for o in feet):
+        for o in feet:
+            o["covered"] = True
+    return out
 
 
 class OwnedIn(BaseModel):

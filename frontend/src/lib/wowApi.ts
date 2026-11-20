@@ -97,6 +97,11 @@ export interface PreBis {
   hit: { cap: number; talent: number; talents: string[]; gear: number; total: number; planned: number; need: number;
     talentList: { id: number; name: string; en: string; tab: number; max: number; full: number; icon: string; rank: number }[] };
   slots: { slot: string; count: number; center: PreBisItem[]; damage: PreBisItem[]; hit: PreBisItem[] }[];
+  talents?: { ranks: Record<string, number>; swap: { from: number; to: number }; split: number[]; fromLevel: number };
+  stats?: string[]; rotation?: { icon: string; spell: string; do: string }[];
+  consumables?: { id: number; group: string; req: number }[];
+  enchants?: { key: string; slot: string; alt: boolean; covered?: boolean; state: "ok" | "other" | "none"; have: string[];
+    item: number | null; maker: string; value: number | null; itemName: string }[];
 }
 export interface AhList { id: number; name: string; items: WatchCard[]; pinned?: boolean }
 export interface BisSale {

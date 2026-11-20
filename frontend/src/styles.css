@@ -1644,3 +1644,15 @@ button.order-line:hover { @apply text-gold; }
 .prebis-dot.focus { border-color: #ffd100; background: rgb(255 209 0 / 0.2); }
 .prebis-dot.best { border: none; width: auto; height: auto; }
 .prebis-dot.best::before { content: "★"; color: #ffd100; }
+
+.prebis-tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid rgb(var(--gold) / 0.2); }
+.prebis-tabs button { padding: 6px 12px; font-size: 14px; color: rgb(var(--muted)); border-bottom: 2px solid transparent; }
+.prebis-tabs button.on { color: rgb(var(--gold)); border-color: rgb(var(--gold)); }
+.prebis-stat { display: flex; gap: 10px; align-items: flex-start; border-radius: 6px; padding: 6px 8px; border: 1px solid transparent; }
+.prebis-stat .n { width: 22px; height: 22px; flex: none; border-radius: 999px; display: grid; place-items: center; font-size: 12px;
+  background: rgb(var(--gold) / 0.15); color: rgb(var(--gold)); }
+.prebis-stat.now { border-color: rgb(255 209 0 / 0.5); background: rgb(255 209 0 / 0.06); }
+.prebis-stat.done { border-color: rgb(95 211 106 / 0.5); background: rgb(47 138 58 / 0.12); }
+.prebis-rot { display: grid; justify-items: center; gap: 4px; width: 96px; text-align: center; }
+.prebis-rot .ico { width: 56px; height: 56px; border-radius: 8px; background-size: cover; box-shadow: 0 0 0 1px rgb(var(--gold) / 0.4); }
+.prebis-rot b { font-size: 12px; color: rgb(var(--gold)); }

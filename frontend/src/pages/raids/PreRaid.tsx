@@ -13,6 +13,9 @@ import { useI18n, type Key } from "../../lib/i18n";
 import { store } from "../../lib/store";
 import { fullName, qColor, wowApi, type Character, type PreBis, type PreBisItem } from "../../lib/wowApi";
 import { Compare } from "../throne/Bis";
+import { ConsumablesPane, EnchantsPane, GuidePane, TalentsPane } from "./PreRaidTabs";
+
+const TABS = ["items", "talents", "guide", "consumables", "enchants"] as const;
 
 const Q = ["POOR", "COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY"];
 
@@ -24,6 +27,7 @@ export function PreRaid({ chars }: { chars: Character[] }) {
   const fit = chars.map((c, i) => ({ c, d: qs[i].data })).filter((x) => x.d?.available);
   const [sel, setSel] = useState<number | null>(() => store.get<number | null>("prebisChar", null));
   const [open, setOpen] = useState(() => store.get("prebisOpen", true));
+  const [tab, setTab] = useState<string>(() => store.get("prebisTab", "items"));
   const cur = fit.find((x) => x.c.id === sel) ?? fit[0];
   if (!cur) return null;
   const d = cur.d!;
@@ -45,10 +49,22 @@ export function PreRaid({ chars }: { chars: Character[] }) {
       {open && (
         <div className="mt-4 space-y-4">
           <HitBar d={d} />
-          <Legend />
-          <div className="grid gap-3 lg:grid-cols-2">
-            {d.slots.map((r) => <SlotCard key={r.slot} r={r} cid={cur.c.id} />)}
+          <div className="prebis-tabs" role="tablist">
+            {TABS.map((k) => (
+              <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""}
+                onClick={() => (setTab(k), store.set("prebisTab", k))}>{t(`pr_tab_${k}` as Key)}</button>
+            ))}
           </div>
+          {tab === "items" && <>
+            <Legend />
+            <div className="grid gap-3 lg:grid-cols-2">
+              {d.slots.map((r) => <SlotCard key={r.slot} r={r} cid={cur.c.id} />)}
+            </div>
+          </>}
+          {tab === "talents" && <TalentsPane d={d} cid={cur.c.id} />}
+          {tab === "guide" && <GuidePane d={d} />}
+          {tab === "consumables" && <ConsumablesPane d={d} level={d.level} />}
+          {tab === "enchants" && <EnchantsPane d={d} />}
         </div>
       )}
     </section>

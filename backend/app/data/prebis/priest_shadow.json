@@ -570,5 +570,203 @@
   18048,
   13524,
   287036
+ ],
+ "talents": {
+  "ranks": {
+   "105849": 5,
+   "105848": 3,
+   "105837": 4,
+   "105843": 3,
+   "105867": 3,
+   "110851": 5,
+   "105831": 4,
+   "105830": 2,
+   "105829": 2,
+   "105826": 1,
+   "105825": 2,
+   "105823": 5,
+   "105820": 1,
+   "105821": 3,
+   "105819": 2,
+   "105818": 5,
+   "105817": 1
+  },
+  "swap": {
+   "from": 105823,
+   "to": 105833
+  },
+  "split": [
+   15,
+   3,
+   33
+  ],
+  "fromLevel": 40
+ },
+ "stats": [
+  "hit",
+  "crit",
+  "sp",
+  "pen",
+  "int",
+  "spi"
+ ],
+ "rotation": [
+  {
+   "icon": "spell_shadow_shadowwordpain",
+   "spell": "swp",
+   "do": "keep"
+  },
+  {
+   "icon": "spell_shadow_blackplague",
+   "spell": "dp",
+   "do": "keep"
+  },
+  {
+   "icon": "spell_shadow_unholyfrenzy",
+   "spell": "mb",
+   "do": "cd"
+  },
+  {
+   "icon": "spell_shadow_demonicfortitude",
+   "spell": "swd",
+   "do": "cd"
+  },
+  {
+   "icon": "spell_shadow_siphonmana",
+   "spell": "mf",
+   "do": "fill"
+  }
+ ],
+ "consumables": [
+  {
+   "id": 13935,
+   "group": "food",
+   "req": 45
+  },
+  {
+   "id": 13454,
+   "group": "elixir",
+   "req": 47
+  },
+  {
+   "id": 9264,
+   "group": "elixir",
+   "req": 40
+  },
+  {
+   "id": 13512,
+   "group": "flask",
+   "req": 50
+  },
+  {
+   "id": 250937,
+   "group": "potion",
+   "req": 55
+  },
+  {
+   "id": 20750,
+   "group": "oil",
+   "req": 40
+  },
+  {
+   "id": 13444,
+   "group": "mana",
+   "req": 49
+  },
+  {
+   "id": 20520,
+   "group": "mana",
+   "req": 0
+  },
+  {
+   "id": 12662,
+   "group": "mana",
+   "req": 0
+  }
+ ],
+ "enchants": [
+  {
+   "key": "kit",
+   "slots": [
+    "CHEST",
+    "LEGS",
+    "HANDS",
+    "FEET"
+   ],
+   "match": {
+    "sp": 6
+   },
+   "item": 252487,
+   "maker": "leatherworking",
+   "value": 6
+  },
+  {
+   "key": "speed",
+   "slots": [
+    "FEET"
+   ],
+   "match": {
+    "speed": true
+   },
+   "item": 289560,
+   "maker": "enchanting",
+   "alt": true
+  },
+  {
+   "key": "staff",
+   "slots": [
+    "MAIN_HAND"
+   ],
+   "twoHand": true,
+   "match": {
+    "sp": 65
+   },
+   "maker": "enchanting",
+   "value": 65
+  },
+  {
+   "key": "weapon",
+   "slots": [
+    "MAIN_HAND"
+   ],
+   "twoHand": false,
+   "match": {
+    "sp": 30
+   },
+   "maker": "enchanting",
+   "value": 30
+  },
+  {
+   "key": "neck",
+   "slots": [
+    "NECK"
+   ],
+   "match": {
+    "sp": 6
+   },
+   "maker": "enchanting",
+   "value": 6
+  },
+  {
+   "key": "bracer",
+   "slots": [
+    "WRIST"
+   ],
+   "match": {
+    "sp": 16
+   },
+   "maker": "enchanting",
+   "value": 16
+  },
+  {
+   "key": "wisdom",
+   "slots": [
+    "OFF_HAND"
+   ],
+   "match": {
+    "wisdom": true
+   },
+   "maker": "enchanting"
+  }
  ]
 }

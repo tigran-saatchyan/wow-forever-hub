@@ -3,6 +3,7 @@
  * keys, reputations, legendaries) in the order to do them against every character, from the quests Blizzard
  * says are done. The chains themselves are walked on the map page.
  */
+import { useQueries } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { ORDERED, STAGES, fits, progress, type Chain } from "../lib/chains";
@@ -10,9 +11,10 @@ import { ClassIcon } from "./Characters";
 import { ChainLink } from "./map/ChainPanel";
 import { useI18n, type Key } from "../lib/i18n";
 import { store } from "../lib/store";
-import { fullName, useCharacters, type Character } from "../lib/wowApi";
+import { fullName, useCharacters, wowApi, type Character } from "../lib/wowApi";
 import { useTab } from "./characters/ArmoryTabs";
 import { PreRaid } from "./raids/PreRaid";
+import { ConsumablesPane } from "./raids/PreRaidTabs";
 
 const OPENS = Date.UTC(2026, 11, 9, 4, 0); // 9 December, the weekly reset in Europe (Wednesday morning)
 
@@ -156,7 +158,26 @@ function Prep({ chars }: { chars: Character[] }) {
           </tbody>
         </table>
       </div>
+      <PrepConsumables chars={chars} />
     </motion.section>
+  );
+}
+
+/** The consumables of the pre-raid list, for the characters that have one (cached with the section above). */
+function PrepConsumables({ chars }: { chars: Character[] }) {
+  const { t, lang } = useI18n();
+  const qs = useQueries({ queries: chars.map((c) => ({ queryKey: ["prebis", c.id, lang], queryFn: () => wowApi.prebis(c.id, lang), staleTime: 5 * 60e3, retry: false })) });
+  const fit = chars.map((c, i) => ({ c, d: qs[i].data })).filter((x) => x.d?.available && x.d.consumables?.length);
+  if (!fit.length) return null;
+  return (
+    <div className="mt-4 space-y-3">
+      {fit.map(({ c, d }) => (
+        <div key={c.id}>
+          <div className="prebis-glabel">{t("pr_tab_consumables")} — {fullName(c, lang)}</div>
+          <ConsumablesPane d={d!} level={d!.level} />
+        </div>
+      ))}
+    </div>
   );
 }
 
