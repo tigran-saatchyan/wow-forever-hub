@@ -109,20 +109,6 @@ export function BisBar({ on, setOn, data, spec, setSpec, tabs, cid }: {
           )}
         </AnimatePresence>
       </div>
-      {on && data?.status === "ready" && (
-        <p className="bis-weights-note">
-          {data.talentsFrom === "custom" ? t("bis_w_custom") : <>
-            {t("bis_w_src")}{" "}
-            <a href="https://github.com/VgerMods/Pawn" target="_blank" rel="noopener noreferrer">Pawn</a> (HawsJon)
-            {data.talentsMoved?.length ? <> · {t(data.talentsFrom === "real" ? "bis_w_real" : "bis_w_tree")}: {data.talentsMoved.join(", ")}</> : null}
-          </>}
-          {data.hit && (
-            <span className={`ml-2 ${data.hit.total >= data.hit.cap ? "text-good" : "text-[#ffb070]"}`} title={t("bis_hit_h")}>
-              · {t("bis_hit", { n: data.hit.total, c: data.hit.cap })}
-            </span>
-          )}
-        </p>
-      )}
       {edit && data && cid && <WeightEditor data={data} cid={cid} label={label} onClose={() => setEdit(false)} onSaved={() => (setEdit(false), setSpec("custom"))} />}
     </div>
   );

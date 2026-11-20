@@ -80,7 +80,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const group = GROUPS.find((g) => inGroup(g, loc.pathname));
 
   const link = ({ isActive }: { isActive: boolean }) =>
-    `font-display tracking-wider px-3 py-1.5 rounded-md transition ${
+    `font-display tracking-wider px-2 min-[1600px]:px-3 py-1.5 rounded-md transition ${
       isActive ? "text-gold bg-accent/15 shadow-[0_0_14px_-4px_var(--glow)]" : "text-muted hover:text-ink"
     }`;
 
@@ -100,7 +100,7 @@ export function Layout({ children }: { children: ReactNode }) {
             </span>
           </NavLink>
           {me.data && (
-            <nav className="flex flex-wrap gap-1 text-sm">
+            <nav className="flex flex-wrap gap-0.5 text-sm">
               {GROUPS.map((g) => (
                 <NavLink key={g.key} to={g.tabs[0].to} end={g.tabs[0].to === "/"} onClick={() => sfx("nav")}
                   className={() => link({ isActive: inGroup(g, loc.pathname) })}>
@@ -109,21 +109,21 @@ export function Layout({ children }: { children: ReactNode }) {
               ))}
             </nav>
           )}
+          {me.data && group && group.tabs.length > 1 && (
+            <div className="sub-nav">
+              {group.tabs.map((x) => (
+                <NavLink key={x.to} to={x.to} end onClick={() => sfx("nav")} className={({ isActive }) => (isActive ? "on" : "")}>
+                  {t(x.label)}{x.to === "/craft" && <SignalBadge />}
+                </NavLink>
+              ))}
+            </div>
+          )}
           <div className="ml-auto flex flex-wrap items-center gap-2 text-sm">
             {me.data && !loc.pathname.startsWith("/craft") && <ActiveCharPicker />}
             {theme.id === "undercity" && <MusicPlayer />}
             <Settings />
           </div>
         </div>
-        {me.data && group && group.tabs.length > 1 && (
-          <div className="sub-nav">
-            {group.tabs.map((x) => (
-              <NavLink key={x.to} to={x.to} end onClick={() => sfx("nav")} className={({ isActive }) => (isActive ? "on" : "")}>
-                {t(x.label)}{x.to === "/craft" && <SignalBadge />}
-              </NavLink>
-            ))}
-          </div>
-        )}
       </header>
       <main className="w-full px-4 py-6 lg:px-6">{children}</main>
       {/* ForeverDB's terms: a visible link wherever its data is shown (the site shows it on many pages) */}

@@ -51,7 +51,7 @@ export function ActiveCharPicker() {
         <Face c={char} size={26} />
         <span className="grid min-w-0 text-left leading-tight">
           <span className="max-w-[11rem] truncate">{fullName(char, lang)}</span>
-          <span className="text-[11px] text-muted">{line(char)}</span>
+          <span className="hidden text-[11px] text-muted min-[1600px]:block">{line(char)}</span>
         </span>
         <span className="text-muted" aria-hidden>▾</span>
       </button>

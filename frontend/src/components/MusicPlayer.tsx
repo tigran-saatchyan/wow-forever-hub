@@ -35,7 +35,7 @@ export function MusicPlayer() {
     <div ref={box} className="relative">
       <button className="btn gap-1.5 px-2" aria-expanded={open} title={t("mp_title")} onClick={() => setOpen(!open)}>
         {st.playing ? <span className="eq" aria-hidden><i /><i /><i /></span> : <span aria-hidden>♪</span>}
-        <span className="hidden max-w-[9rem] truncate text-xs xl:inline">{st.playing ? cur[lang] : t("mp_title")}</span>
+        <span className="hidden max-w-[9rem] truncate text-xs min-[1800px]:inline">{st.playing ? cur[lang] : t("mp_title")}</span>
       </button>
       <AnimatePresence>
         {open && (
