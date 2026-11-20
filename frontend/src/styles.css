@@ -1723,3 +1723,21 @@ button.prebis-fold-chip:hover { border-color: rgb(var(--gold) / .5); }
 .rc-badge { position: relative; display: inline-flex; align-items: center; gap: .3rem; font-size: 11px; outline: none; cursor: help; }
 .rc-tip { position: absolute; left: 0; top: calc(100% + 4px); z-index: 70; width: max-content; max-width: 22rem; display: none; text-align: left; font-size: 13px; }
 .rc-badge:hover .rc-tip, .rc-badge:focus .rc-tip { display: block; }
+
+/* the world map's layers: the gear's menu and the pins */
+.ml-pop { position: absolute; right: 0; top: calc(100% + 6px); z-index: 1000; width: 17rem; display: grid; gap: .3rem; padding: .7rem; border: 1px solid rgb(var(--edge)); border-radius: .5rem; background: rgb(var(--panel)); box-shadow: 0 12px 30px -8px rgb(0 0 0 / .7); }
+.ml-row { display: flex; align-items: center; gap: .5rem; cursor: pointer; font-size: .875rem; }
+.ml-row input { accent-color: rgb(var(--gold)); }
+.ml-glyph { width: 1.1rem; text-align: center; }
+.ml-glyph.dungeons { color: #ff9a40; } .ml-glyph.raids { color: #c58cff; } .ml-glyph.flights { color: #8fd0ff; }
+.ml-glyph.boats, .ml-glyph.zeppelins { color: #d9c08a; } .ml-glyph.classT { color: #7fe07f; } .ml-glyph.profT { color: #e0b070; } .ml-glyph.vendors { color: #ffd76a; }
+.om-pin[class*="ml-"] { left: -8px; top: -8px; }
+.om-pin[class*="ml-"] .wm-glyph { width: 16px; height: 16px; font-size: 11px; box-shadow: 0 0 0 1px #000, 0 0 0 2px #555; }
+.om-pin[class*="ml-"] .wm-label { display: none; }
+.om-pin[class*="ml-"]:hover .wm-label { display: inline; }
+.om-pin.ml-dungeon .wm-glyph { color: #ff9a40; box-shadow: 0 0 0 1px #000, 0 0 0 2px #a8602a; }
+.om-pin.ml-raid .wm-glyph { color: #c58cff; box-shadow: 0 0 0 1px #000, 0 0 0 2px #8a3fd6; }
+.om-pin.ml-flight .wm-glyph { color: #8fd0ff; box-shadow: 0 0 0 1px #000, 0 0 0 2px #3a6f9a; }
+.om-pin.ml-boat .wm-glyph, .om-pin.ml-zeppelin .wm-glyph { color: #f0d8a0; box-shadow: 0 0 0 1px #000, 0 0 0 2px #8a6a2c; }
+.om-pin.ml-trainer .wm-glyph { color: #7fe07f; box-shadow: 0 0 0 1px #000, 0 0 0 2px #2f7a2f; }
+.om-pin.ml-prof .wm-glyph { color: #e0b070; box-shadow: 0 0 0 1px #000, 0 0 0 2px #7a5a2c; }

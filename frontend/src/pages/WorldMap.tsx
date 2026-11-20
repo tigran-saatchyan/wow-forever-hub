@@ -3,7 +3,7 @@
  * matter, every zone, and a quest chain walked step by step: where to take a quest, where to do it, where
  * to hand it in, and what comes next. A character's completed quests mark how far they have come.
  */
-import { setActiveChar, useActiveCharId } from "../lib/activeChar";
+import { setActiveChar, useActiveChar, useActiveCharId } from "../lib/activeChar";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -294,8 +294,15 @@ function World({ continent, setContinent, zone, setZone, faction, pinAt }: { con
   const { t, lang } = useI18n();
   // any quest by ForeverDB: where to take it and where to hand it in; the vendors of the player's side
   const [quest, setQuest] = useState<FdbQuest | null>(null);
-  const [showVendors, setShowVendors] = useState(() => store.get("wmVendors", false));
+  const [ly, setLy] = useState<Layers>(() => ({ ...LAYERS0, ...store.get<Partial<Layers>>("wmLayers", {}), vendors: store.get("wmVendors", false) }));
+  const setLayers = (v: Layers) => (setLy(v), store.set("wmLayers", v), store.set("wmVendors", v.vendors));
+  const showVendors = ly.vendors;
   const vendors = useQuery({ queryKey: ["fdb-vendors"], queryFn: () => req<FdbVendorPin[]>("/api/fdb/vendors"), enabled: showVendors, staleTime: 3600e3 });
+  const anyLayer = ly.dungeons || ly.raids || ly.flights || ly.boats || ly.zeppelins || ly.classT || ly.profT;
+  const layers = useQuery({ queryKey: ["map-layers"], queryFn: async () => (await fetch("/map-layers.json")).json() as Promise<MapLayers>, enabled: anyLayer, staleTime: Infinity });
+  const me = useActiveChar().char;
+  const myClass = me?.summary?.[lang]?.classId ?? null;
+  const myProfs = new Set((me?.profs?.[lang] || []).map((p) => p.id));
   const zones = ALL.filter((m) => m.parent === continent && m.type === 3).sort((a, b) => a.name[lang].localeCompare(b.name[lang]));
   const [focus, setFocus] = useState<Focus>(null);
   useEffect(() => {  // a place sent from another page: fly to it
@@ -320,6 +327,34 @@ function World({ continent, setContinent, zone, setZone, faction, pinAt }: { con
         if (w) out.push({ ...w, kind: "vendor", glyph: "$", label: v.title ? `${v.name} <${v.title}>` : v.name, onClick: () => setFocus({ ...w, zoom: 5.5, tick: Date.now() }) });
       }
     }
+    const L = layers.data;
+    if (L) {
+      const mine = faction === "ALLIANCE" ? "alliance" : "horde";
+      const ok = (side?: string | null) => !ly.mySide || !side || side === "both" || side === mine;
+      const at = (x: { u?: number; v?: number; map?: number; x?: number; y?: number }) =>
+        x.u != null ? { u: x.u, v: x.v! } : x.map != null ? toWorld(x.map, x.x!, x.y!) : null;
+      const put = (x: Parameters<typeof at>[0], kind: string, glyph: string, label: string) => {
+        const w = at(x);
+        if (w) out.push({ ...w, kind, glyph, label, onClick: () => setFocus({ ...w, zoom: 5.5, tick: Date.now() }) });
+      };
+      for (const d of L.dungeons) {
+        if (d.raid ? !ly.raids : !ly.dungeons) continue;
+        const lv = d.levels ? ` ${d.levels[0] === d.levels[1] ? d.levels[0] : `${d.levels[0]}–${d.levels[1]}`}` : "";
+        put(d, d.raid ? "ml-raid" : "ml-dungeon", d.raid ? "☠" : "⛰", `${d.name[lang]}${lv}${d.how === "inside" ? ` (${t("ml_inside")})` : ""}`);
+      }
+      if (ly.flights) for (const f of L.flights) if (ok(f.side)) put(f, `ml-flight ${f.side}`, "✈", f.name[lang]);
+      for (const x of L.transport) {
+        if (x.kind === "boat" ? !ly.boats : !ly.zeppelins) continue;
+        put(x, `ml-${x.kind}`, x.kind === "boat" ? "⚓" : "◉", `${t(x.kind === "boat" ? "ml_boat" : "ml_zep")}: ${x.route}`);
+      }
+      for (const x of L.trainers) {
+        if (!ok(x.side)) continue;
+        if (x.kind === "class" && ly.classT && (ly.allClasses || x.cls === myClass))
+          put(x, "ml-trainer", "♦", `${x.name[lang]} <${x.title[lang]}>`);
+        if (x.kind === "prof" && ly.profT && (ly.allProfs || myProfs.has(x.prof!)))
+          put(x, "ml-prof", "⚒", `${x.name[lang]} <${x.title[lang]}>`);
+      }
+    }
     if (quest) {
       for (const [p, kind, g] of [[quest.starts, "giver", "!"], [quest.ends, "turnin", "?"]] as const) {
         const w = p?.map != null && p.x != null ? toWorld(p.map, p.x, p.y!) : null;
@@ -327,7 +362,7 @@ function World({ continent, setContinent, zone, setZone, faction, pinAt }: { con
       }
     }
     return out;
-  }, [lang, showVendors, vendors.data, quest, faction, pinAt]);
+  }, [lang, showVendors, vendors.data, quest, faction, pinAt, layers.data, ly, myClass, me?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const pick = (id: number) => { setZone(id); setFocus({ map: id, tick: Date.now() }); };
   const showQuest = (q: FdbQuest) => {
     setQuest(q);
@@ -339,13 +374,13 @@ function World({ continent, setContinent, zone, setZone, faction, pinAt }: { con
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
       <Seamless pins={pins} focus={focus} onZone={setZone} />
       <aside className="space-y-2">
-        <div className="flex gap-1">
+        <div className="flex items-center gap-1">
           {[EK, KALIMDOR].map((c) => (
             <button key={c} className={`chip ${continent === c && !zone ? "border-gold/60 text-gold" : ""}`} onClick={() => (setContinent(c), setZone(null), setFocus({ map: c, tick: Date.now() }))}>{BY_ID.get(c)?.name[lang]}</button>
           ))}
+          <MapSettings ly={ly} set={setLayers} />
         </div>
         <QuestFinder faction={faction} quest={quest} show={showQuest} clear={() => setQuest(null)} />
-        <label className="chip cursor-pointer"><input type="checkbox" className="mr-1.5" checked={showVendors} onChange={(e) => (store.set("wmVendors", e.target.checked), setShowVendors(e.target.checked))} />{t("wm_vendors")}</label>
         <div className="eyebrow pt-1">{t("wm_zones")}</div>
         <ul className="max-h-[60vh] space-y-0.5 overflow-y-auto pr-1 text-sm">
           {zones.map((z) => (
@@ -355,6 +390,64 @@ function World({ continent, setContinent, zone, setZone, faction, pinAt }: { con
         <p className="text-[11px] text-muted">{t("wm_omap_note")}</p>
         <a className="text-[11px] text-gold hover:underline" href="https://foreverdb.net" target="_blank" rel="noopener noreferrer">{t("fdb_credit")}</a>
       </aside>
+    </div>
+  );
+}
+
+/** The world map's optional layers (frontend/public/map-layers.json, tools/build_map_layers.py). */
+interface Layers { dungeons: boolean; raids: boolean; flights: boolean; boats: boolean; zeppelins: boolean; classT: boolean;
+  allClasses: boolean; profT: boolean; allProfs: boolean; mySide: boolean; vendors: boolean }
+const LAYERS0: Layers = { dungeons: true, raids: true, flights: false, boats: false, zeppelins: false, classT: false,
+  allClasses: false, profT: false, allProfs: false, mySide: true, vendors: false };
+type LPt = { u?: number; v?: number; map?: number; x?: number; y?: number };
+interface MapLayers {
+  dungeons: (LPt & { name: L; levels: [number, number] | null; raid: boolean; how: string })[];
+  flights: (LPt & { name: L; side: string })[];
+  transport: (LPt & { kind: "boat" | "zeppelin"; route: string })[];
+  trainers: (LPt & { name: L; title: L; side: string; kind: "class" | "prof"; cls?: number; prof?: number })[];
+}
+
+/** The gear of the world view: which layers the map shows. */
+function MapSettings({ ly, set }: { ly: Layers; set: (v: Layers) => void }) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const off = (e: MouseEvent) => { if (!box.current?.contains(e.target as Node)) setOpen(false); };
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", off);
+    document.addEventListener("keydown", esc);
+    return () => { document.removeEventListener("mousedown", off); document.removeEventListener("keydown", esc); };
+  }, [open]);
+  const row = (k: keyof Layers, label: string, glyph?: string, sub = false, disabled = false) => (
+    <label className={`ml-row ${sub ? "pl-6 text-xs" : ""} ${disabled ? "opacity-50" : ""}`}>
+      <input type="checkbox" checked={ly[k]} disabled={disabled} onChange={() => set({ ...ly, [k]: !ly[k] })} />
+      {glyph && <span className={`ml-glyph ${k}`} aria-hidden>{glyph}</span>}
+      <span>{label}</span>
+    </label>
+  );
+  const on = [ly.dungeons, ly.raids, ly.flights, ly.boats, ly.zeppelins, ly.classT, ly.profT, ly.vendors].filter(Boolean).length;
+  return (
+    <div ref={box} className="relative ml-auto">
+      <button className={`btn px-2.5 ${on ? "border-gold/50" : ""}`} aria-expanded={open} title={t("ml_title")} aria-label={t("ml_title")} onClick={() => setOpen(!open)}>⚙</button>
+      {open && (
+        <div className="ml-pop">
+          <b className="font-display text-gold">{t("ml_title")}</b>
+          {row("dungeons", t("ml_dungeons"), "⛰")}
+          {row("raids", t("ml_raids"), "☠")}
+          {row("flights", t("ml_flights"), "✈")}
+          {row("boats", t("ml_boats"), "⚓")}
+          {row("zeppelins", t("ml_zeps"), "◉")}
+          {row("classT", t("ml_class"), "♦")}
+          {row("allClasses", t("ml_all_classes"), undefined, true, !ly.classT)}
+          {row("profT", t("ml_prof"), "⚒")}
+          {row("allProfs", t("ml_all_profs"), undefined, true, !ly.profT)}
+          {row("vendors", t("wm_vendors"), "$")}
+          <div className="border-t border-edge/60 pt-1.5">{row("mySide", t("ml_my_side"))}</div>
+          <p className="text-[11px] leading-snug text-muted">{t("ml_note")}</p>
+        </div>
+      )}
     </div>
   );
 }
