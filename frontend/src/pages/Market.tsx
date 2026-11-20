@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { setActiveChar, useActiveCharId } from "../lib/activeChar";
-import { useRef, useState } from "react";
+import { useActiveCharId } from "../lib/activeChar";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { SourcePanel } from "../components/SourcePanel";
 import { ItemHover, ItemIcon, Money, parseMoney, Sparkline } from "../components/Wow";
@@ -8,7 +8,7 @@ import { useMe } from "../lib/auth";
 import { iconStyle, useIcons } from "../lib/gameData";
 import { fmtDate, useI18n, type Key } from "../lib/i18n";
 import { store } from "../lib/store";
-import { qColor, useCharacter, useCharacters, wowApi, type AhList, type BisSale, type Region } from "../lib/wowApi";
+import { fullName, qColor, useCharacter, useCharacters, wowApi, type AhList, type BisSale, type Region } from "../lib/wowApi";
 import { Compare, qCol, useTrees } from "./throne/Bis";
 
 /**
@@ -275,6 +275,7 @@ function BisOnSale({ onAdd, listName }: { onAdd: (id: number) => void; listName?
   const c = useCharacter(cid).data;
   const trees = useTrees(c);
   const [spec, setSpec] = useState<string | null>(null);
+  useEffect(() => setSpec(null), [cid]); // another character: their own specialization again
   const [open, setOpen] = useState<{ id: number; name: string } | null>(null);
   const q = useQuery({ queryKey: ["bis-sale", cid, spec, lang], enabled: !!cid, queryFn: () => wowApi.bisSale(cid!, spec, lang) });
   const refresh = useMutation({
@@ -290,9 +291,7 @@ function BisOnSale({ onAdd, listName }: { onAdd: (id: number) => void; listName?
   if (!all.length) return null;
   return (
     <Fold id="bis" title={t("mk_bis")} extra={<>
-        <select className="input w-auto" value={cid ?? ""} onChange={(e) => (setActiveChar(+e.target.value), setSpec(null))}>
-          {all.map((x) => <option key={x.id} value={x.id}>{x.summary?.[lang]?.name ?? x.name} · {x.summary?.[lang]?.level ?? "?"}</option>)}
-        </select>
+        {c && <span className="text-sm">{fullName(c, lang)}</span>}
         {d?.level != null && <span className="text-sm text-muted">{t("mk_bis_level", { n: d.level })}</span>}
         <button className="btn ml-auto" disabled={refresh.isPending} onClick={() => refresh.mutate()} title={t("mk_bis_refresh_h")}>
           {refresh.isPending ? "…" : t("mk_bis_refresh")}

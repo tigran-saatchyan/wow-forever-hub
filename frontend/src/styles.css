@@ -1674,3 +1674,12 @@ button.order-line:hover { @apply text-gold; }
 .cr-over-bar { flex: 1; height: 6px; border-radius: 3px; background: rgb(var(--edge) / .7); overflow: hidden; }
 .cr-over-bar > span { display: block; height: 100%; background: linear-gradient(90deg, rgb(var(--accent)), rgb(var(--gold))); }
 .cr-over-bar > span.full { background: #40c040; }
+
+/* the gear menu and the tabs of a section under the top menu */
+.set-pop { position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; width: 17rem; display: grid; gap: .55rem; padding: .7rem; border: 1px solid rgb(var(--edge)); border-radius: .5rem; background: rgb(var(--panel)); box-shadow: 0 12px 30px -8px rgb(0 0 0 / .7); }
+.set-row { display: flex; align-items: center; justify-content: space-between; gap: .6rem; }
+.sub-nav { display: flex; gap: .25rem; padding: 0 1rem .45rem; font-size: .875rem; }
+@media (min-width: 1024px) { .sub-nav { padding: 0 1.5rem .45rem; } }
+.sub-nav a { padding: .2rem .7rem; border-radius: .35rem; color: rgb(var(--muted)); border: 1px solid transparent; position: relative; }
+.sub-nav a:hover { color: rgb(var(--ink)); }
+.sub-nav a.on { color: rgb(var(--gold)); border-color: rgb(var(--gold) / .35); background: rgb(var(--accent) / .12); }

@@ -14,7 +14,7 @@ import { useI18n, type Key } from "../lib/i18n";
 import MAPS from "../lib/maps.json";
 import { req } from "../lib/api";
 import { store } from "../lib/store";
-import { fullName, useCharacters, wowApi, type QuestInfo } from "../lib/wowApi";
+import { useCharacters, wowApi, type QuestInfo } from "../lib/wowApi";
 import { QuestDetails, useTab } from "./characters/ArmoryTabs";
 import { MinLevel } from "./Raids";
 import { Seamless, toWorld, type Focus, type WPin } from "../components/Seamless";
@@ -183,11 +183,6 @@ export function WorldMap() {
             <button key={v} className={`chip ${view === v ? "border-gold/60 text-gold" : ""}`} onClick={() => (store.set("mapView", v), setView(v))}>{t(`wm_view_${v}` as Key)}</button>
           ))}
         </div>
-        {chars.length > 0 && (
-          <select className="input ml-auto w-auto py-1 text-sm" value={char?.id} onChange={(e) => setCid(Number(e.target.value))}>
-            {chars.map((c) => <option key={c.id} value={c.id}>{fullName(c, lang)}</option>)}
-          </select>
-        )}
       </div>
 
       {view === "world" ? (
