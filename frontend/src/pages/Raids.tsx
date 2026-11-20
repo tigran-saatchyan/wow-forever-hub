@@ -78,75 +78,82 @@ export function Raids() {
   );
 }
 
-/** Every chain, stage by stage, against every character: done, how far, or not for them; a cell opens the
- * chain on the map with that character. */
+/** Every chain, stage by stage, as cards: each chain with its progress for the character picked in the menu (and
+ * the starred ones with the switch on); a progress opens the chain on the map with that character. */
 function Matrix({ chars }: { chars: Character[] }) {
   const { t, lang } = useI18n();
   if (!chars.length) return null;
+  const multi = chars.length > 1;
   return (
     <motion.section className="panel p-4" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
       <h2 className="panel-title">{t("cn_matrix")}</h2>
       <p className="mt-1 text-xs text-muted">{t("cn_matrix_h")}</p>
-      <div className="swipe-x mt-3 overflow-x-auto">
-        <table className="w-full min-w-[640px] text-sm">
-          <thead>
-            <tr className="text-left text-xs text-muted">
-              <th className="p-1.5 font-normal" />
-              {chars.map((c) => <th key={c.id} className="p-1.5 font-normal"><span className="flex items-center gap-1.5"><ClassIcon classId={c.summary?.[lang]?.classId ?? null} size={18} />{fullName(c, lang)}</span></th>)}
-            </tr>
-          </thead>
-          <tbody>
-            {STAGES.map((st) => {
-              const list = ORDERED.filter((c) => c.stage === st.n && chars.some((ch) => fits(c, ch.summary?.[lang]?.faction, ch.summary?.[lang]?.classId)));
-              if (!list.length) return null;
-              return [
-                <tr key={`s${st.n}`}><td colSpan={chars.length + 1} className="px-1.5 pb-1 pt-3">
-                  <span className="cn-stage-head"><span className="cn-stage-n">{st.n}</span>
-                  <span className="font-display text-gold">{st.name[lang]}</span>
-                  {!st.announced && <span className="cn-tag">{t("cn_not_announced")}</span>}</span>
-                </td></tr>,
-                ...list.map((c) => (
-                  <tr key={c.key} className="border-t border-edge/30">
-                    <td className="p-1.5">
+      {multi && (
+        <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted">
+          {chars.map((c) => <span key={c.id} className="flex items-center gap-1.5"><ClassIcon classId={c.summary?.[lang]?.classId ?? null} size={16} />{fullName(c, lang)}</span>)}
+        </div>
+      )}
+      <div className="mt-3 grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
+        {STAGES.map((st) => {
+          const list = ORDERED.filter((c) => c.stage === st.n && chars.some((ch) => fits(c, ch.summary?.[lang]?.faction, ch.summary?.[lang]?.classId)));
+          if (!list.length) return null;
+          return (
+            <div key={st.n} className="cn-card">
+              <div className="cn-stage-head">
+                <span className="cn-stage-n">{st.n}</span>
+                <span className="font-display text-gold">{st.name[lang]}</span>
+                {!st.announced && <span className="cn-tag">{t("cn_not_announced")}</span>}
+              </div>
+              <ul className="mt-2 space-y-1.5">
+                {list.map((c) => (
+                  <li key={c.key} className="cn-row">
+                    <div className="min-w-0 flex-1">
                       <ChainLink chain={c.key}>{c.name[lang]}</ChainLink>
                       <div className="text-[11px] text-muted">{t(`cn_cat_${c.category}` as Key)}{c.minLevel ? ` · ${t("cn_from_level", { l: c.minLevel })}` : ""}</div>
-                    </td>
-                    {chars.map((ch) => <Cell key={ch.id} c={c} ch={ch} />)}
-                  </tr>
-                )),
-              ];
-            })}
-          </tbody>
-        </table>
+                    </div>
+                    <div className="grid shrink-0 justify-items-end gap-1">
+                      {chars.map((ch) => <Cell key={ch.id} c={c} ch={ch} multi={multi} />)}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
       </div>
     </motion.section>
   );
 }
 
-function Cell({ c, ch }: { c: Chain; ch: Character }) {
+function Cell({ c, ch, multi }: { c: Chain; ch: Character; multi: boolean }) {
   const { t, lang } = useI18n();
   const s = ch.summary?.[lang];
   const done = useTab<{ ids?: number[] }>(ch.id, "quests");
-  if (!fits(c, s?.faction, s?.classId)) return <td className="p-1.5 text-xs text-muted">—</td>;
+  const who = multi ? <ClassIcon classId={s?.classId ?? null} size={14} /> : null;
+  if (!fits(c, s?.faction, s?.classId)) return multi ? <span className="flex items-center gap-1.5 text-xs text-muted">{who}—</span> : null;
   const p = progress(c, new Set(done.data?.data?.ids || []));
   const low = c.minLevel && (s?.level ?? 0) < c.minLevel;
   return (
-    <td className="p-1.5">
-      <ChainLink chain={c.key} char={ch.id}>
-        {done.isLoading ? "…" : p.complete ? <span className="text-good">✓ {t("cn_finished")}</span>
-          : <span className={p.done ? "text-gold" : "text-muted"}>{p.done}/{p.total}</span>}
-      </ChainLink>
-      {low && !p.complete ? <div className="text-[11px] text-bad">{t("cn_from_level", { l: c.minLevel! })}</div> : null}
-    </td>
+    <ChainLink chain={c.key} char={ch.id}>
+      <span className="flex items-center gap-1.5 text-xs" title={multi ? fullName(ch, lang) : undefined}>
+        {who}
+        {done.isLoading ? "…" : p.complete ? <span className="text-good">✓ {t("cn_finished")}</span> : <>
+          <span className="cn-bar"><span style={{ width: `${p.total ? (p.done / p.total) * 100 : 0}%` }} /></span>
+          <span className={`tabular-nums ${p.done ? "text-gold" : "text-muted"}`}>{p.done}/{p.total}</span>
+        </>}
+        {low && !p.complete ? <span className="text-[10px] text-bad">{t("cn_lvl_short", { l: c.minLevel! })}</span> : null}
+      </span>
+    </ChainLink>
   );
 }
 
-/** Getting ready for Onyxia, ticked per character (kept in this browser). */
+/** Getting ready for Onyxia: a short checklist per character (kept in this browser), the consumables beside it. */
 function Prep({ chars }: { chars: Character[] }) {
   const { t, lang } = useI18n();
   const [prep, setPrep] = useState<Record<number, Record<string, boolean>>>(() =>
     Object.fromEntries(chars.map((c) => [c.id, store.get<Record<string, boolean>>(`raidPrep:${c.id}`, {})])));
   if (!chars.length) return null;
+  const multi = chars.length > 1;
   const toggle = (id: number, k: string) => {
     const v = { ...(prep[id] || {}), [k]: !(prep[id] || {})[k] };
     setPrep({ ...prep, [id]: v });
@@ -155,20 +162,24 @@ function Prep({ chars }: { chars: Character[] }) {
   return (
     <motion.section className="panel p-4" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
       <h2 className="panel-title">{t("rd_prep")}</h2>
-      <div className="swipe-x mt-3 overflow-x-auto">
-        <table className="w-full min-w-[560px] text-sm">
-          <thead><tr className="text-left text-xs text-muted"><th className="p-1.5" />{chars.map((c) => <th key={c.id} className="p-1.5 font-normal">{fullName(c, lang)}</th>)}</tr></thead>
-          <tbody>
-            {PREP.map((k) => (
-              <tr key={k} className="border-t border-edge/30">
-                <td className="p-1.5">{t(k)}</td>
-                {chars.map((c) => <td key={c.id} className="p-1.5"><input type="checkbox" checked={!!prep[c.id]?.[k]} onChange={() => toggle(c.id, k)} /></td>)}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="mt-3 grid gap-4 xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
+        <ul className="space-y-1.5">
+          {PREP.map((k) => (
+            <li key={k} className="cn-row">
+              <span className="min-w-0 flex-1 text-sm">{t(k)}</span>
+              <span className="flex shrink-0 gap-2">
+                {chars.map((c) => (
+                  <label key={c.id} className="flex cursor-pointer items-center gap-1" title={fullName(c, lang)}>
+                    {multi && <ClassIcon classId={c.summary?.[lang]?.classId ?? null} size={14} />}
+                    <input type="checkbox" checked={!!prep[c.id]?.[k]} onChange={() => toggle(c.id, k)} />
+                  </label>
+                ))}
+              </span>
+            </li>
+          ))}
+        </ul>
+        <PrepConsumables chars={chars} />
       </div>
-      <PrepConsumables chars={chars} />
     </motion.section>
   );
 }
@@ -180,7 +191,7 @@ function PrepConsumables({ chars }: { chars: Character[] }) {
   const fit = chars.map((c, i) => ({ c, d: qs[i].data })).filter((x) => x.d?.available && x.d.consumables?.length);
   if (!fit.length) return null;
   return (
-    <div className="mt-4 space-y-3">
+    <div className="space-y-3">
       {fit.map(({ c, d }) => (
         <div key={c.id}>
           <div className="prebis-glabel">{t("pr_tab_consumables")} — {fullName(c, lang)}</div>

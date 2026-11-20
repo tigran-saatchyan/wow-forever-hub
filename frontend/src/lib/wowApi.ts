@@ -93,7 +93,10 @@ export interface PreBisItem {
     dungeonName?: string; part?: string | null; note?: string | null; profession?: string; currency?: string; auction?: boolean;
     levels?: [number, number] | null; entrance?: { map: number; x: number; y: number } | null };
   full: import("../pages/throne/Bis").BisItem | null; wornItem: import("../pages/throne/Bis").BisItem | null;
+  ah?: AhState | null;
 }
+/** An item on the chosen auction house: its latest price (none when no lot is up) and whether a list follows it. */
+export interface AhState { price: { min: number; median: number; quantity: number; ts: string } | null; tracked: boolean }
 export interface PreBis {
   available: boolean; class?: number; spec: string; level?: number; owned: number; total: number; author: number[];
   hit: { cap: number; talent: number; talents: string[]; gear: number; total: number; planned: number; need: number;
@@ -107,7 +110,8 @@ export interface PreBis {
   buffs?: SimBuff[];
   talents?: { ranks: Record<string, number>; swap: { from: number; to: number }; split: number[]; fromLevel: number };
   stats?: string[]; rotation?: { icon: string; spell: string; do: string }[];
-  consumables?: { id: number; group: string; req: number }[];
+  consumables?: { id: number; group: string; req: number; ah?: AhState | null }[];
+  market?: boolean;
   enchants?: { key: string; slot: string; alt: boolean; covered?: boolean; state: "ok" | "other" | "none"; have: string[];
     item: number | null; maker: string; value: number | null; itemName: string }[];
 }

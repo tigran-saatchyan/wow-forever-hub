@@ -95,6 +95,8 @@ async def prebis(cid: int, user: CurrentUser, session: Session, lang: str = "ru"
     eq = {x["slot"]: x for x in (((c.profile or {}).get("equipment") or {}).get(lang) or [])}
     worn = {x["id"] for x in eq.values()}
     marked = await _owned(session, cid)
+    ah = await auction(session, user, [e["id"] for sl in g["slots"] for k in ("center", "damage", "hit") for e in sl.get(k) or []]
+                       + [x["id"] for x in g.get("consumables") or []])
     w, rooms, gear = b["weights"], b.get("hitRoom") or {}, bis_routes.gear()
     # the hit the character's own talents give, at their real ranks (another specialization's tree gives none)
     t_hit, t_names, _ = talent_weights.spell_hit_taken(cls, rows)
@@ -118,7 +120,8 @@ async def prebis(cid: int, user: CurrentUser, session: Session, lang: str = "ru"
                 "note": entry.get("note"), "hit": round(bis.hit_rating(it.get("stats") or {}) / 10, 2),
                 "src": source(entry["src"], lang), "worn": i in worn, "marked": i in marked,
                 "owned": i in worn or i in marked, "author": i in g["author"], "full": full,
-                "wornItem": weakest([(b["slots"].get(e) or {}).get("worn") for e in equip])}
+                "wornItem": weakest([(b["slots"].get(e) or {}).get("worn") for e in equip]),
+                "ah": tradeable(it.get("bind"), ah["items"].get(i))}
 
     def weakest(xs: list) -> dict | None:
         """Of two rings or trinkets worn, the one a new item would replace."""
@@ -177,7 +180,8 @@ async def prebis(cid: int, user: CurrentUser, session: Session, lang: str = "ru"
             "summary": summaries(c, lang, eq, g, gear, t_hit, sum(h["full"] for h in hit_tal), slots),
             "buffs": sim_buffs(),
             "talents": g.get("talents"), "stats": g.get("stats"), "rotation": g.get("rotation"),
-            "consumables": g.get("consumables"), "enchants": enchant_state(g, eq),
+            "consumables": [{**x, "ah": tradeable(x.get("bind"), ah["items"].get(x["id"]))} for x in g.get("consumables") or []],
+            "market": ah["configured"], "enchants": enchant_state(g, eq),
             "total": sum(r["count"] for r in slots if r["slot"] != "TWO_HAND")}
 
 
@@ -221,6 +225,32 @@ STAT_KEYS = {"sp": ("SPELL_POWER", "SPELL_DAMAGE_DONE"), "shadow": ("BONUS_STAT_
              "crit": ("CRIT_RATING", "CRIT_SPELL_RATING", "SPELL_CRIT_RATING"), "hit": bis.HIT_KEYS,
              "pen": ("SPELL_PENETRATION",), "int": ("INTELLECT",), "spi": ("SPIRIT",), "sta": ("STAMINA",),
              "mp5": ("MANA_REGENERATION",)}
+
+
+def tradeable(bind: int | None, ah: dict | None) -> dict | None:
+    """The auction house state of an item that can be on it: bound on pickup or a quest item never is; an item whose
+    binding is unknown only when a lot of it is up now (it is tradeable then, by that very lot)."""
+    if not ah or bind in (1, 4) or (bind is None and not ah["price"]):
+        return None
+    return ah
+
+
+async def auction(session: AsyncSession, user, ids: list[int]) -> dict:
+    """The chosen auction house's latest price of each item and whether the user already follows it in a list."""
+    from sqlalchemy import select
+
+    from ..db import AhLatest, AhList, AhListItem
+    from .market import _setting
+
+    cfg = await _setting(session, "market")
+    followed = set((await session.execute(select(AhListItem.item_id).join(AhList, AhList.id == AhListItem.list_id)
+                                          .where(AhList.user_id == user.id))).scalars().all())
+    items = {}
+    for i in set(ids):
+        x = await session.get(AhLatest, (cfg["ruleset"], cfg["house"], i)) if cfg else None
+        items[i] = {"price": {"min": x.min_price, "median": x.median_price, "quantity": x.quantity, "ts": x.ts} if x else None,
+                    "tracked": i in followed}
+    return {"configured": bool(cfg), "items": items}
 
 
 def summaries(c, lang: str, eq: dict, g: dict, gear: dict, t_hit: float, full_hit: float, slots: list) -> dict:

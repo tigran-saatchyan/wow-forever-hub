@@ -8,6 +8,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence } from "framer-motion";
 import { useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
+import { AhChip } from "../../components/AhChip";
 import { ItemIcon } from "../../components/Wow";
 import { iconStyle, useIcons } from "../../lib/gameData";
 import { useI18n, type Key } from "../../lib/i18n";
@@ -61,7 +62,7 @@ export function PreRaid({ char }: { char: Character | null }) {
           {tab === "items" && <>
             <Legend />
             <div className="grid gap-3 lg:grid-cols-2">
-              {d.slots.map((r) => <SlotCard key={r.slot} r={r} cid={cur.c.id} sim={sim} />)}
+              {d.slots.map((r) => <SlotCard key={r.slot} r={r} cid={cur.c.id} sim={sim} market={!!d.market} />)}
             </div>
           </>}
           {tab === "talents" && <TalentsPane d={d} cid={cur.c.id} />}
@@ -120,13 +121,13 @@ function Legend() {
   );
 }
 
-function SlotCard({ r, cid, sim }: { r: PreBis["slots"][number]; cid: number; sim: boolean }) {
+function SlotCard({ r, cid, sim, market }: { r: PreBis["slots"][number]; cid: number; sim: boolean; market: boolean }) {
   const { t } = useI18n();
   const name = t((["FINGER", "TRINKET", "TWO_HAND"].includes(r.slot) ? `pr_slot_${r.slot}` : `slot_${r.slot}`) as Key);
   const group = (k: "center" | "damage" | "hit", label: string, cls: string): ReactNode => r[k].length > 0 && (
     <div className={`prebis-group ${cls}`}>
       <div className="prebis-glabel">{label}</div>
-      <ul className="space-y-1.5">{r[k].map((x) => <Row key={x.id} x={x} cid={cid} sim={sim} />)}</ul>
+      <ul className="space-y-1.5">{r[k].map((x) => <Row key={x.id} x={x} cid={cid} sim={sim} market={market} />)}</ul>
     </div>
   );
   return (
@@ -146,7 +147,7 @@ function SlotCard({ r, cid, sim }: { r: PreBis["slots"][number]; cid: number; si
   );
 }
 
-function Row({ x, cid, sim }: { x: PreBisItem; cid: number; sim: boolean }) {
+function Row({ x, cid, sim, market }: { x: PreBisItem; cid: number; sim: boolean; market: boolean }) {
   const { t, lang } = useI18n();
   const qc = useQueryClient();
   const [hover, setHover] = useState(false);
@@ -170,6 +171,7 @@ function Row({ x, cid, sim }: { x: PreBisItem; cid: number; sim: boolean }) {
       </span>
       <span className="flex shrink-0 items-center gap-2">
         {x.hit > 0 && <span className="prebis-hitbadge">{t("pr_hit_badge", { n: x.hit })}</span>}
+        {market && x.ah && <AhChip id={x.id} ah={x.ah} />}
         {x.worn ? <span className="text-xs text-good">✓ {t("bis_worn_tag")}</span> : (
           <button className={`prebis-mark ${x.marked ? "on" : ""}`} disabled={mark.isPending} onClick={() => mark.mutate()}
             title={t(x.marked ? "pr_unmark" : "pr_mark")}>{x.marked ? `✓ ${t("pr_have_it")}` : t("pr_have_q")}</button>

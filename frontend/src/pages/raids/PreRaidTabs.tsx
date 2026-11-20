@@ -1,5 +1,6 @@
 /** The pre-raid section's other tabs: the talent build against the character's, the stat priority and the
  *  rotation, the consumables, and the enchantments the character's gear still lacks. */
+import { AhChip } from "../../components/AhChip";
 import { useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
@@ -116,7 +117,7 @@ export function ConsumablesPane({ d, level }: { d: PreBis; level?: number }) {
   const { t } = useI18n();
   return (
     <div className="space-y-3">
-      <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 26rem), 1fr))" }}>
         {(d.consumables || []).map((x) => (
           <li key={x.id} className="prebis-item">
             <ItemHover id={x.id}>
@@ -131,6 +132,7 @@ export function ConsumablesPane({ d, level }: { d: PreBis; level?: number }) {
             <span className={`ml-auto shrink-0 text-xs ${level != null && x.req > level ? "text-[#ffb070]" : "text-muted"}`}>
               {x.req ? t("pr_from_lvl", { n: x.req }) : ""}
             </span>
+            {d.market && x.ah && <AhChip id={x.id} ah={x.ah} />}
           </li>
         ))}
       </ul>
