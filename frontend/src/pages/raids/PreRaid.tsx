@@ -15,6 +15,7 @@ import { store } from "../../lib/store";
 import { fullName, qColor, wowApi, type Character, type PreBis, type PreBisItem } from "../../lib/wowApi";
 import { Compare } from "../throne/Bis";
 import { ConsumablesPane, EnchantsPane, GuidePane, TalentsPane } from "./PreRaidTabs";
+import { applySim, BuffBar, SimSettings, useSimCfg, type SimResult } from "./SimBuffs";
 
 const TABS = ["items", "talents", "guide", "consumables", "enchants"] as const;
 
@@ -28,9 +29,11 @@ export function PreRaid({ char }: { char: Character | null }) {
   const [open, setOpen] = useState(() => store.get("prebisOpen", true));
   const [tab, setTab] = useState<string>(() => store.get("prebisTab", "items"));
   const [sim, setSim] = useState(false);
+  const [cfg, setCfg] = useSimCfg();
   if (!char || !q.data?.available) return null;
   const d = q.data;
   const cur = { c: char };
+  const r = sim ? applySim(d, cfg) : null;
   const toggle = () => { store.set("prebisOpen", !open); setOpen(!open); };
   return (
     <section className="panel prebis p-4">
@@ -42,11 +45,13 @@ export function PreRaid({ char }: { char: Character | null }) {
         <span className="text-sm text-muted">{fullName(cur.c, lang)}</span>
         <span className="ml-auto text-sm text-muted">{t("pr_have", { n: d.owned, t: d.total })}</span>
         <button className={sim ? "btn-primary" : "btn"} onClick={() => setSim(!sim)} title={t("pr_sim_h")}>{t(sim ? "pr_sim_off" : "pr_sim")}</button>
+        <SimSettings d={d} cfg={cfg} set={(c) => (setCfg(c), setSim(true))} />
       </div>
       {open && (
         <div className="mt-4 space-y-4">
-          <HitBar d={d} sim={sim} />
-          <StatSummary d={d} sim={sim} />
+          <HitBar d={d} r={r} />
+          <StatSummary d={d} r={r} />
+          {r && <BuffBar r={r} />}
           <div className="prebis-tabs" role="tablist">
             {TABS.map((k) => (
               <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""}
@@ -70,13 +75,13 @@ export function PreRaid({ char }: { char: Character | null }) {
 }
 
 /** The spell hit: talents (at their real ranks) and worn gear now, with the list's items the character has, against the cap. */
-function HitBar({ d, sim }: { d: PreBis; sim: boolean }) {
+function HitBar({ d, r }: { d: PreBis; r: SimResult | null }) {
   const { t } = useI18n();
   const icons = useIcons();
   const full = d.hit.talentList.reduce((a, x) => a + x.full, 0);
   // the simulation: the best combination worn, the hit talents at full rank
-  const h = sim && d.summary ? { ...d.hit, talent: full, planned: d.summary.sim.hit, total: d.summary.sim.hit, gear: +(d.summary.sim.hit - full).toFixed(2),
-    need: Math.max(0, +(d.hit.cap - d.summary.sim.hit).toFixed(2)), talentList: d.hit.talentList.map((x) => ({ ...x, rank: x.max })) } : d.hit;
+  const h = r ? { ...d.hit, talent: full, planned: r.hit, total: r.hit, gear: +(r.hit - full).toFixed(2),
+    need: Math.max(0, +(d.hit.cap - r.hit).toFixed(2)), talentList: d.hit.talentList.map((x) => ({ ...x, rank: x.max })) } : d.hit;
   const pct = (v: number) => `${Math.min(100, (v / h.cap) * 100)}%`;
   const done = h.planned >= h.cap;
   return (
@@ -198,24 +203,42 @@ function Src({ x }: { x: PreBisItem }) {
   return <>{main}{extra ? ` · ${extra}` : ""}{s.bossNames && s.kind === "bosses" && s.bossNames.length ? <span className="hidden sm:inline"> — {s.bossNames.join(", ")}</span> : null}</>;
 }
 
-/** What the gear adds up to: worn now, and with the simulation on the best combination beside it. */
-function StatSummary({ d, sim }: { d: PreBis; sim: boolean }) {
+/** What the character has now (their base and worn gear), and with the simulation the best combination with all
+ * that is switched on in its settings. */
+function StatSummary({ d, r }: { d: PreBis; r: SimResult | null }) {
   const { t } = useI18n();
   if (!d.summary) return null;
-  const a = d.summary.worn, b = d.summary.sim;
-  const rows: [keyof typeof a, string][] = [["hit", "%"], ["crit", "%"], ["shadow", ""], ["sp", ""], ["pen", ""], ["int", ""], ["spi", ""], ["sta", ""]];
+  const a = d.summary.worn;
+  const manaNow = d.summary.base ? d.summary.base.mana + 15 * a.int : null;
+  const rows: [string, number | null, number | null, string][] = [
+    ["hit", a.hit, r?.hit ?? null, "%"], ["crit", a.crit, r?.crit ?? null, "%"], ["shadow", a.shadow, r?.shadow ?? null, ""],
+    ["sp", a.sp, r?.sp ?? null, ""], ["pen", a.pen, r?.pen ?? null, ""], ["int", a.int, r?.int ?? null, ""],
+    ["spi", a.spi, r?.spi ?? null, ""], ["sta", a.sta, r?.sta ?? null, ""], ["mana", manaNow, r?.mana ?? null, ""],
+    ["mp5", a.mp5, r?.mp5 ?? null, ""],
+  ];
   return (
-    <div className="prebis-sum">
-      {rows.map(([k, u]) => {
-        const diff = +(b[k] - a[k]).toFixed(2);
-        return (
-          <div key={k} className="cell">
-            <div className="eyebrow">{t(`pr_sum_${k}` as Key)}</div>
-            <div className="font-mono text-lg">{a[k]}{u}</div>
-            {sim && <div className="text-xs">→ <b className="text-gold">{b[k]}{u}</b> <span className={diff > 0 ? "text-good" : diff < 0 ? "text-bad" : "text-muted"}>({diff > 0 ? "+" : ""}{diff}{u})</span></div>}
+    <div className="space-y-2">
+      <div className="prebis-sum">
+        {rows.map(([k, x, y, u]) => {
+          const diff = x != null && y != null ? +(y - x).toFixed(2) : null;
+          return (
+            <div key={k} className="cell">
+              <div className="eyebrow">{t(`pr_sum_${k}` as Key)}</div>
+              <div className="font-mono text-lg">{x ?? "—"}{x != null ? u : ""}</div>
+              {r && y != null && <div className="text-xs">→ <b className="text-gold">{y}{u}</b>{diff != null && <> <span className={diff > 0 ? "text-good" : diff < 0 ? "text-bad" : "text-muted"}>({diff > 0 ? "+" : ""}{diff}{u})</span></>}</div>}
+            </div>
+          );
+        })}
+        {r && r.dmg > 1 && (
+          <div className="cell">
+            <div className="eyebrow">{t("pr_sum_dmg")}</div>
+            <div className="font-mono text-lg text-gold">+{Math.round((r.dmg - 1) * 100)}%</div>
+            <div className="text-xs text-muted">{t("pr_sum_dmg_h")}</div>
           </div>
-        );
-      })}
+        )}
+      </div>
+      {!d.summary.base && <p className="text-xs text-muted">{t("pr_sum_nobase")}</p>}
+      {r && d.summary.base && <p className="text-xs text-muted">{t("pr_sum_base", { l: d.level ?? "?" })}</p>}
     </div>
   );
 }

@@ -30,6 +30,14 @@ DATA = Path(__file__).resolve().parent.parent / "data" / "prebis"
 EQUIP = {"FINGER": ["FINGER_1", "FINGER_2"], "TRINKET": ["TRINKET_1", "TRINKET_2"], "TWO_HAND": ["MAIN_HAND"]}
 
 
+@lru_cache(maxsize=1)
+def sim_buffs() -> list[dict]:
+    """What the simulation can switch on: consumables, other classes' buffs, buffs through others' talents
+    (tools/build_sim_buffs.py, from the game's files)."""
+    p = DATA.parent / "sim_buffs.json"
+    return json.loads(p.read_text("utf-8"))["buffs"] if p.is_file() else []
+
+
 @lru_cache(maxsize=8)
 def guide(cls: int, spec: str) -> dict | None:
     key = bis.CLASSES.get(cls, {}).get("key")
@@ -166,12 +174,8 @@ async def prebis(cid: int, user: CurrentUser, session: Session, lang: str = "ru"
     return {"available": True, "class": cls, "spec": spec, "level": level, "hit": {**hit, "cap": g["hitCap"],
             "planned": round(planned, 2), "need": round(need, 2)},
             "slots": slots, "author": g["author"], "owned": owned_slots,
-            "summary": {
-                "worn": summary([x.get("statv") or {} for x in eq.values()], t_hit),
-                # the best combination, with the hit talents at full rank
-                "sim": summary([(gear.get(str(i)) or {}).get("stats") or {} for i in g["author"]],
-                               sum(h["full"] for h in hit_tal)),
-            },
+            "summary": summaries(c, lang, eq, g, gear, t_hit, sum(h["full"] for h in hit_tal), slots),
+            "buffs": sim_buffs(),
             "talents": g.get("talents"), "stats": g.get("stats"), "rotation": g.get("rotation"),
             "consumables": g.get("consumables"), "enchants": enchant_state(g, eq),
             "total": sum(r["count"] for r in slots if r["slot"] != "TWO_HAND")}
@@ -217,6 +221,37 @@ STAT_KEYS = {"sp": ("SPELL_POWER", "SPELL_DAMAGE_DONE"), "shadow": ("BONUS_STAT_
              "crit": ("CRIT_RATING", "CRIT_SPELL_RATING", "SPELL_CRIT_RATING"), "hit": bis.HIT_KEYS,
              "pen": ("SPELL_PENETRATION",), "int": ("INTELLECT",), "spi": ("SPIRIT",), "sta": ("STAMINA",),
              "mp5": ("MANA_REGENERATION",)}
+
+
+def summaries(c, lang: str, eq: dict, g: dict, gear: dict, t_hit: float, full_hit: float, slots: list) -> dict:
+    """Worn now and the simulated best combination, both on the character's own base: what Blizzard reports as
+    their totals less what the worn gear gives (so a level 35 character is simulated at their level 35 base);
+    and the enchantments the guide puts on that combination."""
+    worn = summary([x.get("statv") or {} for x in eq.values()], t_hit)
+    sim = summary([(gear.get(str(i)) or {}).get("stats") or {} for i in g["author"]], full_hit)
+    st = (((c.profile or {}).get("stats") or {}).get(lang) or {})
+    base = None
+    if isinstance(st.get("intellect"), (int, float)):
+        base = {"int": st["intellect"] - worn["int"], "spi": st.get("spirit", 0) - worn["spi"],
+                "sta": st.get("stamina", 0) - worn["sta"], "sp": max(0, (st.get("spell_power") or 0) - worn["sp"]),
+                "crit": round(max(0.0, (st.get("spell_crit") or 0) - worn["crit"]), 2)}
+        for x in (worn, sim):
+            for k in ("int", "spi", "sta", "sp", "crit"):
+                x[k] = round(x[k] + base[k], 2)
+            x["shadow"] += base["sp"]
+        # mana: 15 a point of intellect (the game's rule), the rest is the class and level base
+        base["mana"] = (st.get("power") or 0) - 15 * st["intellect"]
+    # the guide's enchantments on the combination: a staff takes its own, a one-hand weapon and an off-hand theirs
+    two = any(x["id"] in g["author"] for r in slots if r["slot"] == "TWO_HAND" for x in r["center"] + r["damage"] + r["hit"])
+    ench = []
+    for e in g.get("enchants") or []:
+        if e.get("alt") or ("twoHand" in e and e["twoHand"] != two):
+            continue
+        for slot in e["slots"]:
+            if slot == "OFF_HAND" and two:
+                continue
+            ench.append({"key": e["key"], "slot": slot, "sp": e.get("value"), "item": e.get("item"), "maker": e["maker"]})
+    return {"worn": worn, "sim": sim, "base": base, "enchants": ench}
 
 
 def summary(stats_list: list[dict], talent_hit: float) -> dict:

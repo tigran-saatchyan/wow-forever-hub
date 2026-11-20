@@ -99,7 +99,12 @@ export interface PreBis {
   hit: { cap: number; talent: number; talents: string[]; gear: number; total: number; planned: number; need: number;
     talentList: { id: number; name: string; en: string; tab: number; max: number; full: number; icon: string; rank: number }[] };
   slots: { slot: string; count: number; center: PreBisItem[]; damage: PreBisItem[]; hit: PreBisItem[] }[];
-  summary?: Record<"worn" | "sim", { sp: number; shadow: number; crit: number; hit: number; pen: number; int: number; spi: number; sta: number; mp5: number }>;
+  summary?: {
+    worn: SimStats; sim: SimStats;
+    base: { int: number; spi: number; sta: number; sp: number; crit: number; mana: number } | null;
+    enchants: { key: string; slot: string; sp: number | null; item?: number | null; maker: string }[];
+  };
+  buffs?: SimBuff[];
   talents?: { ranks: Record<string, number>; swap: { from: number; to: number }; split: number[]; fromLevel: number };
   stats?: string[]; rotation?: { icon: string; spell: string; do: string }[];
   consumables?: { id: number; group: string; req: number }[];
@@ -264,6 +269,19 @@ export interface ItemSources {
  * "Name Surname", Forever's way. The surname comes from the profile; for cards fetched before it was read,
  * from the lookup slug (name-surname), capitalised.
  */
+export interface SimStats { sp: number; shadow: number; crit: number; hit: number; pen: number; int: number; spi: number; sta: number; mp5: number }
+export type SimEffect = Partial<Record<"sp" | "int" | "spi" | "sta" | "str" | "agi" | "crit" | "hit" | "mp5" | "mana" | "hp" | "dmgPct", number>>
+  & { pct?: Partial<Record<"int" | "spi" | "sta" | "str" | "agi", number>>; school?: Partial<Record<string, number>> };
+/** A buff the simulation can switch on, with its values from the game's files. */
+export interface SimBuff {
+  key: string; group: "food" | "elixir" | "flask" | "potion" | "oil" | "class" | "talent";
+  item?: number; itemIcon?: string | null; req?: number; spell: number; name: Record<Lang, string>; aura: Record<Lang, string>;
+  eff: SimEffect; dur: number | null; icon: string | null; needs?: string;
+  class?: { id: number; token: string; name: Record<Lang, string>; color: string; icon: string };
+  talent?: number; talentName?: Record<Lang, string>; talentIcon?: string; spec?: { tab: number; name: Record<Lang, string> };
+  text?: Record<Lang, string>;
+}
+
 export function fullName(c: { name: string; slug?: string; summary?: Record<Lang, CharSummary> | null }, lang: Lang): string {
   const s = c.summary?.[lang];
   const first = s?.name || c.name;

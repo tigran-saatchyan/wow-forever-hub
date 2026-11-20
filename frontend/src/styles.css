@@ -1683,3 +1683,16 @@ button.order-line:hover { @apply text-gold; }
 .sub-nav a { padding: .2rem .7rem; border-radius: .35rem; color: rgb(var(--muted)); border: 1px solid transparent; position: relative; }
 .sub-nav a:hover { color: rgb(var(--ink)); }
 .sub-nav a.on { color: rgb(var(--gold)); border-color: rgb(var(--gold) / .35); background: rgb(var(--accent) / .12); }
+
+/* the simulation's buffs: the settings under the gear and the buff bar */
+.sb-pop { position: absolute; right: 0; top: calc(100% + 6px); z-index: 60; width: min(92vw, 60rem); max-height: 75vh; overflow-y: auto; display: grid; gap: .5rem; padding: .8rem; border: 1px solid rgb(var(--edge)); border-radius: .5rem; background: rgb(var(--panel)); box-shadow: 0 14px 34px -8px rgb(0 0 0 / .75); }
+.sb-cols { display: grid; gap: .9rem 1.2rem; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); }
+.sb-row { display: flex; align-items: center; gap: .5rem; padding: .3rem .4rem; border: 1px solid transparent; border-radius: .35rem; cursor: pointer; }
+.sb-row:hover { background: rgb(var(--accent) / .1); }
+.sb-row.on { border-color: rgb(var(--gold) / .35); background: rgb(var(--accent) / .14); }
+.sb-row input { flex: none; accent-color: rgb(var(--gold)); }
+.sb-bar { display: flex; flex-wrap: wrap; gap: .45rem; padding: .5rem .6rem; border: 1px solid rgb(var(--edge)); border-radius: .45rem; background: rgb(0 0 0 / .25); }
+.sb-buff { position: relative; display: grid; justify-items: center; gap: 1px; outline: none; }
+.sb-time { font-size: 11px; line-height: 1; color: #ffd100; text-shadow: 0 1px 2px #000; min-height: 11px; }
+.sb-tip { position: absolute; left: 50%; top: calc(100% + 4px); transform: translateX(-50%); z-index: 70; width: max-content; max-width: 19rem; display: none; text-align: left; }
+.sb-buff:hover .sb-tip, .sb-buff:focus .sb-tip { display: block; }

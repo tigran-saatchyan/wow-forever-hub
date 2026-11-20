@@ -1,0 +1,811 @@
+{
+ "build": "1.60.1.70938",
+ "source": "the game's files (wago.tools DB2 export) and the community listfile",
+ "buffs": [
+  {
+   "key": "food:13935",
+   "group": "food",
+   "item": 13935,
+   "name": {
+    "en": "Baked Salmon",
+    "ru": "Запеченный лосось"
+   },
+   "req": 45,
+   "itemIcon": "inv_misc_fish_20",
+   "spell": 1249520,
+   "aura": {
+    "en": "Well Fed",
+    "ru": "Сытость"
+   },
+   "eff": {
+    "sp": 28
+   },
+   "dur": 900000,
+   "icon": "inv_misc_food_01"
+  },
+  {
+   "key": "food:13931",
+   "group": "food",
+   "item": 13931,
+   "name": {
+    "en": "Nightfin Soup",
+    "ru": "Суп из ночницы"
+   },
+   "req": 35,
+   "itemIcon": "inv_drink_17",
+   "spell": 1249520,
+   "aura": {
+    "en": "Well Fed",
+    "ru": "Сытость"
+   },
+   "eff": {
+    "sp": 22
+   },
+   "dur": 900000,
+   "icon": "inv_misc_food_01"
+  },
+  {
+   "key": "food:18254",
+   "group": "food",
+   "item": 18254,
+   "name": {
+    "en": "Runn Tum Tuber Surprise",
+    "ru": "Десерт из корня Рун-Тум"
+   },
+   "req": 35,
+   "itemIcon": "inv_misc_food_63",
+   "spell": 1248421,
+   "aura": {
+    "en": "Well Fed",
+    "ru": "Сытость"
+   },
+   "eff": {
+    "int": 15
+   },
+   "dur": 900000,
+   "icon": "inv_misc_food_01"
+  },
+  {
+   "key": "elixir:13454",
+   "group": "elixir",
+   "item": 13454,
+   "name": {
+    "en": "Greater Arcane Elixir",
+    "ru": "Сильный чародейский эликсир"
+   },
+   "req": 47,
+   "itemIcon": "inv_potion_109",
+   "spell": 17539,
+   "aura": {
+    "en": "Greater Arcane Elixir",
+    "ru": "Сильный чародейский эликсир"
+   },
+   "eff": {
+    "sp": 35
+   },
+   "dur": 3600000,
+   "icon": "inv_potion_109"
+  },
+  {
+   "key": "elixir:9155",
+   "group": "elixir",
+   "item": 9155,
+   "name": {
+    "en": "Arcane Elixir",
+    "ru": "Чародейский эликсир"
+   },
+   "req": 37,
+   "itemIcon": "inv_potion_30",
+   "spell": 11390,
+   "aura": {
+    "en": "Arcane Elixir",
+    "ru": "Чародейский эликсир"
+   },
+   "eff": {
+    "sp": 20
+   },
+   "dur": 1800000,
+   "icon": "inv_potion_30"
+  },
+  {
+   "key": "elixir:9264",
+   "group": "elixir",
+   "item": 9264,
+   "name": {
+    "en": "Elixir of Shadow Power",
+    "ru": "Эликсир силы тьмы"
+   },
+   "req": 40,
+   "itemIcon": "inv_potion_48",
+   "spell": 11474,
+   "aura": {
+    "en": "Shadow Power",
+    "ru": "Мощь темной магии"
+   },
+   "eff": {
+    "school": {
+     "shadow": 40
+    }
+   },
+   "dur": 1800000,
+   "icon": "inv_potion_48"
+  },
+  {
+   "key": "elixir:13447",
+   "group": "elixir",
+   "item": 13447,
+   "name": {
+    "en": "Elixir of the Sages",
+    "ru": "Эликсир мудрецов"
+   },
+   "req": 38,
+   "itemIcon": "inv_potion_29",
+   "spell": 17535,
+   "aura": {
+    "en": "Elixir of the Sages",
+    "ru": "Эликсир Мудреца"
+   },
+   "eff": {
+    "int": 18,
+    "spi": 18
+   },
+   "dur": 3600000,
+   "icon": "inv_potion_29"
+  },
+  {
+   "key": "elixir:20007",
+   "group": "elixir",
+   "item": 20007,
+   "name": {
+    "en": "Mageblood Elixir",
+    "ru": "Эликсир крови волшебника"
+   },
+   "req": 40,
+   "itemIcon": "inv_potion_137",
+   "spell": 24363,
+   "aura": {
+    "en": "Mana Regeneration",
+    "ru": "Восполнение маны"
+   },
+   "eff": {
+    "mp5": 12
+   },
+   "dur": 3600000,
+   "icon": "inv_potion_137"
+  },
+  {
+   "key": "flask:13512",
+   "group": "flask",
+   "item": 13512,
+   "name": {
+    "en": "Flask of Supreme Power",
+    "ru": "Настой великой силы"
+   },
+   "req": 50,
+   "itemIcon": "inv_potion_41",
+   "spell": 17628,
+   "aura": {
+    "en": "Supreme Power",
+    "ru": "Превосходная мощь"
+   },
+   "eff": {
+    "sp": 150
+   },
+   "dur": 7200000,
+   "icon": "inv_potion_41"
+  },
+  {
+   "key": "flask:13511",
+   "group": "flask",
+   "item": 13511,
+   "name": {
+    "en": "Flask of Distilled Wisdom",
+    "ru": "Настой Концентрированной мудрости"
+   },
+   "req": 50,
+   "itemIcon": "inv_potion_97",
+   "spell": 17627,
+   "aura": {
+    "en": "Distilled Wisdom",
+    "ru": "Очищенная мудрость"
+   },
+   "eff": {
+    "mana": 2000
+   },
+   "dur": 7200000,
+   "icon": "inv_potion_97"
+  },
+  {
+   "key": "flask:13510",
+   "group": "flask",
+   "item": 13510,
+   "name": {
+    "en": "Flask of the Titans",
+    "ru": "Настой титанов"
+   },
+   "req": 50,
+   "itemIcon": "inv_potion_62",
+   "spell": 17626,
+   "aura": {
+    "en": "Flask of the Titans",
+    "ru": "Склянка Титанов"
+   },
+   "eff": {
+    "hp": 1200
+   },
+   "dur": 7200000,
+   "icon": "inv_potion_62"
+  },
+  {
+   "key": "potion:250937",
+   "group": "potion",
+   "item": 250937,
+   "name": {
+    "en": "Major Spellblasting Potion",
+    "ru": "Большое зелье взрывных чар"
+   },
+   "req": 55,
+   "itemIcon": "inv_potione_4",
+   "spell": 1251932,
+   "aura": {
+    "en": "Major Spellblasting Potion",
+    "ru": "Большое зелье взрывных чар"
+   },
+   "eff": {
+    "sp": 47
+   },
+   "dur": 30000,
+   "icon": "inv_potione_4"
+  },
+  {
+   "key": "oil:20750",
+   "group": "oil",
+   "item": 20750,
+   "name": {
+    "en": "Wizard Oil",
+    "ru": "Волшебное масло"
+   },
+   "req": 40,
+   "itemIcon": "inv_potion_104",
+   "spell": 25111,
+   "aura": {
+    "en": "Wizard Oil",
+    "ru": "Волшебное масло"
+   },
+   "eff": {
+    "sp": 24
+   },
+   "dur": 1800000,
+   "icon": "inv_potion_104"
+  },
+  {
+   "key": "oil:20749",
+   "group": "oil",
+   "item": 20749,
+   "name": {
+    "en": "Brilliant Wizard Oil",
+    "ru": "Сверкающее волшебное масло"
+   },
+   "req": 45,
+   "itemIcon": "inv_potion_105",
+   "spell": 25113,
+   "aura": {
+    "en": "Brilliant Wizard Oil",
+    "ru": "Сверкающее волшебное масло"
+   },
+   "eff": {
+    "sp": 36,
+    "crit": 1
+   },
+   "dur": 1800000,
+   "icon": "inv_potion_105"
+  },
+  {
+   "key": "class:23028",
+   "group": "class",
+   "class": {
+    "id": 8,
+    "token": "MAGE",
+    "name": {
+     "en": "Mage",
+     "ru": "Маг"
+    },
+    "color": "#3fc7eb",
+    "icon": "classicon_mage"
+   },
+   "spell": 23028,
+   "name": {
+    "en": "Arcane Brilliance",
+    "ru": "Чародейская гениальность"
+   },
+   "aura": {
+    "en": "Arcane Brilliance",
+    "ru": "Чародейская гениальность"
+   },
+   "eff": {
+    "int": 31
+   },
+   "dur": 3600000,
+   "icon": "spell_holy_arcaneintellect"
+  },
+  {
+   "key": "class:21564",
+   "group": "class",
+   "class": {
+    "id": 5,
+    "token": "PRIEST",
+    "name": {
+     "en": "Priest",
+     "ru": "Жрец"
+    },
+    "color": "#ffffff",
+    "icon": "classicon_priest"
+   },
+   "spell": 21564,
+   "name": {
+    "en": "Prayer of Fortitude",
+    "ru": "Молитва стойкости"
+   },
+   "aura": {
+    "en": "Prayer of Fortitude",
+    "ru": "Молитва стойкости"
+   },
+   "eff": {
+    "sta": 70
+   },
+   "dur": 3600000,
+   "icon": "spell_holy_prayeroffortitude"
+  },
+  {
+   "key": "class:27681",
+   "group": "class",
+   "class": {
+    "id": 5,
+    "token": "PRIEST",
+    "name": {
+     "en": "Priest",
+     "ru": "Жрец"
+    },
+    "color": "#ffffff",
+    "icon": "classicon_priest"
+   },
+   "spell": 27681,
+   "name": {
+    "en": "Prayer of Spirit",
+    "ru": "Молитва духа"
+   },
+   "aura": {
+    "en": "Prayer of Spirit",
+    "ru": "Молитва духа"
+   },
+   "eff": {
+    "spi": 40
+   },
+   "dur": 3600000,
+   "icon": "spell_holy_prayerofspirit"
+  },
+  {
+   "key": "class:21850",
+   "group": "class",
+   "class": {
+    "id": 11,
+    "token": "DRUID",
+    "name": {
+     "en": "Druid",
+     "ru": "Друид"
+    },
+    "color": "#ff7c0a",
+    "icon": "classicon_druid"
+   },
+   "spell": 21850,
+   "name": {
+    "en": "Gift of the Wild",
+    "ru": "Дар леса"
+   },
+   "aura": {
+    "en": "Gift of the Wild",
+    "ru": "Дар леса"
+   },
+   "eff": {
+    "str": 16,
+    "agi": 16,
+    "sta": 16,
+    "int": 16,
+    "spi": 16
+   },
+   "dur": 3600000,
+   "icon": "spell_nature_regeneration"
+  },
+  {
+   "key": "class:10497",
+   "group": "class",
+   "class": {
+    "id": 7,
+    "token": "SHAMAN",
+    "name": {
+     "en": "Shaman",
+     "ru": "Шаман"
+    },
+    "color": "#0070dd",
+    "icon": "classicon_shaman"
+   },
+   "spell": 10497,
+   "name": {
+    "en": "Mana Spring Totem",
+    "ru": "Тотем источника маны"
+   },
+   "aura": {
+    "en": "Mana Spring Totem",
+    "ru": "Тотем источника маны"
+   },
+   "eff": {
+    "mp5": 25.0
+   },
+   "dur": 300000,
+   "icon": "spell_nature_manaregentotem"
+  },
+  {
+   "key": "class:25918",
+   "group": "class",
+   "class": {
+    "id": 2,
+    "token": "PALADIN",
+    "name": {
+     "en": "Paladin",
+     "ru": "Паладин"
+    },
+    "color": "#f48cba",
+    "icon": "classicon_paladin"
+   },
+   "spell": 25918,
+   "name": {
+    "en": "Greater Blessing of Wisdom",
+    "ru": "Великое благословение мудрости"
+   },
+   "aura": {
+    "en": "Greater Blessing of Wisdom",
+    "ru": "Великое благословение мудрости"
+   },
+   "eff": {
+    "mp5": 40.0
+   },
+   "dur": 3600000,
+   "icon": "spell_holy_greaterblessingofwisdom"
+  },
+  {
+   "key": "class:25898",
+   "group": "class",
+   "class": {
+    "id": 2,
+    "token": "PALADIN",
+    "name": {
+     "en": "Paladin",
+     "ru": "Паладин"
+    },
+    "color": "#f48cba",
+    "icon": "classicon_paladin"
+   },
+   "spell": 25898,
+   "name": {
+    "en": "Greater Blessing of Kings",
+    "ru": "Великое благословение королей"
+   },
+   "aura": {
+    "en": "Greater Blessing of Kings",
+    "ru": "Великое благословение королей"
+   },
+   "eff": {
+    "pct": {
+     "str": 10,
+     "agi": 10,
+     "sta": 10,
+     "int": 10,
+     "spi": 10
+    }
+   },
+   "dur": 3600000,
+   "icon": "spell_magic_greaterblessingofkings"
+  },
+  {
+   "key": "class:11767",
+   "group": "class",
+   "class": {
+    "id": 9,
+    "token": "WARLOCK",
+    "name": {
+     "en": "Warlock",
+     "ru": "Чернокнижник"
+    },
+    "color": "#8788ee",
+    "icon": "classicon_warlock"
+   },
+   "spell": 11767,
+   "name": {
+    "en": "Blood Pact",
+    "ru": "Кровавый союз"
+   },
+   "aura": {
+    "en": "Blood Pact",
+    "ru": "Кровавый союз"
+   },
+   "eff": {
+    "sta": 49
+   },
+   "dur": -1,
+   "icon": "spell_shadow_bloodboil"
+  },
+  {
+   "key": "talent:105836",
+   "group": "talent",
+   "class": {
+    "id": 5,
+    "token": "PRIEST",
+    "name": {
+     "en": "Priest",
+     "ru": "Жрец"
+    },
+    "color": "#ffffff",
+    "icon": "classicon_priest"
+   },
+   "talent": 105836,
+   "spec": {
+    "tab": 0,
+    "name": {
+     "en": "Discipline",
+     "ru": "Послушание"
+    }
+   },
+   "talentName": {
+    "en": "Power Infusion",
+    "ru": "Придание сил"
+   },
+   "talentIcon": "spell_holy_powerinfusion",
+   "text": {
+    "en": "Infuses the target with power, increasing their spell damage and healing done by 20% for 15 sec.",
+    "ru": "Наполняет цель силой, увеличивая урон и силу исцеления заклинаний на 20% на 15 сек."
+   },
+   "spell": 10060,
+   "name": {
+    "en": "Power Infusion",
+    "ru": "Придание сил"
+   },
+   "aura": {
+    "en": "Power Infusion",
+    "ru": "Придание сил"
+   },
+   "eff": {
+    "dmgPct": 20
+   },
+   "dur": 15000,
+   "icon": "spell_holy_powerinfusion"
+  },
+  {
+   "key": "talent:105823",
+   "group": "talent",
+   "class": {
+    "id": 5,
+    "token": "PRIEST",
+    "name": {
+     "en": "Priest",
+     "ru": "Жрец"
+    },
+    "color": "#ffffff",
+    "icon": "classicon_priest"
+   },
+   "talent": 105823,
+   "spec": {
+    "tab": 2,
+    "name": {
+     "en": "Shadow",
+     "ru": "Тьма"
+    }
+   },
+   "talentName": {
+    "en": "Dark Inspiration",
+    "ru": "Темное воодушевление"
+   },
+   "talentIcon": "spell_warlock_demonsoul",
+   "text": {
+    "en": "Your Mind Blast and fully channeled Mind Flay causes Dark Inspiration, increasing yours and your party's Spirit by 15% for 10 sec.",
+    "ru": "\"Взрыв разума\" и \"Пытка разума\" по завершении поддержания вызывают срабатывание \"Темного воодушевления\", которое повышает дух для вас и вашей группы на 15% на 10 сек."
+   },
+   "spell": 1326168,
+   "name": {
+    "en": "Dark Inspiration",
+    "ru": "Темное воодушевление"
+   },
+   "aura": {
+    "en": "Dark Inspiration",
+    "ru": "Темное воодушевление"
+   },
+   "eff": {
+    "pct": {
+     "spi": 15
+    }
+   },
+   "dur": 10000,
+   "icon": "spell_warlock_demonsoul"
+  },
+  {
+   "key": "talent:104937",
+   "group": "talent",
+   "class": {
+    "id": 11,
+    "token": "DRUID",
+    "name": {
+     "en": "Druid",
+     "ru": "Друид"
+    },
+    "color": "#ff7c0a",
+    "icon": "classicon_druid"
+   },
+   "talent": 104937,
+   "spec": {
+    "tab": 0,
+    "name": {
+     "en": "Balance",
+     "ru": "Баланс"
+    }
+   },
+   "talentName": {
+    "en": "Moonkin Form",
+    "ru": "Облик лунного совуха"
+   },
+   "talentIcon": "spell_nature_forceofnature",
+   "text": {
+    "en": "Shapeshift into Moonkin Form, increasing Omen of Clarity's chance to trigger by 100%, Armor contribution from items by 360%, and all party or raid members within 45 yards have their Critical Strike chance increased by 3%. Also protects the caster from Polymorph effects and prevents the use of healing spells.\n\nThe act of shapeshifting frees the caster of Polymorph and Movement Impairing effects.",
+    "ru": "Вы принимаете облик лунного совуха. В этом облике \"Знамение ясности\" срабатывает на 100% чаще, бонус к броне от снаряжения увеличивается на 360%, а вероятность критического удара участников группы или рейда в радиусе 45 м повышается на 3%. В облике лунного совуха вы невосприимчивы к эффектам превращения и не можете применять исцеляющие заклинания.\n\nКогда вы меняете облик, вы освобождаетесь от эффектов превращения и затруднения передвижения."
+   },
+   "spell": 24907,
+   "name": {
+    "en": "Moonkin Form",
+    "ru": "Облик лунного совуха"
+   },
+   "aura": {
+    "en": "Moonkin Aura",
+    "ru": "Аура лунного совуха"
+   },
+   "eff": {
+    "crit": 3
+   },
+   "dur": -1,
+   "icon": "spell_nature_forceofnature"
+  },
+  {
+   "key": "talent:104955",
+   "group": "talent",
+   "class": {
+    "id": 11,
+    "token": "DRUID",
+    "name": {
+     "en": "Druid",
+     "ru": "Друид"
+    },
+    "color": "#ff7c0a",
+    "icon": "classicon_druid"
+   },
+   "talent": 104955,
+   "spec": {
+    "tab": 1,
+    "name": {
+     "en": "Feral Combat",
+     "ru": "Сила зверя"
+    }
+   },
+   "talentName": {
+    "en": "Leader of the Pack",
+    "ru": "Вожак стаи"
+   },
+   "talentIcon": "spell_nature_unyeildingstamina",
+   "text": {
+    "en": "While in Cat Form, Bear Form, or Dire Bear Form, the Leader of the Pack increases the Critical Strike chance of all party or raid members within 45 yards by 3%.",
+    "ru": "В облике кошки, медведя или лютого медведя \"Вожак стаи\" усиливает участников группы в радиусе 45 м, повышая вероятность критического удара на 3%."
+   },
+   "spell": 24932,
+   "name": {
+    "en": "Leader of the Pack",
+    "ru": "Вожак стаи"
+   },
+   "aura": {
+    "en": "Leader of the Pack",
+    "ru": "Вожак стаи"
+   },
+   "eff": {
+    "crit": 3
+   },
+   "dur": null,
+   "icon": "spell_nature_unyeildingstamina"
+  },
+  {
+   "key": "talent:104728",
+   "group": "talent",
+   "class": {
+    "id": 7,
+    "token": "SHAMAN",
+    "name": {
+     "en": "Shaman",
+     "ru": "Шаман"
+    },
+    "color": "#0070dd",
+    "icon": "classicon_shaman"
+   },
+   "talent": 104728,
+   "spec": {
+    "tab": 2,
+    "name": {
+     "en": "Restoration",
+     "ru": "Исцеление"
+    }
+   },
+   "talentName": {
+    "en": "Mana Tide Totem",
+    "ru": "Тотем прилива маны"
+   },
+   "talentIcon": "spell_frost_summonwaterelemental",
+   "text": {
+    "en": "Summons a Mana Tide Totem with 5 health at the feet of the caster for 12 sec that restores 88 mana every 3 seconds to group members within 30 yards.",
+    "ru": "Создание рядом с заклинателем тотема прилива маны прочностью 5 ед., который в течение 12 сек. раз в 3 сек. восполняет 88 ед. маны всем участникам группы в радиусе 30 м."
+   },
+   "spell": 16191,
+   "name": {
+    "en": "Mana Tide Totem",
+    "ru": "Тотем прилива маны"
+   },
+   "aura": {
+    "en": "Mana Tide",
+    "ru": "Прилив маны"
+   },
+   "eff": {
+    "mp5": 146.67
+   },
+   "dur": 13000,
+   "icon": "spell_frost_summonwaterelemental"
+  },
+  {
+   "key": "talent:104730",
+   "group": "talent",
+   "class": {
+    "id": 7,
+    "token": "SHAMAN",
+    "name": {
+     "en": "Shaman",
+     "ru": "Шаман"
+    },
+    "color": "#0070dd",
+    "icon": "classicon_shaman"
+   },
+   "talent": 104730,
+   "spec": {
+    "tab": 2,
+    "name": {
+     "en": "Restoration",
+     "ru": "Исцеление"
+    }
+   },
+   "talentName": {
+    "en": "Restorative Totems",
+    "ru": "Восстанавливающий тотем"
+   },
+   "talentIcon": "spell_nature_manaregentotem",
+   "text": {
+    "en": "Increases the effect of your Mana Spring Totem by 25% and increases the effect of your Healing Stream Totem by 50%.",
+    "ru": "Повышает эффективность тотема источника маны на 25%, а тотема исцеляющего потока – на 50%."
+   },
+   "spell": 16187,
+   "name": {
+    "en": "Restorative Totems",
+    "ru": "Восстанавливающий тотем"
+   },
+   "aura": {
+    "en": "Mana Spring Totem",
+    "ru": "Тотем источника маны"
+   },
+   "eff": {
+    "mp5": 6.25
+   },
+   "dur": 300000,
+   "icon": "spell_nature_manaregentotem",
+   "needs": "class:10497"
+  }
+ ]
+}
