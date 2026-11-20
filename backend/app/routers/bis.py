@@ -35,6 +35,14 @@ def base_gear() -> dict[str, dict]:
     return {k: bis.plausible_dps(v) for k, v in json.loads(GEAR.read_text("utf-8"))["items"].items()}
 
 
+@lru_cache(maxsize=1)
+def fixes() -> dict[str, dict]:
+    """Items as the game shows them (tooltip screenshots), for where ForeverDB and Blizzard miss a bonus or carry
+    the original game's numbers; see tools and data/item_fixes.json."""
+    p = GEAR.parent / "item_fixes.json"
+    return json.loads(p.read_text("utf-8"))["items"] if p.is_file() else {}
+
+
 def gear() -> dict[str, dict]:
     """The whole reference: Blizzard's items and the ones only ForeverDB knows (app/fdb_gear.py), less the items
     ForeverDB doubts are in the game."""
@@ -43,6 +51,10 @@ def gear() -> dict[str, dict]:
     stamp = (len(extra), len(flags))
     if _merged[0] != stamp:  # rebuilt only when the ForeverDB half changed
         merged = {**base_gear(), **{k: bis.plausible_dps(v) for k, v in extra.items()}}
+        for k, fix in fixes().items():  # what the game itself shows wins (data/item_fixes.json)
+            base = merged.get(k) or {"classes": -1, "races": -1, "pvp": 0, "flags": 0, "bind": 1, "set": 0, "rep": 0,
+                                     "skill": 0, "spells": [], "unique": False}
+            merged[k] = {**base, **{f: v for f, v in fix.items() if v is not None}}
         _merged = (stamp, {k: v for k, v in merged.items() if not flags.get(k)})
     return _merged[1]
 
@@ -50,26 +62,26 @@ def gear() -> dict[str, dict]:
 _merged: tuple[tuple[int, int] | None, dict] = (None, {})
 
 
-def _item(i: int, lang: str, w: dict, slot: str) -> dict | None:
+def _item(i: int, lang: str, w: dict, slot: str, room: float | None = None) -> dict | None:
     it = gear().get(str(i))
     if not it:
         return None
     return {"id": i, "name": it.get(lang) or it["en"], "q": it["q"], "ilvl": it["ilvl"], "req": it["req"],
             "stats": it.get("stats") or {}, "armor": it.get("armor"), "dps": it.get("dps"), "speed": it.get("speed"),
-            "spells": it.get("spells") or [], "two": it["slot"] == 17, "score": bis.score(it, w, slot)}
+            "spells": it.get("spells") or [], "two": it["slot"] == 17, "score": bis.score(it, w, slot, room)}
 
 
 QUALITY = {"POOR": 0, "COMMON": 1, "UNCOMMON": 2, "RARE": 3, "EPIC": 4, "LEGENDARY": 5}
 
 
-def _worn(x: dict, w: dict, slot: str) -> dict:
+def _worn(x: dict, w: dict, slot: str, room: float | None = None) -> dict:
     """A worn item the gear reference lacks (Forever's item API does not know every item): told by the character's
     own equipment, which carries its stats."""
     it = {"stats": x.get("statv") or {}, "armor": x.get("armor"), "dps": x.get("dps"),
           "cls": 2 if x.get("dps") else 4, "sub": 0}
     return {"id": x["id"], "name": x.get("name") or f"#{x['id']}", "q": QUALITY.get(x.get("quality") or "", 1),
             "ilvl": x.get("ilvl") or 0, "req": 0, "stats": it["stats"], "armor": it["armor"], "dps": it["dps"],
-            "speed": None, "spells": [], "two": x.get("inv") == "TWOHWEAPON", "score": bis.score(it, w, slot)}
+            "speed": None, "spells": [], "two": x.get("inv") == "TWOHWEAPON", "score": bis.score(it, w, slot, room)}
 
 
 async def _char(session: AsyncSession, user, cid: int) -> tuple[Character, dict]:
@@ -80,6 +92,21 @@ async def _char(session: AsyncSession, user, cid: int) -> tuple[Character, dict]
     if not s.get("classId") or s["classId"] not in bis.CLASSES:
         raise HTTPException(422, "the character's class is not known yet")
     return c, s
+
+
+def hit_state(cls: int, specs: list[str], spec: str, level: int, rows: list, eq: dict) -> tuple[dict | None, dict]:
+    """For the casters that damage: the spell hit the character has (talents and what it wears) against the cap,
+    and for every slot how much hit rating an item there can still use (the cap less all hit but that slot's).
+    Nothing for the other specializations: their hit keeps its plain weight."""
+    if (cls, spec) not in bis.CASTER_DPS:
+        return None, {}
+    talent, names = talent_weights.spell_hit(cls, specs, spec, level, rows)
+    per_slot = {k: bis.hit_rating(x.get("statv") or {}) for k, x in eq.items()}
+    gear_hit = sum(per_slot.values())
+    cap = bis.HIT_CAP * 10
+    rooms = {slot: cap - (talent * 10 + gear_hit - per_slot.get(slot, 0.0)) for slot in bis.SLOTS}
+    return {"cap": bis.HIT_CAP, "talent": talent, "talents": names, "gear": round(gear_hit / 10, 2),
+            "total": round(talent + gear_hit / 10, 2)}, rooms
 
 
 async def _state(session: AsyncSession, cid: int) -> dict:
@@ -113,25 +140,29 @@ async def build(session: AsyncSession, c: Character, s: dict, spec: str | None, 
     custom = st.get("custom") or {}
     base = custom.get("base") if custom.get("base") in specs else specs[0]
     if spec == bis.CUSTOM:  # the player's own weights over the specialization they started from
-        out = bis.choose(gear(), cls, base, level, faction, w={**bis.weights(cls, base), **(custom.get("w") or {})})
         moved, whose = [], "custom"
+    eq = {x["slot"]: x for x in (((c.profile or {}).get("equipment") or {}).get(lang) or [])}
+    hit, rooms = hit_state(cls, specs, spec if spec in specs else (custom.get("base") if spec == bis.CUSTOM else specs[0]),
+                           level, rows, eq)
+    if spec == bis.CUSTOM:
+        out = bis.choose(gear(), cls, base, level, faction, w={**bis.weights(cls, base), **(custom.get("w") or {})},
+                         hit_room=rooms)
     else:
         # Pawn's weights for the specialization, moved by talents: the character's own when it plays this tree
         tw, moved, whose = talent_weights.for_spec(bis.weights(cls, spec or specs[0]), cls, specs, spec or specs[0], level, rows, lang)
-        out = bis.choose(gear(), cls, spec or specs[0], level, faction, w=tw)
+        out = bis.choose(gear(), cls, spec or specs[0], level, faction, w=tw, hit_room=rooms)
     w = out["weights"]
     picks = (st.get("picks") or {}).get(spec or specs[0]) or {}
-    eq = {x["slot"]: x for x in (((c.profile or {}).get("equipment") or {}).get(lang) or [])}
     worn = {k: x["id"] for k, x in eq.items()}
     slots, have, total = {}, 0, 0
     two_hand = out["twoHand"]
     for slot, cands in out["slots"].items():
-        options = [x for x in (_item(cd["id"], lang, w, slot) for cd in cands) if x]
+        options = [x for x in (_item(cd["id"], lang, w, slot, rooms.get(slot)) for cd in cands) if x]
         pick = min(int(picks.get(slot, 0)), max(0, len(options) - 1))
         if slot == "MAIN_HAND" and options:
             two_hand = options[pick]["two"]
         wid = worn.get(slot)
-        mine = (_item(wid, lang, w, slot) or _worn(eq[slot], w, slot)) if wid else None
+        mine = (_item(wid, lang, w, slot, rooms.get(slot)) or _worn(eq[slot], w, slot, rooms.get(slot))) if wid else None
         # what is worn is BiS only when it is one of the three items of the list for this level, and then its place
         # in it (0 = the first); a new level brings a new list, and the item is checked against that one
         # what is worn takes part too: an item the reference lacks (Forever's API doesn't know every item) can't be
@@ -169,7 +200,7 @@ async def build(session: AsyncSession, c: Character, s: dict, spec: str | None, 
         await session.commit()
     return {"status": "ready", "class": bis.CLASSES[cls]["key"], "specs": specs, "spec": spec or specs[0], "customBase": base, "customSet": bool(custom.get("w")), "specSaved": bool(st.get("spec")), "level": level,
             "twoHand": two_hand, "slots": slots, "have": have, "total": total, "complete": complete, "cheer": cheer,
-            "weights": w, "maxIlvl": bis.MAX_ILVL, "talentsMoved": moved, "talentsFrom": whose}
+            "weights": w, "maxIlvl": bis.MAX_ILVL, "talentsMoved": moved, "talentsFrom": whose, "hit": hit, "hitRoom": rooms}
 
 
 class Pick(BaseModel):
@@ -276,6 +307,6 @@ async def compare_items(cid: int, user: CurrentUser, session: Session, ids: str 
             out.append({"id": i, "gear": False})
             continue
         slot = min(slots, key=lambda sl: ((b["slots"].get(sl) or {}).get("worn") or {}).get("score") or 0.0)
-        out.append({"id": i, "gear": True, "slot": slot, "full": _item(i, lang, w, slot),
+        out.append({"id": i, "gear": True, "slot": slot, "full": _item(i, lang, w, slot, (b.get("hitRoom") or {}).get(slot)),
                     "worn": (b["slots"].get(slot) or {}).get("worn")})
     return out

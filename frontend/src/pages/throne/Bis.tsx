@@ -40,6 +40,7 @@ export interface BisData {
   customBase?: string; customSet?: boolean; weights?: Record<string, number>; classId?: number;
   twoHand: boolean; slots: Record<string, BisSlot>; have: number; total: number; complete: boolean; cheer: boolean;
   maxIlvl: number; talentsMoved?: string[]; talentsFrom?: "real" | "tree" | "custom" | "none";
+  hit?: { cap: number; talent: number; talents: string[]; gear: number; total: number } | null;
 }
 
 const Q = ["POOR", "COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY"];
@@ -115,6 +116,11 @@ export function BisBar({ on, setOn, data, spec, setSpec, tabs, cid }: {
             <a href="https://github.com/VgerMods/Pawn" target="_blank" rel="noopener noreferrer">Pawn</a> (HawsJon)
             {data.talentsMoved?.length ? <> · {t(data.talentsFrom === "real" ? "bis_w_real" : "bis_w_tree")}: {data.talentsMoved.join(", ")}</> : null}
           </>}
+          {data.hit && (
+            <span className={`ml-2 ${data.hit.total >= data.hit.cap ? "text-good" : "text-[#ffb070]"}`} title={t("bis_hit_h")}>
+              · {t("bis_hit", { n: data.hit.total, c: data.hit.cap })}
+            </span>
+          )}
         </p>
       )}
       {edit && data && cid && <WeightEditor data={data} cid={cid} label={label} onClose={() => setEdit(false)} onSaved={() => (setEdit(false), setSpec("custom"))} />}

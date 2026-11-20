@@ -1,0 +1,728 @@
+{
+ "about": "Items as the game shows them (tooltip screenshots, November 2026), over ForeverDB's and Blizzard's data where those miss a bonus (an equip effect's spell power) or carry the original game's numbers (melee weapon damage).",
+ "items": {
+  "22267": {
+   "en": "Spellweaver's Turban",
+   "ru": "Spellweaver's Turban",
+   "q": 3,
+   "ilvl": 63,
+   "req": 60,
+   "slot": 1,
+   "cls": 4,
+   "sub": 1,
+   "stats": {
+    "SPIRIT": 13,
+    "HIT_RATING": 10,
+    "SPELL_POWER": 33
+   },
+   "armor": 73,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "18691": {
+   "en": "Dark Advisor's Pendant",
+   "ru": "Dark Advisor's Pendant",
+   "q": 3,
+   "ilvl": 61,
+   "req": 56,
+   "slot": 2,
+   "cls": 4,
+   "sub": 0,
+   "stats": {
+    "STAMINA": 9,
+    "INTELLECT": 8,
+    "BONUS_STAT_SHADOW_DAMAGE_DONE": 20
+   },
+   "armor": null,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "12103": {
+   "en": "Star of Mystaria",
+   "ru": "Star of Mystaria",
+   "q": 3,
+   "ilvl": 63,
+   "req": 58,
+   "slot": 2,
+   "cls": 4,
+   "sub": 0,
+   "stats": {
+    "STAMINA": 7,
+    "INTELLECT": 7,
+    "SPIRIT": 7,
+    "HIT_RATING": 13
+   },
+   "armor": null,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "22403": {
+   "en": "Nacreous Shell Necklace",
+   "ru": "Nacreous Shell Necklace",
+   "q": 3,
+   "ilvl": 61,
+   "req": 56,
+   "slot": 2,
+   "cls": 4,
+   "sub": 0,
+   "stats": {
+    "STAMINA": 7,
+    "INTELLECT": 8,
+    "HIT_RATING": 10,
+    "SPELL_POWER": 9
+   },
+   "armor": null,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "18681": {
+   "en": "Burial Shawl",
+   "ru": "Burial Shawl",
+   "q": 3,
+   "ilvl": 61,
+   "req": 56,
+   "slot": 3,
+   "cls": 4,
+   "sub": 1,
+   "stats": {
+    "STAMINA": 4,
+    "INTELLECT": 16,
+    "SPELL_POWER": 20
+   },
+   "armor": 65,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "13374": {
+   "en": "Soulstealer Mantle",
+   "ru": "Soulstealer Mantle",
+   "q": 3,
+   "ilvl": 60,
+   "req": 55,
+   "slot": 3,
+   "cls": 4,
+   "sub": 1,
+   "stats": {
+    "INTELLECT": 22,
+    "HIT_RATING": 10
+   },
+   "armor": 64,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "272411": {
+   "en": "Arcanoweave Cloak",
+   "ru": "Arcanoweave Cloak",
+   "q": 3,
+   "ilvl": 65,
+   "req": 60,
+   "slot": 16,
+   "cls": 4,
+   "sub": 1,
+   "stats": {
+    "INTELLECT": 8,
+    "HIT_RATING": 10,
+    "SPELL_POWER": 16
+   },
+   "armor": 46,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "280057": {
+   "en": "Robes of Dark Summons",
+   "ru": "Robes of Dark Summons",
+   "q": 3,
+   "ilvl": 59,
+   "req": 54,
+   "slot": 20,
+   "cls": 4,
+   "sub": 1,
+   "stats": {
+    "STAMINA": 14,
+    "HIT_RATING": 18,
+    "SPELL_POWER": 21
+   },
+   "armor": 84,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "14136": {
+   "en": "Robe of Winter Night",
+   "ru": "Robe of Winter Night",
+   "q": 3,
+   "ilvl": 57,
+   "req": 52,
+   "slot": 20,
+   "cls": 4,
+   "sub": 1,
+   "stats": {
+    "INTELLECT": 12,
+    "BONUS_STAT_SHADOW_DAMAGE_DONE": 40,
+    "BONUS_STAT_FROST_DAMAGE_DONE": 40
+   },
+   "armor": null,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "18497": {
+   "en": "Sublime Wristguards",
+   "ru": "Sublime Wristguards",
+   "q": 3,
+   "ilvl": 60,
+   "req": 55,
+   "slot": 9,
+   "cls": 4,
+   "sub": 1,
+   "stats": {
+    "STAMINA": 6,
+    "INTELLECT": 10,
+    "SPIRIT": 6,
+    "SPELL_POWER": 12
+   },
+   "armor": 37,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "18407": {
+   "en": "Felcloth Gloves",
+   "ru": "Felcloth Gloves",
+   "q": 3,
+   "ilvl": 62,
+   "req": 57,
+   "slot": 10,
+   "cls": 4,
+   "sub": 1,
+   "stats": {
+    "STAMINA": 9,
+    "BONUS_STAT_SHADOW_DAMAGE_DONE": 33
+   },
+   "armor": 55,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "13253": {
+   "en": "Hands of Power",
+   "ru": "Hands of Power",
+   "q": 3,
+   "ilvl": 60,
+   "req": 55,
+   "slot": 10,
+   "cls": 4,
+   "sub": 1,
+   "stats": {
+    "INTELLECT": 9,
+    "SPIRIT": 8,
+    "SPELL_POWER": 23
+   },
+   "armor": 53,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "276395": {
+   "en": "Grimm's Packing Gloves",
+   "ru": "Grimm's Packing Gloves",
+   "q": 3,
+   "ilvl": 59,
+   "req": 54,
+   "slot": 10,
+   "cls": 4,
+   "sub": 1,
+   "stats": {
+    "STAMINA": 20,
+    "HIT_RATING": 10
+   },
+   "armor": 52,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "18405": {
+   "en": "Belt of the Archmage",
+   "ru": "Belt of the Archmage",
+   "q": 4,
+   "ilvl": 62,
+   "req": 57,
+   "slot": 6,
+   "cls": 4,
+   "sub": 1,
+   "stats": {
+    "STAMINA": 10,
+    "INTELLECT": 16,
+    "CRIT_RATING": 14,
+    "SPELL_POWER": 20
+   },
+   "armor": 54,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "11662": {
+   "en": "Ban'thok Sash",
+   "ru": "Ban'thok Sash",
+   "q": 3,
+   "ilvl": 54,
+   "req": 49,
+   "slot": 6,
+   "cls": 4,
+   "sub": 1,
+   "stats": {
+    "STAMINA": 10,
+    "INTELLECT": 10,
+    "HIT_RATING": 10,
+    "SPELL_POWER": 12
+   },
+   "armor": 43,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "22342": {
+   "en": "Leggings of Torment",
+   "ru": "Leggings of Torment",
+   "q": 3,
+   "ilvl": 63,
+   "req": 58,
+   "slot": 7,
+   "cls": 4,
+   "sub": 1,
+   "stats": {
+    "STAMINA": 16,
+    "INTELLECT": 16,
+    "BONUS_STAT_SHADOW_DAMAGE_DONE": 34
+   },
+   "armor": 78,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "13170": {
+   "en": "Skyshroud Leggings",
+   "ru": "Skyshroud Leggings",
+   "q": 3,
+   "ilvl": 60,
+   "req": 55,
+   "slot": 7,
+   "cls": 4,
+   "sub": 1,
+   "stats": {
+    "STAMINA": 11,
+    "INTELLECT": 12,
+    "SPELL_POWER": 30
+   },
+   "armor": 75,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "16687": {
+   "en": "Magister's Leggings",
+   "ru": "Magister's Leggings",
+   "q": 3,
+   "ilvl": 61,
+   "req": 56,
+   "slot": 7,
+   "cls": 4,
+   "sub": 1,
+   "stats": {
+    "STAMINA": 12,
+    "INTELLECT": 15,
+    "SPIRIT": 21,
+    "HIT_RATING": 9,
+    "SPELL_POWER": 7
+   },
+   "armor": 76,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "11822": {
+   "en": "Omnicast Boots",
+   "ru": "Omnicast Boots",
+   "q": 3,
+   "ilvl": 59,
+   "req": 54,
+   "slot": 8,
+   "cls": 4,
+   "sub": 1,
+   "stats": {
+    "STAMINA": 8,
+    "INTELLECT": 12,
+    "SPELL_POWER": 20
+   },
+   "armor": 58,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "22231": {
+   "en": "Kayser's Boots of Precision",
+   "ru": "Kayser's Boots of Precision",
+   "q": 3,
+   "ilvl": 61,
+   "req": 56,
+   "slot": 8,
+   "cls": 4,
+   "sub": 1,
+   "stats": {
+    "STAMINA": 11,
+    "INTELLECT": 18,
+    "HIT_RATING": 10,
+    "SPELL_POWER": 4
+   },
+   "armor": 60,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "22339": {
+   "en": "Rune Band of Wizardry",
+   "ru": "Rune Band of Wizardry",
+   "q": 3,
+   "ilvl": 63,
+   "req": 58,
+   "slot": 11,
+   "cls": 4,
+   "sub": 0,
+   "stats": {
+    "STAMINA": 7,
+    "ARCANE_RESISTANCE": 7,
+    "HIT_RATING": 10,
+    "SPELL_POWER": 13
+   },
+   "armor": null,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "22433": {
+   "en": "Don Mauricio's Band of Domination",
+   "ru": "Don Mauricio's Band of Domination",
+   "q": 3,
+   "ilvl": 63,
+   "req": 58,
+   "slot": 11,
+   "cls": 4,
+   "sub": 0,
+   "stats": {
+    "STAMINA": 10,
+    "CRIT_RATING": 14,
+    "SPELL_POWER": 11
+   },
+   "armor": null,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "272406": {
+   "en": "Channeler's Ring",
+   "ru": "Channeler's Ring",
+   "q": 3,
+   "ilvl": 65,
+   "req": 60,
+   "slot": 11,
+   "cls": 4,
+   "sub": 0,
+   "stats": {
+    "INTELLECT": 14,
+    "HIT_RATING": 10,
+    "SPELL_POWER": 9
+   },
+   "armor": null,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "12930": {
+   "en": "Briarwood Reed",
+   "ru": "Briarwood Reed",
+   "q": 3,
+   "ilvl": 60,
+   "req": 55,
+   "slot": 12,
+   "cls": 4,
+   "sub": 0,
+   "stats": {
+    "SPELL_POWER": 15
+   },
+   "armor": null,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "272438": {
+   "en": "Weakness Analyzer",
+   "ru": "Weakness Analyzer",
+   "q": 3,
+   "ilvl": 65,
+   "req": 60,
+   "slot": 12,
+   "cls": 4,
+   "sub": 0,
+   "stats": {
+    "SPELL_POWER": 18
+   },
+   "armor": null,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "13213": {
+   "en": "Smolderweb's Eye",
+   "ru": "Smolderweb's Eye",
+   "q": 3,
+   "ilvl": 60,
+   "req": 55,
+   "slot": 12,
+   "cls": 4,
+   "sub": 0,
+   "stats": {
+    "NATURE_RESISTANCE": 5,
+    "HIT_RATING": 10
+   },
+   "armor": null,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "13382": {
+   "en": "Cannonball Runner",
+   "ru": "Cannonball Runner",
+   "q": 3,
+   "ilvl": 61,
+   "req": 56,
+   "slot": 12,
+   "cls": 4,
+   "sub": 0,
+   "stats": {
+    "HIT_RATING": 5
+   },
+   "armor": null,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "13349": {
+   "en": "Scepter of the Unholy",
+   "ru": "Scepter of the Unholy",
+   "q": 3,
+   "ilvl": 63,
+   "req": 58,
+   "slot": 21,
+   "cls": 2,
+   "sub": 4,
+   "stats": {
+    "STAMINA": 5,
+    "SHADOW_RESISTANCE": 13,
+    "BONUS_STAT_SHADOW_DAMAGE_DONE": 88
+   },
+   "armor": null,
+   "dps": 27.5,
+   "speed": 2400,
+   "dmg": [
+    46,
+    86
+   ]
+  },
+  "18372": {
+   "en": "Blade of the New Moon",
+   "ru": "Blade of the New Moon",
+   "q": 3,
+   "ilvl": 62,
+   "req": 57,
+   "slot": 21,
+   "cls": 2,
+   "sub": 15,
+   "stats": {
+    "STAMINA": 15,
+    "BONUS_STAT_SHADOW_DAMAGE_DONE": 88
+   },
+   "armor": null,
+   "dps": 27.14,
+   "speed": 1400,
+   "dmg": [
+    26,
+    50
+   ]
+  },
+  "13964": {
+   "en": "Witchblade",
+   "ru": "Witchblade",
+   "q": 3,
+   "ilvl": 62,
+   "req": 57,
+   "slot": 21,
+   "cls": 2,
+   "sub": 15,
+   "stats": {
+    "INTELLECT": 8,
+    "SPELL_POWER": 72,
+    "SPELL_PENETRATION": 4
+   },
+   "armor": null,
+   "dps": 27.19,
+   "speed": 1600,
+   "dmg": [
+    30,
+    57
+   ]
+  },
+  "18048": {
+   "en": "Mastersmith's Hammer",
+   "ru": "Mastersmith's Hammer",
+   "q": 3,
+   "ilvl": 60,
+   "req": 55,
+   "slot": 21,
+   "cls": 2,
+   "sub": 4,
+   "stats": {
+    "STAMINA": 10,
+    "HIT_RATING": 10,
+    "SPELL_POWER": 68
+   },
+   "armor": null,
+   "dps": 26.25,
+   "speed": 2400,
+   "dmg": [
+    44,
+    82
+   ]
+  },
+  "18316": {
+   "en": "Obsidian Bauble",
+   "ru": "Obsidian Bauble",
+   "q": 3,
+   "ilvl": 58,
+   "req": 53,
+   "slot": 23,
+   "cls": 4,
+   "sub": 0,
+   "stats": {
+    "INTELLECT": 9,
+    "CRIT_RATING": 7,
+    "SPELL_POWER": 15
+   },
+   "armor": null,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "13524": {
+   "en": "Skull of Burning Shadows",
+   "ru": "Skull of Burning Shadows",
+   "q": 3,
+   "ilvl": 62,
+   "req": 57,
+   "slot": 23,
+   "cls": 4,
+   "sub": 0,
+   "stats": {
+    "FIRE_RESISTANCE": 10,
+    "SHADOW_RESISTANCE": 10,
+    "HIT_RATING": 10
+   },
+   "armor": null,
+   "dps": null,
+   "speed": null,
+   "dmg": null
+  },
+  "22335": {
+   "en": "Lord Valthalak's Staff of Command",
+   "ru": "Lord Valthalak's Staff of Command",
+   "q": 3,
+   "ilvl": 63,
+   "req": 58,
+   "slot": 17,
+   "cls": 2,
+   "sub": 10,
+   "stats": {
+    "STAMINA": 21,
+    "INTELLECT": 21,
+    "HIT_RATING": 10,
+    "SPELL_POWER": 72
+   },
+   "armor": null,
+   "dps": 40.0,
+   "speed": 2100,
+   "dmg": [
+    67,
+    101
+   ]
+  },
+  "13396": {
+   "en": "Skul's Ghastly Touch",
+   "ru": "Skul's Ghastly Touch",
+   "q": 3,
+   "ilvl": 60,
+   "req": 55,
+   "slot": 26,
+   "cls": 2,
+   "sub": 19,
+   "stats": {
+    "SHADOW_RESISTANCE": 3,
+    "BONUS_STAT_SHADOW_DAMAGE_DONE": 14
+   },
+   "armor": null,
+   "dps": 59.72,
+   "speed": 1800,
+   "dmg": [
+    75,
+    140
+   ]
+  },
+  "13938": {
+   "en": "Bonecreeper Stylus",
+   "ru": "Bonecreeper Stylus",
+   "q": 3,
+   "ilvl": 62,
+   "req": 57,
+   "slot": 26,
+   "cls": 2,
+   "sub": 19,
+   "stats": {
+    "INTELLECT": 5,
+    "SPELL_POWER": 11
+   },
+   "armor": null,
+   "dps": 62.63,
+   "speed": 1900,
+   "dmg": [
+    83,
+    155
+   ]
+  },
+  "287036": {
+   "en": "Satyr's Touch",
+   "ru": "Satyr's Touch",
+   "q": 3,
+   "ilvl": 59,
+   "req": 54,
+   "slot": 26,
+   "cls": 2,
+   "sub": 19,
+   "stats": {
+    "STAMINA": 9,
+    "HIT_RATING": 5
+   },
+   "armor": null,
+   "dps": 58.42,
+   "speed": 1900,
+   "dmg": [
+    77,
+    145
+   ]
+  }
+ }
+}

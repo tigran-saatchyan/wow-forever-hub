@@ -1769,7 +1769,7 @@
     55
    ],
    "new": true,
-   "open": false,
+   "open": true,
    "bosses": [
     "Withermaw",
     "Impaan the Imprisoner",
@@ -1789,7 +1789,8 @@
     "Unbound Spirit": "Свободный дух"
    },
    "notableLoot": [],
-   "url": null
+   "url": null,
+   "seen": "Played in Forever (a guide video, November 2026: Impaan the Imprisoner's loot)"
   },
   {
    "id": 2994,

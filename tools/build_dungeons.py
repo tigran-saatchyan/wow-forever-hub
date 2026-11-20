@@ -40,6 +40,8 @@ ALIAS = {"stormwind stockades": "stormwind stockade", "zulfarak": "zulfarrak", "
          # parts of one instance in ForeverDB's list
          "dire maul  west": "dire maul", "dire maul  north": "dire maul", "upper blackrock spire": "blackrock spire"}
 SKIP_TYPES = {"4", "5"}  # zones and battlegrounds in the group finder's table
+# dungeons seen played in Forever though ForeverDB doesn't list them: open, whatever the lists say
+SEEN_OPEN = {"blackmaw hold"}
 
 
 def norm(s: str) -> str:
@@ -115,7 +117,7 @@ def main() -> None:
             mid = maps.get(k) or maps.get(norm(re.sub(r"^the ", "", c["en"].lower())))
             cb, cru = bosses_of(mid)
             out.append({"id": mid, "en": c["en"], "ru": c["ru"], "kind": "dungeon", "players": 5,
-                        "levels": [c["min"], c["min"]] if c.get("min") else None, "new": True, "open": False,
+                        "levels": [c["min"], c["min"]] if c.get("min") else None, "new": True, "open": k in SEEN_OPEN,
                         "bosses": cb, "bossRu": cru, "notableLoot": [], "url": None})
     OUT.write_text(json.dumps({"source": "ForeverDB.net (https://foreverdb.net) and the game's files", "build": a.build,
                                "at": time.strftime("%Y-%m-%d"), "dungeons": out}, ensure_ascii=False, indent=1), "utf-8")

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 
 import httpx
 
@@ -31,7 +32,45 @@ STATS = {
     45: "SPELL_POWER", 47: "SPELL_PENETRATION", 48: "BLOCK_VALUE", 50: "EXTRA_ARMOR", 51: "FIRE_RESISTANCE",
     52: "FROST_RESISTANCE", 53: "HOLY_RESISTANCE", 54: "SHADOW_RESISTANCE", 55: "NATURE_RESISTANCE",
     56: "ARCANE_RESISTANCE",
+    # damage done by one school: 86 Nature, 87 Frost and 88 Shadow seen on items; the rest follow the game's school
+    # order (holy, fire, nature, frost, shadow, arcane) from the same base
+    84: "BONUS_STAT_HOLY_DAMAGE_DONE", 85: "BONUS_STAT_FIRE_DAMAGE_DONE", 86: "BONUS_STAT_NATURE_DAMAGE_DONE",
+    87: "BONUS_STAT_FROST_DAMAGE_DONE", 88: "BONUS_STAT_SHADOW_DAMAGE_DONE", 89: "BONUS_STAT_ARCANE_DAMAGE_DONE",
 }
+VERSION = 2  # bump when convert() learns something: the items already kept are converted again from the cache
+
+INVISIBLE = re.compile("[\u200b-\u200f\u2060-\u2064\ufeff]")
+SCHOOL = {"holy": "BONUS_STAT_HOLY_DAMAGE_DONE", "fire": "BONUS_STAT_FIRE_DAMAGE_DONE",
+          "nature": "BONUS_STAT_NATURE_DAMAGE_DONE", "frost": "BONUS_STAT_FROST_DAMAGE_DONE",
+          "shadow": "BONUS_STAT_SHADOW_DAMAGE_DONE", "arcane": "BONUS_STAT_ARCANE_DAMAGE_DONE"}
+# an equip effect's words -> the stat it is (ForeverDB lists some items' spell power only as such a text)
+EQUIP = [
+    (re.compile(r"Increases damage and healing done by magical spells and effects by up to (\d+)", re.I), "SPELL_POWER", 1),
+    (re.compile(r"Increases healing done by (?:magical )?spells and effects by up to (\d+)", re.I), "SPELL_HEALING_DONE", 1),
+    (re.compile(r"Increases damage done by (\w+) spells and effects by up to (\d+)", re.I), "school", 1),
+    (re.compile(r"Improves your chance to hit(?: with spells)? by (\d+(?:\.\d+)?)%", re.I), "HIT_RATING", 10),
+    (re.compile(r"Improves your chance to get a critical strike(?: with spells)? by (\d+(?:\.\d+)?)%", re.I), "CRIT_RATING", 14),
+    (re.compile(r"Restores (\d+) mana per 5 sec", re.I), "MANA_REGENERATION", 1),
+]
+
+
+def equip_stats(texts: list[str]) -> dict[str, int]:
+    """Stats an item's equip effects give, read from their words (the invisible marks ForeverDB adds are only
+    stepped over here, the texts kept are left as they are)."""
+    out: dict[str, int] = {}
+    for raw in texts:
+        t = INVISIBLE.sub("", raw or "")
+        for rx, key, per in EQUIP:
+            m = rx.search(t)
+            if not m:
+                continue
+            if key == "school":
+                k = SCHOOL.get(m.group(1).lower())
+                if k:
+                    out[k] = out.get(k, 0) + int(m.group(2))
+            else:
+                out[key] = out.get(key, 0) + round(float(m.group(1)) * per)
+    return out
 BIND = {"Binds when picked up": 1, "Binds when equipped": 2, "Binds when used": 3, "Quest item": 4}
 _extra: dict[str, dict] = {}
 _flags: dict[str, bool] = {}  # item id -> doubtful (speculation or a beta event copy)
@@ -52,6 +91,9 @@ def convert(d: dict) -> dict:
         k = STATS.get(s.get("statId"))
         if k:
             stats[k] = stats.get(k, 0) + (s.get("value") or 0)
+    texts = [e.get("text") for e in d.get("effects") or [] if e.get("text")]
+    for k, v in equip_stats(texts).items():  # only what the stats don't already say
+        stats.setdefault(k, v)
     dmg, speed = d.get("damage") or {}, d.get("speed")
     dps = round((dmg["min"] + dmg["max"]) / 2 / speed, 1) if dmg.get("min") is not None and speed else None
     return {
@@ -59,8 +101,8 @@ def convert(d: dict) -> dict:
         "req": d.get("requiredLevel") or 0, "slot": d.get("inventoryTypeId") or 0, "cls": d.get("classId") or 0,
         "sub": d.get("subclassId") or 0, "classes": -1, "set": 0, "bind": BIND.get(d.get("bonding") or "", 0),
         "races": -1, "pvp": 0, "rep": 0, "skill": 0, "flags": 0, "stats": stats, "armor": None, "dps": dps,
-        "speed": round(speed * 1000) if speed else None, "spells": [e.get("text") for e in d.get("effects") or [] if e.get("text")],
-        "unique": bool(d.get("unique")), "src": "foreverdb",
+        "speed": round(speed * 1000) if speed else None, "spells": texts,
+        "unique": bool(d.get("unique")), "src": "foreverdb", "v": VERSION,
     }
 
 
@@ -100,8 +142,9 @@ async def sync() -> None:
                     flags[i] = True
                 else:
                     flags.pop(i, None)
-                if i not in have and i not in items and x.get("inventoryTypeId") in WEARABLE:
-                    todo.append(i)
+                if i not in have and x.get("inventoryTypeId") in WEARABLE and \
+                        (i not in items or (items[i].get("v") or 1) < VERSION):
+                    todo.append(i)  # new, or kept by an older convert(): its details come back from the cache
     await _save(items, flags)
     _flags.update(flags)
     log.info("ForeverDB gear: %d to ask", len(todo))

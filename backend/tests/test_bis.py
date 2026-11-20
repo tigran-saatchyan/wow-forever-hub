@@ -171,3 +171,38 @@ def test_bis_here_marks_the_dungeon(monkeypatch):
     _, head = item(4040, 1, INTELLECT=12)
     got = inst.bis_here(189, [{"itemId": 9}], {4040: ("HEAD", 2, False), 9: ("NECK", 1, True)}, {"4040": head}, "ru")
     assert [(x["id"], x["slot"], x["rank"], x["worn"]) for x in got] == [(4040, "HEAD", 2, False), (9, "NECK", 1, True)]
+
+
+def test_equip_effect_words_become_stats():
+    from app import fdb_gear
+    marked = "Increases ⁣​damage and healing done by magical spells and effects by up to 15."
+    assert fdb_gear.equip_stats([marked, "Equip: Improves your chance to hit by 1.3%.",
+                                 "Increases damage done by Shadow spells and effects by up to 20"]) == \
+        {"SPELL_POWER": 15, "HIT_RATING": 13, "BONUS_STAT_SHADOW_DAMAGE_DONE": 20}
+    x = fdb_gear.convert({"id": 1, "name": "Reed", "stats": [{"statId": 88, "value": 20}],
+                          "effects": [{"text": marked}], "inventoryTypeId": 12, "classId": 4})
+    assert x["stats"] == {"BONUS_STAT_SHADOW_DAMAGE_DONE": 20, "SPELL_POWER": 15}
+
+
+def test_game_values_fix_the_reference():
+    from app.routers.bis import gear
+    hammer = gear()["18048"]  # Mastersmith's Hammer: +68 spell power and 26.25 dps in the game
+    assert hammer["stats"]["SPELL_POWER"] == 68 and hammer["dps"] == 26.25
+
+
+def test_hit_counts_up_to_the_cap():
+    w = bis.weights(5, "shadow")
+    it = {"stats": {"HIT_RATING": 10, "SPELL_POWER": 10}, "cls": 4, "sub": 1}
+    full, capped = bis.score(it, w, "HEAD"), bis.score(it, w, "HEAD", hit_room=0)
+    assert round(full - capped, 2) == round(w["hit"] * 10, 2) and bis.score(it, w, "HEAD", hit_room=5) < full
+
+
+def test_hit_state_counts_shadow_focus_and_worn_gear():
+    from app.routers.bis import hit_state
+    specs = bis.CLASSES[5]["specs"]
+    rows = [{"name": "Shadow Focus", "rank": 5}, {"name": "Shadowform", "rank": 1}, {"name": "Mind Flay", "rank": 1}]
+    eq = {"HEAD": {"statv": {"HIT_RATING": 10}}, "NECK": {"statv": {"HIT_RATING": 13}}}
+    hit, rooms = hit_state(5, specs, "shadow", 60, rows, eq)
+    assert hit["talent"] == 5 and hit["gear"] == 2.3 and hit["total"] == 7.3
+    assert rooms["HEAD"] == 170 - (50 + 23 - 10) and rooms["FEET"] == 170 - 73
+    assert hit_state(5, specs, "holy", 60, rows, eq) == (None, {})  # a healer's hit keeps its plain weight

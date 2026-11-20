@@ -110,6 +110,19 @@ def _build_weights() -> dict[tuple[int, str], dict[str, float]]:
 
 
 WEIGHTS = _build_weights()
+# Shadow: spell penetration is Forever's own stat and can take a target's resistance below zero, so it always counts
+# (fourth after hit, crit and spell power in the community's priority); Pawn's Forever scale gives it next to nothing
+WEIGHTS[(5, "shadow")]["SPELL_PENETRATION"] = 0.3
+
+# The spell hit cap of the casters that damage: 17 % against raid bosses (10 hit rating = 1 %), talents included
+HIT_CAP = 17.0
+CASTER_DPS = {(5, "shadow"), (8, "arcane"), (8, "fire"), (8, "frost"), (9, "affliction"), (9, "demonology"),
+              (9, "destruction"), (11, "balance"), (7, "elemental")}
+HIT_KEYS = ("HIT_RATING", "HIT_SPELL_RATING", "SPELL_HIT_RATING")
+
+
+def hit_rating(stats: dict) -> float:
+    return float(sum((stats or {}).get(k, 0) for k in HIT_KEYS))
 
 # ---- what a class can wear ----
 CLOTH, LEATHER, MAIL, PLATE, SHIELD = 1, 2, 3, 4, 6
@@ -188,14 +201,19 @@ def usable(it: dict, cls: int, level: int, faction: str | None) -> bool:
     return False
 
 
-def score(it: dict, w: dict[str, float], slot: str = "") -> float:
+def score(it: dict, w: dict[str, float], slot: str = "", hit_room: float | None = None) -> float:
+    """The item's worth by the weights. `hit_room`: hit rating the slot can still use before the hit cap (what the
+    character has without this slot's item counted out); hit beyond it is worth nothing."""
     st = it.get("stats") or {}
     s = 0.0
     for k, v in st.items():
         s += w.get(k, 0.0) * v
     for g, names in GROUPS.items():
         if g in w:
-            s += w[g] * sum(st.get(n, 0) for n in names if n not in w)
+            v = sum(st.get(n, 0) for n in names if n not in w)
+            if g == "hit" and hit_room is not None:
+                v = min(v, max(0.0, hit_room))
+            s += w[g] * v
     if "armor" in w and it.get("armor"):
         s += w["armor"] * it["armor"]
     if it.get("dps") and it["cls"] == 2:
@@ -225,7 +243,7 @@ def fits(it: dict, slot: str, cls: int, spec: str) -> bool:
 
 
 def choose(gear: dict[str, dict], cls: int, spec: str, level: int, faction: str | None, top: int = 3,
-           w: dict[str, float] | None = None) -> dict:
+           w: dict[str, float] | None = None, hit_room: dict[str, float] | None = None) -> dict:
     """For every slot, the best `top` items (ids, best first) with their scores; and whether a two-hand weapon
     beats a main hand plus an off hand."""
     w = w or weights(cls, spec)
@@ -236,7 +254,7 @@ def choose(gear: dict[str, dict], cls: int, spec: str, level: int, faction: str 
         for i, it in pool:
             if not fits(it, slot, cls, spec):
                 continue
-            cands.append({"id": i, "score": score(it, w, slot), "two": it["slot"] == 17})
+            cands.append({"id": i, "score": score(it, w, slot, (hit_room or {}).get(slot)), "two": it["slot"] == 17})
         cands.sort(key=lambda x: (-x["score"], x["id"]))
         out[slot] = cands
     # rings and trinkets: the second slot starts from the next best, the same item can't go in twice

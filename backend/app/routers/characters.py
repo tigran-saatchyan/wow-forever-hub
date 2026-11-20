@@ -408,7 +408,8 @@ async def instances(cid: int, user: CurrentUser, session: Session, lang: str = "
         b = await bis_routes.build(session, c, s2, None, lang, save=False)
         if b.get("status") == "ready":
             worn = {k: (x.get("worn") or {}).get("score") or 0.0 for k, x in b["slots"].items()}
-            up_ctx = (s2["classId"], b["weights"], worn, b["spec"], {k: x.get("worn") for k, x in b["slots"].items()})
+            up_ctx = (s2["classId"], b["weights"], worn, b["spec"], {k: x.get("worn") for k, x in b["slots"].items()},
+                      b.get("hitRoom") or {})
             # the character's BiS for its level: item -> (slot, place 1-3), to mark the dungeons that drop it
             bis_ids = {o["id"]: (slot, n + 1, x.get("wornId") == o["id"]) for slot, x in b["slots"].items()
                        for n, o in enumerate(x["options"]) if not o.get("wornOnly")}
@@ -421,9 +422,9 @@ async def instances(cid: int, user: CurrentUser, session: Session, lang: str = "
         names = d["ru"] if lang == "ru" else d["en"]
         try:
             ups = inst.upgrades(d["id"], d.get("notableLoot") or [], bis_routes.gear(), up_ctx[0], level, s.get("faction"),
-                                up_ctx[1], up_ctx[2], lang, spec=up_ctx[3]) if up_ctx else []
+                                up_ctx[1], up_ctx[2], lang, spec=up_ctx[3], hit_room=up_ctx[5]) if up_ctx else []
             for u in ups[:12]:  # both sides of the comparison tooltip: the item and what is worn in its slot
-                u["full"] = bis_routes._item(u["id"], lang, up_ctx[1], u["slot"])
+                u["full"] = bis_routes._item(u["id"], lang, up_ctx[1], u["slot"], up_ctx[5].get(u["slot"]))
                 u["worn"] = up_ctx[4].get(u["slot"])
         except Exception:  # noqa: BLE001 - one odd item must not take the tab down
             log.exception("instances: upgrades in %s", d.get("id"))
@@ -436,7 +437,8 @@ async def instances(cid: int, user: CurrentUser, session: Session, lang: str = "
                                 for b in d.get("bosses") or []],
                      "kills": [{"boss": k["bossLocal"] or k["boss"], "kills": k["kills"]} for k in mine],
                      "cleared": sum(k["kills"] for k in mine[:1]), "upgrades": ups[:12], "upgradeCount": len(ups),
-                     "bis": [{**x, "full": bis_routes._item(x["id"], lang, up_ctx[1], x["slot"]), "wornItem": up_ctx[4].get(x["slot"])}
+                     "bis": [{**x, "full": bis_routes._item(x["id"], lang, up_ctx[1], x["slot"], up_ctx[5].get(x["slot"])),
+                              "wornItem": up_ctx[4].get(x["slot"])}
                              if up_ctx else x for x in inst.bis_here(d["id"], d.get("notableLoot") or [], bis_ids, bis_routes.gear(), lang)],
                      "lootKnown": "classic" if d["id"] in INSTANCES else ("notable" if d.get("notableLoot") else "none")})
     # what the statistics count but the list lacks (ForeverDB not reached): shown all the same

@@ -109,7 +109,8 @@ def _by_instance() -> dict[int, list[tuple[int, int, float]]]:
 
 
 def upgrades(instance_id: int, notable: list[dict], gear: dict, cls: int, level: int, faction: str | None,
-             w: dict, worn: dict[str, float], lang: str, ahead: int = 5, spec: str = "") -> list[dict]:
+             w: dict, worn: dict[str, float], lang: str, ahead: int = 5, spec: str = "",
+             hit_room: dict[str, float] | None = None) -> list[dict]:
     """Items of the instance better than what is worn (by the specialization's weights), best first: usable now
     or within `ahead` levels."""
     seen: dict[int, dict] = {}
@@ -126,7 +127,7 @@ def upgrades(instance_id: int, notable: list[dict], gear: dict, cls: int, level:
             base = worn.get(slot, 0.0)
             if it["slot"] == 17:  # a two-hander takes the off hand's place too
                 base += worn.get("OFF_HAND", 0.0)
-            sc = bis.score(it, w, slot)
+            sc = bis.score(it, w, slot, (hit_room or {}).get(slot))
             gain = (sc - base) / base * 100 if base > 0 else (float("inf") if sc > 0 else 0)
             if sc > base and (best is None or gain > best[1]):
                 best = (slot, gain)

@@ -128,3 +128,22 @@ def for_spec(w: dict[str, float], cls: int, specs: list[str], spec: str, level: 
             moved.append(local_name(cls, name, lang))
         out = after
     return out, moved, whose
+
+
+HIT_TEXT = [re.compile(r"Improves your chance to hit with (?:\w+ )?spells by (\d+)%", re.I),
+            re.compile(r"Improves your chance to hit with (\w+) spells by (\d+)%", re.I),
+            re.compile(r"Reduces the chance for enemies to resist your [\w ,]+? spells by (\d+)%", re.I)]
+
+
+def spell_hit(cls: int, specs: list[str], spec: str, level: int, rows: list[dict] | None) -> tuple[float, list[str]]:
+    """Spell hit the talents give (Shadow Focus: 1 % a rank), from the same talents as the weights: the character's
+    own when it plays the tree, else the tree's as far as the level reaches. With the names of those talents."""
+    texts, _ = texts_for(cls, specs, spec, level, rows)
+    total, names = 0.0, []
+    for name, t in texts:
+        t = re.sub(r"\s+", " ", t)
+        m = HIT_TEXT[1].search(t) or HIT_TEXT[0].search(t) or HIT_TEXT[2].search(t)
+        if m:
+            total += float(m.groups()[-1])
+            names.append(local_name(cls, name, "ru"))
+    return total, names
