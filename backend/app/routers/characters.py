@@ -436,7 +436,8 @@ async def instances(cid: int, user: CurrentUser, session: Session, lang: str = "
                                 for b in d.get("bosses") or []],
                      "kills": [{"boss": k["bossLocal"] or k["boss"], "kills": k["kills"]} for k in mine],
                      "cleared": sum(k["kills"] for k in mine[:1]), "upgrades": ups[:12], "upgradeCount": len(ups),
-                     "bis": inst.bis_here(d["id"], d.get("notableLoot") or [], bis_ids, bis_routes.gear(), lang),
+                     "bis": [{**x, "full": bis_routes._item(x["id"], lang, up_ctx[1], x["slot"]), "wornItem": up_ctx[4].get(x["slot"])}
+                             if up_ctx else x for x in inst.bis_here(d["id"], d.get("notableLoot") or [], bis_ids, bis_routes.gear(), lang)],
                      "lootKnown": "classic" if d["id"] in INSTANCES else ("notable" if d.get("notableLoot") else "none")})
     # what the statistics count but the list lacks (ForeverDB not reached): shown all the same
     listed = {inst.norm(r["nameEn"]) for r in rows}

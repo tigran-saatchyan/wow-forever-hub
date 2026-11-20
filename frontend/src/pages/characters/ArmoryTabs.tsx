@@ -362,17 +362,7 @@ function InstTile({ r, level, near, open, onToggle }: { r: InstRow; level: numbe
             <div className="inst-boss bis mb-3">
               <div className="mb-2 text-sm font-semibold text-[#c98cff]">★ {t("in_bis_here")}</div>
               <ul className="grid gap-2 md:grid-cols-2">
-                {(r.bis || []).map((x) => (
-                  <li key={x.id} className="flex items-center gap-2.5 text-[15px]">
-                    <span className="bis-rank">{x.rank}</span>
-                    <ItemIcon itemId={x.id} quality={Q_NAMES[x.q]} size={34} />
-                    <span className="grid min-w-0 leading-tight">
-                      <span className="truncate" style={{ color: qColor(Q_NAMES[x.q]) }}>{x.name}</span>
-                      <span className="truncate text-xs text-muted">{t(`slot_${x.slot}` as Key)}{x.boss ? ` · ${x.boss}` : ""}</span>
-                    </span>
-                    {x.worn && <span className="ml-auto text-sm text-good">{t("bis_worn_tag")}</span>}
-                  </li>
-                ))}
+                {(r.bis || []).map((x) => <BisHere key={x.id} x={x} />)}
               </ul>
             </div>
           )}
@@ -423,6 +413,30 @@ function BossFace({ model, name, killed, size = 34 }: { model: number | null; na
     <span className={`boss-face ${killed ? "killed" : ""}`} title={name} style={{ width: size, height: size, fontSize: size * 0.42 }}>
       {src && !bad ? <img src={src} alt="" loading="lazy" onError={() => setBad(true)} /> : <span aria-hidden>☠</span>}
     </span>
+  );
+}
+
+/** A BiS item that drops here: hovering compares it with what is worn in its slot, as on the throne room. */
+function BisHere({ x }: { x: InstRow["bis"][number] }) {
+  const { t } = useI18n();
+  const [hover, setHover] = useState(false);
+  const anchor = useRef<HTMLSpanElement>(null);
+  return (
+    <li className="flex items-center gap-2.5 text-[15px]">
+      <span className="bis-rank">{x.rank}</span>
+      <span ref={anchor} tabIndex={0} className="inline-flex min-w-0 items-center gap-2.5"
+        onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} onFocus={() => setHover(true)} onBlur={() => setHover(false)}>
+        <ItemIcon itemId={x.id} quality={Q_NAMES[x.q]} size={34} />
+        <span className="grid min-w-0 leading-tight">
+          <span className="truncate" style={{ color: qColor(Q_NAMES[x.q]) }}>{x.name}</span>
+          <span className="truncate text-xs text-muted">{t(`slot_${x.slot}` as Key)}{x.boss ? ` · ${x.boss}` : ""}</span>
+        </span>
+      </span>
+      {x.worn && <span className="ml-auto text-sm text-good">{t("bis_worn_tag")}</span>}
+      <AnimatePresence>
+        {hover && x.full && anchor.current && <Compare a={x.full} b={x.wornItem ?? null} side="right" anchor={anchor.current} />}
+      </AnimatePresence>
+    </li>
   );
 }
 
