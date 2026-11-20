@@ -38,7 +38,7 @@ export function Market() {
   const target = pinned[0] ?? list;  // where a BiS item's ☆ puts it
 
   const inv = () => (qc.invalidateQueries({ queryKey: ["market"] }), qc.invalidateQueries({ queryKey: ["ah-lists"] }),
-    qc.invalidateQueries({ queryKey: ["bis-sale"] }));
+    qc.invalidateQueries({ queryKey: ["bis-sale"] }), qc.invalidateQueries({ queryKey: ["prebis"] }));
   const save = useMutation({ mutationFn: wowApi.setMarket, onSuccess: () => wowApi.refreshMarket().then(inv) });
   const poll = useMutation({ mutationFn: wowApi.refreshMarket, onSuccess: inv });
   const newList = useMutation({ mutationFn: wowApi.addList, onSuccess: (x) => (pickList(x.id), inv()) });

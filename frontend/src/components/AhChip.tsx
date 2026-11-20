@@ -20,7 +20,9 @@ export function AhChip({ id, ah }: { id: number; ah: AhState }) {
     onSuccess: () => (qc.invalidateQueries({ queryKey: ["prebis"] }), qc.invalidateQueries({ queryKey: ["ah-lists"] })),
   });
   const p = ah.price;
-  const tracked = ah.tracked || add.isSuccess;
+  // followed or not by the lists themselves (removing it on the auction page shows here at once); the
+  // server's flag only until the lists are loaded
+  const tracked = lists.data ? lists.data.some((l) => l.items.some((w) => w.itemId === id)) : ah.tracked;
   return (
     <button type="button" className={`ah-chip ${tracked ? "on" : ""}`} disabled={add.isPending}
       onClick={(e) => { e.stopPropagation(); if (tracked) nav("/market"); else add.mutate(); }}
