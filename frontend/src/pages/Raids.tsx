@@ -227,23 +227,18 @@ function PrepChar({ c, multi }: { c: Character; multi: boolean }) {
         </div>
         <ul className="grid gap-1.5" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 24rem), 1fr))" }}>
           {manual.map((x) => (
-            <li key={x.k} className={`cn-row flex-wrap gap-y-0.5 ${ticks[x.k] ? "rp-done" : ""}`}>
-              <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5">
-                <input type="checkbox" checked={!!ticks[x.k]} onChange={() => save({ ...ticks, [x.k]: !ticks[x.k] })} />
-                {x.id ? (
-                  <ItemHover id={x.id}>
-                    <span className="inline-flex min-w-0 items-center gap-2.5">
-                      <ItemIcon itemId={x.id} size={28} />
-                      <span className="grid min-w-0 leading-tight">
-                        <span className="truncate text-sm">{x.label}</span>
-                        {x.hint && <span className="truncate text-xs text-muted">{x.hint}</span>}
-                      </span>
-                    </span>
-                  </ItemHover>
-                ) : <span className="truncate text-sm">{x.label}</span>}
-              </label>
+            <li key={x.k} className={`cn-row ${ticks[x.k] ? "rp-done" : ""}`}>
+              <input type="checkbox" className="shrink-0 cursor-pointer" checked={!!ticks[x.k]} aria-label={x.label}
+                onChange={() => save({ ...ticks, [x.k]: !ticks[x.k] })} />
+              {x.id && <ItemHover id={x.id}><ItemIcon itemId={x.id} size={28} /></ItemHover>}
+              {/* name, what it gives and the recipe line in one column: no gap between them */}
+              <span className="grid min-w-0 flex-1 leading-tight">
+                {x.id ? <ItemHover id={x.id}><span className="block truncate text-sm">{x.label}</span></ItemHover>
+                  : <span className="truncate text-sm">{x.label}</span>}
+                {x.hint && <span className="truncate text-xs text-muted">{x.hint}</span>}
+                {x.recipe && <span className="mt-0.5"><RecipeBadge r={x.recipe} /></span>}
+              </span>
               {d?.market && x.id && x.ah && <AhChip id={x.id} ah={x.ah} />}
-              {x.recipe && <span className="basis-full pl-[64px]"><RecipeBadge r={x.recipe} /></span>}
             </li>
           ))}
         </ul>
