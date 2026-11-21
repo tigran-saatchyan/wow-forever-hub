@@ -264,3 +264,39 @@ def test_prebis_for_a_shadow_priest_only(client):
             await s.delete(await s.get(Character, cid))
             await s.commit()
     asyncio.run(clean())
+
+
+def test_fishing_gear(client):
+    import asyncio
+
+    from app.db import Character, SessionLocal, User
+    from sqlalchemy import select
+
+    login(client)
+    me = client.get("/api/auth/me").json()
+
+    async def seed():
+        async with SessionLocal() as s:
+            uid = (await s.execute(select(User.id).where(User.email == me["email"]))).scalar_one()
+            c = Character(user_id=uid, region="eu", slug="f", name="F", profile={
+                "summary": {"en": {"classId": 5, "level": 30, "faction": "HORDE"}},
+                "professions": {"ru": [{"id": 356, "name": "Рыбная ловля", "skill": 125, "max": 150}]},
+                "equipment": {"ru": [{"slot": "MAIN_HAND", "id": 6365}]}})
+            s.add(c)
+            await s.commit()
+            return c.id
+    cid = asyncio.run(seed())
+    d = client.get(f"/api/profgear/{cid}/fishing").json()
+    assert d["skill"] == 125 and d["max"] == 150
+    by = {x["id"]: x for x in d["items"]}
+    assert by[6365]["worn"] and by[6365]["owned"] and by[6365]["kind"] == "pole"
+    assert by[6533]["bonus"] == 100 and by[6533]["minutes"] == 5 and by[6533]["skill"] == 100  # the lure, from the client
+    assert client.put(f"/api/profgear/{cid}/owned", json={"item_id": 6530, "owned": True}).json() == {"owned": [6530]}
+    assert {x["id"] for x in client.get(f"/api/profgear/{cid}/fishing").json()["items"] if x["owned"]} == {6365, 6530}
+    assert client.get(f"/api/profgear/{cid}/mining").status_code == 404
+
+    async def clean():
+        async with SessionLocal() as s:
+            await s.delete(await s.get(Character, cid))
+            await s.commit()
+    asyncio.run(clean())

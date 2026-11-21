@@ -1739,3 +1739,9 @@ button.prebis-fold-chip:hover { border-color: rgb(var(--gold) / .5); }
 .om-pin.ml-prof .wm-glyph { color: #e0b070; box-shadow: 0 0 0 1px #000, 0 0 0 2px #7a5a2c; }
 /* a tooltip kept on screen (components/EdgeTip): as wide as its text */
 .edge-tip { width: max-content; max-width: min(24rem, calc(100vw - 16px)); pointer-events: none; }
+
+/* a profession's gear: groups as the game's own lists, what one has in colour */
+.pg-head { margin-bottom: .35rem; font-family: var(--font-display, serif); letter-spacing: .08em; text-transform: uppercase; font-size: .8rem; color: #ffd100; }
+.pg-row { display: flex; align-items: center; gap: .55rem; padding: .25rem .4rem; border-radius: .35rem; color: rgb(var(--muted)); }
+.pg-row:hover { background: rgb(var(--accent) / .08); }
+.pg-row.owned { color: rgb(var(--ink)); background: rgb(64 192 64 / .06); }

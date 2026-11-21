@@ -1,0 +1,313 @@
+{
+ "source": "WoW Forever client (wago.tools DB2 export)",
+ "fishing": [
+  {
+   "id": 6256,
+   "kind": "pole",
+   "name": {
+    "en": "Fishing Pole",
+    "ru": "Удочка"
+   },
+   "q": 1,
+   "req": 0,
+   "skill": 0,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 12225,
+   "kind": "pole",
+   "name": {
+    "en": "Blump Family Fishing Pole",
+    "ru": "Удочка семейства Блумп"
+   },
+   "q": 1,
+   "req": 0,
+   "skill": 1,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 6365,
+   "kind": "pole",
+   "name": {
+    "en": "Strong Fishing Pole",
+    "ru": "Крепкая удочка"
+   },
+   "q": 1,
+   "req": 5,
+   "skill": 10,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 19022,
+   "kind": "pole",
+   "name": {
+    "en": "Nat Pagle's Extreme Angler FC-5000",
+    "ru": "Экстремальная рыбалка FC-5000 Ната Пэгла"
+   },
+   "q": 2,
+   "req": 0,
+   "skill": 100,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 6367,
+   "kind": "pole",
+   "name": {
+    "en": "Big Iron Fishing Pole",
+    "ru": "Большая железная удочка"
+   },
+   "q": 1,
+   "req": 25,
+   "skill": 100,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 19970,
+   "kind": "pole",
+   "name": {
+    "en": "Arcanite Fishing Pole",
+    "ru": "Арканитовая удочка"
+   },
+   "q": 3,
+   "req": 0,
+   "skill": 300,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 6529,
+   "kind": "lure",
+   "name": {
+    "en": "Shiny Bauble",
+    "ru": "Блесна"
+   },
+   "q": 1,
+   "req": 0,
+   "skill": 0,
+   "bonus": 25,
+   "minutes": 10,
+   "lure": false
+  },
+  {
+   "id": 268880,
+   "kind": "lure",
+   "name": {
+    "en": "\"Secret\" Bait",
+    "ru": "\"Секретная\" наживка"
+   },
+   "q": 1,
+   "req": 0,
+   "skill": 0,
+   "bonus": 25,
+   "minutes": 10,
+   "lure": false
+  },
+  {
+   "id": 6530,
+   "kind": "lure",
+   "name": {
+    "en": "Nightcrawlers",
+    "ru": "Выползки"
+   },
+   "q": 1,
+   "req": 0,
+   "skill": 50,
+   "bonus": 50,
+   "minutes": 10,
+   "lure": false
+  },
+  {
+   "id": 6811,
+   "kind": "lure",
+   "name": {
+    "en": "Aquadynamic Fish Lens",
+    "ru": "Аквадинамическая блесна"
+   },
+   "q": 1,
+   "req": 0,
+   "skill": 50,
+   "bonus": 50,
+   "minutes": 10,
+   "lure": false
+  },
+  {
+   "id": 6532,
+   "kind": "lure",
+   "name": {
+    "en": "Bright Baubles",
+    "ru": "Яркая побрякушка"
+   },
+   "q": 1,
+   "req": 0,
+   "skill": 100,
+   "bonus": 75,
+   "minutes": 10,
+   "lure": false
+  },
+  {
+   "id": 6533,
+   "kind": "lure",
+   "name": {
+    "en": "Aquadynamic Fish Attractor",
+    "ru": "Аквадинамический магнит для рыбы"
+   },
+   "q": 1,
+   "req": 0,
+   "skill": 100,
+   "bonus": 100,
+   "minutes": 5,
+   "lure": false
+  },
+  {
+   "id": 7307,
+   "kind": "lure",
+   "name": {
+    "en": "Flesh Eating Worm",
+    "ru": "Кусеница"
+   },
+   "q": 1,
+   "req": 0,
+   "skill": 100,
+   "bonus": 75,
+   "minutes": 10,
+   "lure": false
+  },
+  {
+   "id": 19979,
+   "kind": "clothes",
+   "name": {
+    "en": "Hook of the Master Angler",
+    "ru": "Крючок мастера Англера"
+   },
+   "q": 3,
+   "req": 0,
+   "skill": 0,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 244229,
+   "kind": "clothes",
+   "name": {
+    "en": "Angler's Mantle",
+    "ru": "Оплечье рыбака"
+   },
+   "q": 1,
+   "req": 1,
+   "skill": 0,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 276272,
+   "kind": "clothes",
+   "name": {
+    "en": "Master Angler's Fishing Hat",
+    "ru": "Шляпа лучшего удильщика"
+   },
+   "q": 3,
+   "req": 1,
+   "skill": 0,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 19969,
+   "kind": "clothes",
+   "name": {
+    "en": "Nat Pagle's Extreme Anglin' Boots",
+    "ru": "Небывалые рыбацкие сапоги Ната Пэгла"
+   },
+   "q": 2,
+   "req": 0,
+   "skill": 1,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 19972,
+   "kind": "clothes",
+   "name": {
+    "en": "Lucky Fishing Hat",
+    "ru": "Счастливая шляпа рыболова"
+   },
+   "q": 2,
+   "req": 0,
+   "skill": 1,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 259846,
+   "kind": "clothes",
+   "name": {
+    "en": "Wide-Brimmed Fishing Hat",
+    "ru": "Широкополая рыбацкая шляпа"
+   },
+   "q": 2,
+   "req": 0,
+   "skill": 1,
+   "bonus": 25,
+   "minutes": 10,
+   "lure": true
+  },
+  {
+   "id": 7996,
+   "kind": "clothes",
+   "name": {
+    "en": "Worn Fishing Hat",
+    "ru": "Поношенная шляпа рыболова"
+   },
+   "q": 1,
+   "req": 15,
+   "skill": 1,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 273495,
+   "kind": "extra",
+   "name": {
+    "en": "Enchant Gloves - Fishing",
+    "ru": "Чары для перчаток: рыбная ловля"
+   },
+   "q": 1,
+   "req": 1,
+   "skill": 0,
+   "bonus": 2,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 19971,
+   "kind": "extra",
+   "name": {
+    "en": "High Test Eternium Fishing Line",
+    "ru": "Сверхпрочная этерниевая леска"
+   },
+   "q": 2,
+   "req": 0,
+   "skill": 150,
+   "bonus": 5,
+   "minutes": null,
+   "lure": false
+  }
+ ]
+}

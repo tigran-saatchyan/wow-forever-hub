@@ -11,6 +11,7 @@ import { Link } from "react-router-dom";
 import { CharProfPicker, ProfIcon, profKey } from "../components/CharProfPicker";
 import { ClassIcon } from "./Characters";
 import { SourcePanel } from "../components/SourcePanel";
+import { ProfGear } from "./craft/ProfGear";
 import { Money, parseMoney } from "../components/Wow";
 import { markSeen, signalKey, useSeen, useSignals } from "../lib/signals";
 import { fmtDate, useI18n, type Key } from "../lib/i18n";
@@ -61,6 +62,7 @@ export function Craft() {
       {!d || d.status === "building" ? <p className="text-muted">{t("pf_building")}</p> : (
         <>
           <ProfOverview />
+          <Section id="gear" title={t("pg_title")} hint={t("pg_hint")}><ProfGear onOpen={setPanel} /></Section>
           <SignalsBlock onOpen={setPanel} />
           <Profitable rows={d.rows || []} onOpen={setPanel} />
           <Leveling rows={d.rows || []} onOpen={setPanel} />
