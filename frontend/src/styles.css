@@ -1694,8 +1694,6 @@ button.order-line:hover { @apply text-gold; }
 .sb-bar { display: flex; flex-wrap: wrap; gap: .45rem; padding: .5rem .6rem; border: 1px solid rgb(var(--edge)); border-radius: .45rem; background: rgb(0 0 0 / .25); }
 .sb-buff { position: relative; display: grid; justify-items: center; gap: 1px; outline: none; }
 .sb-time { font-size: 11px; line-height: 1; color: #ffd100; text-shadow: 0 1px 2px #000; min-height: 11px; }
-.sb-tip { position: absolute; left: 50%; top: calc(100% + 4px); transform: translateX(-50%); z-index: 70; width: max-content; max-width: 19rem; display: none; text-align: left; }
-.sb-buff:hover .sb-tip, .sb-buff:focus .sb-tip { display: block; }
 
 /* the raids page: stage cards with the chains and their progress */
 .cn-card { padding: .7rem .8rem; border: 1px solid rgb(var(--edge)); border-radius: .5rem; background: rgb(var(--bg) / .35); }
@@ -1721,8 +1719,6 @@ button.prebis-fold-chip:hover { border-color: rgb(var(--gold) / .5); }
 
 /* the recipe behind a consumable: a line, the details on hover */
 .rc-badge { position: relative; display: inline-flex; align-items: center; gap: .3rem; font-size: 11px; outline: none; cursor: help; }
-.rc-tip { position: absolute; left: 0; top: calc(100% + 4px); z-index: 70; width: max-content; max-width: 22rem; display: none; text-align: left; font-size: 13px; }
-.rc-badge:hover .rc-tip, .rc-badge:focus .rc-tip { display: block; }
 
 /* the world map's layers: the gear's menu and the pins */
 .ml-pop { position: absolute; right: 0; top: calc(100% + 6px); z-index: 1000; width: 17rem; display: grid; gap: .3rem; padding: .7rem; border: 1px solid rgb(var(--edge)); border-radius: .5rem; background: rgb(var(--panel)); box-shadow: 0 12px 30px -8px rgb(0 0 0 / .7); }
@@ -1741,3 +1737,5 @@ button.prebis-fold-chip:hover { border-color: rgb(var(--gold) / .5); }
 .om-pin.ml-boat .wm-glyph, .om-pin.ml-zeppelin .wm-glyph { color: #f0d8a0; box-shadow: 0 0 0 1px #000, 0 0 0 2px #8a6a2c; }
 .om-pin.ml-trainer .wm-glyph { color: #7fe07f; box-shadow: 0 0 0 1px #000, 0 0 0 2px #2f7a2f; }
 .om-pin.ml-prof .wm-glyph { color: #e0b070; box-shadow: 0 0 0 1px #000, 0 0 0 2px #7a5a2c; }
+/* a tooltip kept on screen (components/EdgeTip): as wide as its text */
+.edge-tip { width: max-content; max-width: min(24rem, calc(100vw - 16px)); pointer-events: none; }

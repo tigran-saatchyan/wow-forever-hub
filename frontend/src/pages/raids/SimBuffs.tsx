@@ -6,6 +6,7 @@
  * time left under them, and a tooltip with what each gives.
  */
 import { useEffect, useRef, useState } from "react";
+import { EdgeTip, useEdgeTip } from "../../components/EdgeTip";
 import { useI18n, type Key, type Lang } from "../../lib/i18n";
 import { store } from "../../lib/store";
 import { media, type PreBis, type SimBuff, type SimEffect, type SimStats } from "../../lib/wowApi";
@@ -108,7 +109,7 @@ function Tip({ b, boosts }: { b: SimBuff; boosts: SimBuff[] }) {
   const { t, lang } = useI18n();
   const dur = useDur();
   return (
-    <div className="sb-tip wow-tip" role="tooltip">
+    <div className="max-w-[19rem]">
       <div className="text-[#ffd100]">{b.aura[lang]}</div>
       {effectLines(b.eff, t, b).map((l) => <div key={l} className="text-good">{l}</div>)}
       {boosts.map((x) => <div key={x.key} className="text-good">{t("sb_boosted", { n: x.boost ?? 0, s: x.talentName?.[lang] ?? "" })}</div>)}
@@ -122,6 +123,18 @@ function Tip({ b, boosts }: { b: SimBuff; boosts: SimBuff[] }) {
   );
 }
 
+/** One buff of the bar: its icon, the time under it, the tooltip kept on screen. */
+function Buff({ b, time, boosts }: { b: SimBuff; time: string; boosts: SimBuff[] }) {
+  const { anchor, open, bind } = useEdgeTip();
+  return (
+    <span {...bind} className="sb-buff" tabIndex={0}>
+      <SpellIcon name={b.icon} size={34} />
+      <span className="sb-time">{time}</span>
+      <EdgeTip anchor={anchor} open={open}><Tip b={b} boosts={boosts} /></EdgeTip>
+    </span>
+  );
+}
+
 /** The buffs on the character, as the game's buff bar shows them. */
 export function BuffBar({ r }: { r: SimResult }) {
   const { t } = useI18n();
@@ -130,11 +143,7 @@ export function BuffBar({ r }: { r: SimResult }) {
   return (
     <div className="sb-bar" aria-label={t("sb_bar")}>
       {r.active.filter((b) => !b.boost).map((b) => (
-        <span key={b.key} className="sb-buff" tabIndex={0}>
-          <SpellIcon name={b.icon} size={34} />
-          <span className="sb-time">{dur(b.dur)}</span>
-          <Tip b={b} boosts={r.active.filter((x) => x.boost && x.needs === b.key)} />
-        </span>
+        <Buff key={b.key} b={b} time={dur(b.dur)} boosts={r.active.filter((x) => x.boost && x.needs === b.key)} />
       ))}
       {r.enchantSp > 0 && <span className="ml-2 self-center text-xs text-muted">{t("sb_ench_sum", { n: r.enchantSp })}</span>}
     </div>
