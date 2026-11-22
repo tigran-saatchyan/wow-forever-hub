@@ -37,7 +37,7 @@ STATS = {
     84: "BONUS_STAT_HOLY_DAMAGE_DONE", 85: "BONUS_STAT_FIRE_DAMAGE_DONE", 86: "BONUS_STAT_NATURE_DAMAGE_DONE",
     87: "BONUS_STAT_FROST_DAMAGE_DONE", 88: "BONUS_STAT_SHADOW_DAMAGE_DONE", 89: "BONUS_STAT_ARCANE_DAMAGE_DONE",
 }
-VERSION = 2  # bump when convert() learns something: the items already kept are converted again from the cache
+VERSION = 3  # 3: the icon kept for tooltips; bump when convert() learns something: the items already kept are converted again from the cache
 
 INVISIBLE = re.compile("[\u200b-\u200f\u2060-\u2064\ufeff]")
 SCHOOL = {"holy": "BONUS_STAT_HOLY_DAMAGE_DONE", "fire": "BONUS_STAT_FIRE_DAMAGE_DONE",
@@ -103,6 +103,8 @@ def convert(d: dict) -> dict:
         "races": -1, "pvp": 0, "rep": 0, "skill": 0, "flags": 0, "stats": stats, "armor": None, "dps": dps,
         "speed": round(speed * 1000) if speed else None, "spells": texts,
         "unique": bool(d.get("unique")), "src": "foreverdb", "v": VERSION,
+        # for the tooltip of an item Blizzard does not know (hidden in Forever): its icon and armor as ForeverDB has them
+        "icon": d.get("icon") or d.get("iconName") or d.get("iconFile"), "armorValue": d.get("armor"),
     }
 
 

@@ -350,3 +350,24 @@ def test_raid_consumables_list():
     assert xs[13512]["kind"] == "flask" and xs[13512]["eff"] == {"sp": 150} and "caster" in xs[13512]["roles"]
     assert xs[13931]["kind"] == "food" and xs[13931]["prof"] == "cooking"  # Nightfin Soup: the food's own value
     assert any(x["kind"] == "protection" and x["eff"].get("absorb", {}).get("fire") for x in xs.values())  # Onyxia's fire
+
+
+def test_hidden_item_tooltip_from_reference():
+    """An item Blizzard does not know (hidden in Forever) gets its tooltip from ForeverDB's item in the reference."""
+    from app import fdb_gear
+    from app.routers import bis as bis_routes
+    from app.routers.items import from_reference
+
+    fdb_gear._extra["99990016693"] = fdb_gear.convert({
+        "name": "Devout Crown", "qualityId": 3, "itemLevel": 60, "requiredLevel": 57, "inventoryTypeId": 1, "classId": 4,
+        "subclassId": 1, "bonding": "Binds when picked up", "stats": [{"statId": 5, "value": 24}],
+        "effects": [{"text": "Equip: Increases damage and healing done by magical spells and effects by up to 15."}], "icon": "inv_helmet_27"})
+    bis_routes._merged = (None, {})
+    try:
+        t = from_reference(99990016693, "ru")
+        assert t["name"] == "Devout Crown" and t["quality"] == "RARE" and t["slot"] == "Голова" and t["subclass"] == "Ткань"
+        assert t["stats"] == ["+24 к интеллекту"] and "up to 15" in t["spells"][0] and t["icon"].endswith("inv_helmet_27.jpg")
+        assert t["binding"].startswith("Становится персональным при получении")
+    finally:
+        fdb_gear._extra.pop("99990016693", None)
+        bis_routes._merged = (None, {})

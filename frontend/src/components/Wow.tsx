@@ -121,6 +121,7 @@ export function ItemTip({ it, extra }: { it: ItemInfo; extra?: ReactNode }) {
       {it.description && <div className="text-[#ffd100]">“{it.description}”</div>}
       {extra}
       {it.sell ? <div className="mt-1 flex items-center gap-1.5 text-muted">{t("item_sell")} <Money c={it.sell} /></div> : null}
+      {it.source === "foreverdb" && <div className="mt-1.5 text-[11px] text-muted">{t("item_from_fdb")}</div>}
     </>
   );
 }

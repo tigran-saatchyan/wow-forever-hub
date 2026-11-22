@@ -56,9 +56,11 @@ async def get_item(session: AsyncSession, item_id: int, lang: str) -> dict | Non
         log.warning("item %s: %s", item_id, err)
         if media is None:
             if err.status == 404:
-                return None
+                return from_reference(item_id, lang)  # hidden in Forever: what ForeverDB says of it
             raise err
-        return {**wow.item({"id": item_id}, media, lang), "partial": True}
+        part = {**wow.item({"id": item_id}, media, lang), "partial": True}
+        ref = from_reference(item_id, lang)  # the icon from Blizzard, the rest from ForeverDB's item
+        return {**ref, "icon": part.get("icon") or ref.get("icon"), "partial": True} if ref else part
     out = None
     for lg in LANGS:
         data = {**wow.item(raw, media, lg), "v": ITEM_V}
@@ -67,6 +69,44 @@ async def get_item(session: AsyncSession, item_id: int, lang: str) -> dict | Non
             out = data
     await session.commit()
     return out
+
+
+# names for a tooltip built from the hub's reference (ForeverDB's items: English names only)
+_Q = {0: "POOR", 1: "COMMON", 2: "UNCOMMON", 3: "RARE", 4: "EPIC", 5: "LEGENDARY"}
+_PRIMARY = {"STRENGTH": ("Strength", "к силе"), "AGILITY": ("Agility", "к ловкости"), "STAMINA": ("Stamina", "к выносливости"),
+            "INTELLECT": ("Intellect", "к интеллекту"), "SPIRIT": ("Spirit", "к духу")}
+_SLOT = {1: ("Head", "Голова"), 2: ("Neck", "Шея"), 3: ("Shoulder", "Плечи"), 5: ("Chest", "Грудь"), 20: ("Chest", "Грудь"),
+         6: ("Waist", "Пояс"), 7: ("Legs", "Ноги"), 8: ("Feet", "Ступни"), 9: ("Wrist", "Запястья"), 10: ("Hands", "Кисти рук"),
+         11: ("Finger", "Палец"), 12: ("Trinket", "Аксессуар"), 16: ("Back", "Спина"), 13: ("One-Hand", "Одноручное"),
+         17: ("Two-Hand", "Двуручное"), 21: ("Main Hand", "Правая рука"), 22: ("Off Hand", "Левая рука"),
+         23: ("Held In Off-hand", "Левая рука"), 14: ("Shield", "Щит"), 15: ("Ranged", "Дальний бой"), 26: ("Ranged", "Дальний бой")}
+_ARMOR = {1: ("Cloth", "Ткань"), 2: ("Leather", "Кожа"), 3: ("Mail", "Кольчуга"), 4: ("Plate", "Латы")}
+_BIND = {1: ("Binds when picked up", "Становится персональным при получении"), 2: ("Binds when equipped", "Становится персональным при надевании"),
+         3: ("Binds when used", "Становится персональным при использовании"), 4: ("Quest Item", "Предмет, необходимый для задания")}
+
+
+def from_reference(item_id: int, lang: str) -> dict | None:
+    """The tooltip of an item Blizzard does not know (hidden in Forever) from the hub's reference, where ForeverDB's
+    items are kept: name, quality, level, slot, the primary stats and the effects' texts as ForeverDB gives them."""
+    from .bis import gear
+
+    g = gear().get(str(item_id))
+    if not g:
+        return None
+    ru = lang == "ru"
+    pick = (lambda pair: pair[1] if ru else pair[0])
+    icon = g.get("icon")
+    if icon and not str(icon).startswith("http"):
+        icon = f"https://wow.zamimg.com/images/wow/icons/large/{str(icon).lower()}.jpg"
+    stats = [f"+{v} {pick(_PRIMARY[k]) if ru else _PRIMARY[k][0]}" for k, v in (g.get("stats") or {}).items() if k in _PRIMARY and v]
+    return {
+        "id": item_id, "name": g.get(lang) or g.get("en") or "", "quality": _Q.get(g.get("q") or 1), "level": g.get("ilvl"),
+        "required": g.get("req") or None, "class": ("Доспехи" if ru else "Armor") if g.get("cls") == 4 else ("Оружие" if ru else "Weapon") if g.get("cls") == 2 else "",
+        "subclass": pick(_ARMOR[g["sub"]]) if g.get("cls") == 4 and g.get("sub") in _ARMOR else "",
+        "slot": pick(_SLOT[g["slot"]]) if g.get("slot") in _SLOT else "", "binding": pick(_BIND[g["bind"]]) if g.get("bind") in _BIND else None,
+        "stats": stats, "spells": g.get("spells") or [], "armor": (f"{g['armorValue']} {'брони' if ru else 'Armor'}" if g.get("armorValue") else None),
+        "damage": None, "speed": None, "sell": None, "description": None, "icon": icon, "source": "foreverdb",
+    }
 
 
 def _err(e: BnetError) -> HTTPException:

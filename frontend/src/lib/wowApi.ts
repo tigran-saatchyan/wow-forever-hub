@@ -64,6 +64,8 @@ export interface ItemInfo {
   id: number; name: string; quality?: string; level?: number; required?: number; class?: string; subclass?: string;
   slot?: string; binding?: string | null; stats: string[]; spells: string[]; armor?: string; damage?: string;
   speed?: string; sell?: number; description?: string; icon?: string | null;
+  /** "foreverdb": an item Blizzard does not know (hidden in Forever), told from ForeverDB's data */
+  source?: string; partial?: boolean;
 }
 export interface PricePoint { t: string; min: number; median: number; q: number }
 export interface WatchCard {
