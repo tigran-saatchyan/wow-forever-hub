@@ -341,3 +341,12 @@ def test_tier05(client):
             await s.delete(await s.get(Character, cid))
             await s.commit()
     asyncio.run(clean())
+
+
+def test_raid_consumables_list():
+    from app.routers.craft import _raid_items
+
+    xs = {x["item"]: x for x in _raid_items()}
+    assert xs[13512]["kind"] == "flask" and xs[13512]["eff"] == {"sp": 150} and "caster" in xs[13512]["roles"]
+    assert xs[13931]["kind"] == "food" and xs[13931]["prof"] == "cooking"  # Nightfin Soup: the food's own value
+    assert any(x["kind"] == "protection" and x["eff"].get("absorb", {}).get("fire") for x in xs.values())  # Onyxia's fire

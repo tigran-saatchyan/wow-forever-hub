@@ -4,6 +4,7 @@ Prices come from the auction house chosen on the Auction page (its latest snapsh
 prices from the client (the recipe reference). The arithmetic lives in app/craft.py.
 """
 
+import json
 from datetime import datetime
 from email.utils import parsedate_to_datetime
 from typing import Annotated
@@ -221,3 +222,63 @@ async def set_signal_cfg(body: SignalCfg, user: CurrentUser, session: Session):
     await session.merge(Setting(key=f"craft_cfg:{user.id}", value=body.model_dump()))
     await session.commit()
     return body.model_dump()
+
+
+# --- raid consumables: what to craft for the raids, for oneself or to sell (data/raid_consumables.json) ----------
+
+_RAID: list[dict] | None = None
+
+
+def _raid_items() -> list[dict]:
+    global _RAID
+    if _RAID is None:
+        from pathlib import Path
+
+        p = Path(__file__).resolve().parent.parent / "data" / "raid_consumables.json"
+        _RAID = json.loads(p.read_text("utf-8"))["items"] if p.is_file() else []
+    return _RAID
+
+
+@router.get("/raid")
+async def raid_consumables(user: CurrentUser, session: Session, lang: str = "ru"):
+    """Every raid consumable a profession makes: what it gives and who it suits, the recipe's profession and skill,
+    which of the user's characters know it or can learn it, what its reagents cost and what it sells for now (and
+    how many are up: few or none means nobody supplies it yet), and the profit of one craft."""
+    lang = "ru" if lang == "ru" else "en"
+    ds = await _reference()
+    if not ds:
+        prof_routes._start(prof_routes._build())
+        return {"status": "building"}
+    prices, market = await _prices(session)
+    item = _namer(ds, lang)
+    by_spell = {r["spell"]: (pid, p, r) for pid, p in ds["professions"].items() for r in p["recipes"]}
+    chars = (await session.execute(select(Character).where(Character.user_id == user.id))).scalars().all()
+    # the side whose vendors teach the recipes: the characters' (the first one's)
+    fac = next((((c.profile or {}).get("summary") or {}).get("en") or {}).get("faction") for c in chars) if chars else None
+    side = "alliance" if (fac or "").upper() == "ALLIANCE" else "horde"
+    rows = []
+    for x in _raid_items():
+        hit = by_spell.get(x["spell"])
+        r = hit[2] if hit else None
+        need = craft.need(r)[0] if r else x["yellow"]
+        who = []
+        for c in chars:
+            p = c.profile or {}
+            pr = next((y for y in (p.get("professions") or {}).get(lang) or [] if hit and str(y.get("id")) == hit[0]), None)
+            if not pr:
+                continue
+            known = set(pr.get("known") or [])
+            state = "known" if r and (r["id"] in known or r["spell"] in known) else "learn" if (pr.get("skill") or 0) >= need else "low"
+            who.append({"cid": c.id, "name": ((p.get("summary") or {}).get(lang) or {}).get("name") or c.name,
+                        "state": state, "skill": pr.get("skill")})
+        e = craft.economics(r, ds["items"], prices) if r else None
+        learn = fdb_sources.learn(x["spell"])
+        rows.append({
+            **{k: x[k] for k in ("kind", "eff", "ms", "roles", "prof", "spell")},
+            "item": item(x["item"]) or {"id": x["item"], "name": x["name"][lang]}, "need": need,
+            "profName": ((hit[1].get("name") or {}).get(lang) if hit else None) or x["prof"],
+            "who": who, "cost": e["cost"] if e else None, "parts": [{**item(y["id"]), "count": y["count"], "unit": y["unit"]} for y in e["parts"]] if e else [],
+            "made": e["made"] if e else 1, "sale": e["sale"] if e else None, "profit": e["profit"] if e else None,
+            "learn": {"ways": learn["ways"], "vendors": (learn.get("vendors") or {}).get(side, [])[:2]} if learn else None,
+        })
+    return {"status": "ready", "market": market, "items": rows}

@@ -1,0 +1,2137 @@
+{
+ "source": "WoW Forever client (wago.tools DB2 export)",
+ "items": [
+  {
+   "item": 274273,
+   "name": {
+    "en": "Flask of Natural Accuracy",
+    "ru": "Настой природной меткости"
+   },
+   "q": 2,
+   "req": 55,
+   "kind": "flask",
+   "eff": {
+    "sta": 30,
+    "hit": 0
+   },
+   "ms": 7200000,
+   "roles": [
+    "melee",
+    "hunter",
+    "caster"
+   ],
+   "prof": "alchemy",
+   "yellow": 320,
+   "gray": 330,
+   "spell": 1293559
+  },
+  {
+   "item": 274274,
+   "name": {
+    "en": "Flask of Natural Aggression",
+    "ru": "Настой природной ярости"
+   },
+   "q": 2,
+   "req": 55,
+   "kind": "flask",
+   "eff": {
+    "sta": 30,
+    "crit": 0
+   },
+   "ms": 7200000,
+   "roles": [
+    "melee",
+    "hunter",
+    "caster"
+   ],
+   "prof": "alchemy",
+   "yellow": 320,
+   "gray": 330,
+   "spell": 1293560
+  },
+  {
+   "item": 274275,
+   "name": {
+    "en": "Flask of Natural Precision",
+    "ru": "Настой природной точности"
+   },
+   "q": 2,
+   "req": 55,
+   "kind": "flask",
+   "eff": {
+    "sta": 30,
+    "expertise": 0
+   },
+   "ms": 7200000,
+   "roles": [
+    "melee",
+    "hunter"
+   ],
+   "prof": "alchemy",
+   "yellow": 320,
+   "gray": 330,
+   "spell": 1293561
+  },
+  {
+   "item": 274276,
+   "name": {
+    "en": "Flask of Natural Swiftness",
+    "ru": "Настой природной быстроты"
+   },
+   "q": 2,
+   "req": 55,
+   "kind": "flask",
+   "eff": {
+    "sta": 30,
+    "haste": 0
+   },
+   "ms": 7200000,
+   "roles": [
+    "melee",
+    "hunter",
+    "caster"
+   ],
+   "prof": "alchemy",
+   "yellow": 320,
+   "gray": 330,
+   "spell": 1293562
+  },
+  {
+   "item": 13510,
+   "name": {
+    "en": "Flask of the Titans",
+    "ru": "Настой титанов"
+   },
+   "q": 1,
+   "req": 50,
+   "kind": "flask",
+   "eff": {
+    "hp": 1200
+   },
+   "ms": 7200000,
+   "roles": [
+    "tank"
+   ],
+   "prof": "alchemy",
+   "yellow": 315,
+   "gray": 330,
+   "spell": 17635
+  },
+  {
+   "item": 13512,
+   "name": {
+    "en": "Flask of Supreme Power",
+    "ru": "Настой великой силы"
+   },
+   "q": 1,
+   "req": 50,
+   "kind": "flask",
+   "eff": {
+    "sp": 150
+   },
+   "ms": 7200000,
+   "roles": [
+    "caster"
+   ],
+   "prof": "alchemy",
+   "yellow": 315,
+   "gray": 330,
+   "spell": 17637
+  },
+  {
+   "item": 250351,
+   "name": {
+    "en": "Elixir of the Grizzly",
+    "ru": "Эликсир гризли"
+   },
+   "q": 1,
+   "req": 55,
+   "kind": "elixir",
+   "eff": {
+    "str": 25,
+    "crit": 2
+   },
+   "ms": 1800000,
+   "roles": [
+    "melee"
+   ],
+   "prof": "alchemy",
+   "yellow": 305,
+   "gray": 310,
+   "spell": 1250800
+  },
+  {
+   "item": 13454,
+   "name": {
+    "en": "Greater Arcane Elixir",
+    "ru": "Сильный чародейский эликсир"
+   },
+   "q": 1,
+   "req": 47,
+   "kind": "elixir",
+   "eff": {
+    "sp": 35
+   },
+   "ms": 3600000,
+   "roles": [
+    "caster"
+   ],
+   "prof": "alchemy",
+   "yellow": 300,
+   "gray": 340,
+   "spell": 17573
+  },
+  {
+   "item": 13452,
+   "name": {
+    "en": "Elixir of the Mongoose",
+    "ru": "Эликсир мангуста"
+   },
+   "q": 1,
+   "req": 46,
+   "kind": "elixir",
+   "eff": {
+    "agi": 25,
+    "crit": 2
+   },
+   "ms": 1800000,
+   "roles": [
+    "melee",
+    "hunter"
+   ],
+   "prof": "alchemy",
+   "yellow": 295,
+   "gray": 335,
+   "spell": 17571
+  },
+  {
+   "item": 250943,
+   "name": {
+    "en": "Major Frenzy Potion",
+    "ru": "Большое зелье бешенства"
+   },
+   "q": 1,
+   "req": 55,
+   "kind": "elixir",
+   "eff": {
+    "ap": 80,
+    "rap": 80
+   },
+   "ms": 30000,
+   "roles": [
+    "melee",
+    "hunter"
+   ],
+   "prof": "alchemy",
+   "yellow": 295,
+   "gray": 300,
+   "spell": 1251740
+  },
+  {
+   "item": 13453,
+   "name": {
+    "en": "Elixir of Brute Force",
+    "ru": "Эликсир грубой силы"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "elixir",
+   "eff": {
+    "str": 18,
+    "sta": 18
+   },
+   "ms": 3600000,
+   "roles": [
+    "melee",
+    "tank"
+   ],
+   "prof": "alchemy",
+   "yellow": 290,
+   "gray": 330,
+   "spell": 17557
+  },
+  {
+   "item": 20007,
+   "name": {
+    "en": "Mageblood Elixir",
+    "ru": "Эликсир крови волшебника"
+   },
+   "q": 1,
+   "req": 40,
+   "kind": "elixir",
+   "eff": {
+    "mp5": 12
+   },
+   "ms": 3600000,
+   "roles": [
+    "healer"
+   ],
+   "prof": "alchemy",
+   "yellow": 290,
+   "gray": 330,
+   "spell": 24365
+  },
+  {
+   "item": 250336,
+   "name": {
+    "en": "Elixir of Wicked Regeneration",
+    "ru": "Эликсир зловещей регенерации"
+   },
+   "q": 1,
+   "req": 55,
+   "kind": "elixir",
+   "eff": {
+    "mp5": 10
+   },
+   "ms": 1800000,
+   "roles": [
+    "healer"
+   ],
+   "prof": "alchemy",
+   "yellow": 290,
+   "gray": 295,
+   "spell": 1250785
+  },
+  {
+   "item": 250343,
+   "name": {
+    "en": "Elixir of Nature Power",
+    "ru": "Эликсир силы природы"
+   },
+   "q": 1,
+   "req": 55,
+   "kind": "elixir",
+   "eff": {
+    "school": {
+     "nature": 40
+    }
+   },
+   "ms": 1800000,
+   "roles": [
+    "caster"
+   ],
+   "prof": "alchemy",
+   "yellow": 290,
+   "gray": 295,
+   "spell": 1250792
+  },
+  {
+   "item": 250937,
+   "name": {
+    "en": "Major Spellblasting Potion",
+    "ru": "Большое зелье взрывных чар"
+   },
+   "q": 1,
+   "req": 55,
+   "kind": "elixir",
+   "eff": {
+    "sp": 47
+   },
+   "ms": 30000,
+   "roles": [
+    "caster"
+   ],
+   "prof": "alchemy",
+   "yellow": 290,
+   "gray": 295,
+   "spell": 1251734
+  },
+  {
+   "item": 13447,
+   "name": {
+    "en": "Elixir of the Sages",
+    "ru": "Эликсир мудрецов"
+   },
+   "q": 1,
+   "req": 38,
+   "kind": "elixir",
+   "eff": {
+    "int": 18,
+    "spi": 18
+   },
+   "ms": 3600000,
+   "roles": [
+    "healer"
+   ],
+   "prof": "alchemy",
+   "yellow": 285,
+   "gray": 325,
+   "spell": 17555
+  },
+  {
+   "item": 250337,
+   "name": {
+    "en": "Elixir of the Owl",
+    "ru": "Эликсир совы"
+   },
+   "q": 1,
+   "req": 55,
+   "kind": "elixir",
+   "eff": {
+    "int": 25,
+    "crit": 2
+   },
+   "ms": 1800000,
+   "roles": [
+    "caster",
+    "healer"
+   ],
+   "prof": "alchemy",
+   "yellow": 285,
+   "gray": 290,
+   "spell": 1250786
+  },
+  {
+   "item": 250949,
+   "name": {
+    "en": "Major Mender's Potion",
+    "ru": "Большое зелье целителя"
+   },
+   "q": 1,
+   "req": 55,
+   "kind": "elixir",
+   "eff": {
+    "healing": 88
+   },
+   "ms": 30000,
+   "roles": [
+    "healer"
+   ],
+   "prof": "alchemy",
+   "yellow": 285,
+   "gray": 290,
+   "spell": 1251747
+  },
+  {
+   "item": 250328,
+   "name": {
+    "en": "Elixir of Cunning",
+    "ru": "Эликсир хитрости"
+   },
+   "q": 1,
+   "req": 55,
+   "kind": "elixir",
+   "eff": {
+    "agi": 25,
+    "int": 25
+   },
+   "ms": 1800000,
+   "roles": [
+    "healer",
+    "melee",
+    "hunter"
+   ],
+   "prof": "alchemy",
+   "yellow": 280,
+   "gray": 285,
+   "spell": 1250777
+  },
+  {
+   "item": 250338,
+   "name": {
+    "en": "Elixir of Sages",
+    "ru": "Эликсир мудрецов"
+   },
+   "q": 1,
+   "req": 55,
+   "kind": "elixir",
+   "eff": {
+    "spi": 25,
+    "crit": 2
+   },
+   "ms": 1800000,
+   "roles": [
+    "healer",
+    "melee"
+   ],
+   "prof": "alchemy",
+   "yellow": 280,
+   "gray": 285,
+   "spell": 1250787
+  },
+  {
+   "item": 250348,
+   "name": {
+    "en": "Elixir of the Whale",
+    "ru": "Эликсир кита"
+   },
+   "q": 1,
+   "req": 55,
+   "kind": "elixir",
+   "eff": {
+    "spi": 25,
+    "crit": 2
+   },
+   "ms": 1800000,
+   "roles": [
+    "healer",
+    "melee"
+   ],
+   "prof": "alchemy",
+   "yellow": 280,
+   "gray": 285,
+   "spell": 1250797
+  },
+  {
+   "item": 250350,
+   "name": {
+    "en": "Elixir of Ferocity",
+    "ru": "Эликсир свирепости"
+   },
+   "q": 1,
+   "req": 55,
+   "kind": "elixir",
+   "eff": {
+    "str": 18,
+    "agi": 18
+   },
+   "ms": 1800000,
+   "roles": [
+    "melee",
+    "hunter"
+   ],
+   "prof": "alchemy",
+   "yellow": 280,
+   "gray": 285,
+   "spell": 1250799
+  },
+  {
+   "item": 13442,
+   "name": {
+    "en": "Mighty Rage Potion",
+    "ru": "Мощное зелье ярости"
+   },
+   "q": 1,
+   "req": 46,
+   "kind": "elixir",
+   "eff": {
+    "str": 60
+   },
+   "ms": 20000,
+   "roles": [
+    "melee"
+   ],
+   "prof": "alchemy",
+   "yellow": 270,
+   "gray": 310,
+   "spell": 17552
+  },
+  {
+   "item": 9264,
+   "name": {
+    "en": "Elixir of Shadow Power",
+    "ru": "Эликсир силы тьмы"
+   },
+   "q": 1,
+   "req": 40,
+   "kind": "elixir",
+   "eff": {
+    "school": {
+     "shadow": 40
+    }
+   },
+   "ms": 1800000,
+   "roles": [
+    "caster"
+   ],
+   "prof": "alchemy",
+   "yellow": 265,
+   "gray": 305,
+   "spell": 11476
+  },
+  {
+   "item": 21546,
+   "name": {
+    "en": "Elixir of Holy Power",
+    "ru": "Эликсир энергии Света"
+   },
+   "q": 1,
+   "req": 40,
+   "kind": "elixir",
+   "eff": {
+    "school": {
+     "holy": 40
+    }
+   },
+   "ms": 1800000,
+   "roles": [
+    "caster"
+   ],
+   "prof": "alchemy",
+   "yellow": 265,
+   "gray": 305,
+   "spell": 26277
+  },
+  {
+   "item": 9206,
+   "name": {
+    "en": "Elixir of Greater Strength",
+    "ru": "Действенный эликсир силы"
+   },
+   "q": 1,
+   "req": 48,
+   "kind": "elixir",
+   "eff": {
+    "str": 25
+   },
+   "ms": 3600000,
+   "roles": [
+    "melee"
+   ],
+   "prof": "alchemy",
+   "yellow": 260,
+   "gray": 300,
+   "spell": 11472
+  },
+  {
+   "item": 246948,
+   "name": {
+    "en": "Distilled Firewater",
+    "ru": "Дистиллированная огненная вода"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "elixir",
+   "eff": {
+    "ap": 35
+   },
+   "ms": 1200000,
+   "roles": [
+    "melee"
+   ],
+   "prof": "alchemy",
+   "yellow": 260,
+   "gray": 270,
+   "spell": 1244421
+  },
+  {
+   "item": 9187,
+   "name": {
+    "en": "Elixir of Greater Agility",
+    "ru": "Сильный эликсир ловкости"
+   },
+   "q": 1,
+   "req": 38,
+   "kind": "elixir",
+   "eff": {
+    "agi": 25
+   },
+   "ms": 3600000,
+   "roles": [
+    "melee",
+    "hunter"
+   ],
+   "prof": "alchemy",
+   "yellow": 255,
+   "gray": 295,
+   "spell": 11467
+  },
+  {
+   "item": 250329,
+   "name": {
+    "en": "Elixir of the Phalanx",
+    "ru": "Эликсир фаланги"
+   },
+   "q": 1,
+   "req": 55,
+   "kind": "elixir",
+   "eff": {
+    "hp": 400
+   },
+   "ms": 1800000,
+   "roles": [
+    "tank"
+   ],
+   "prof": "alchemy",
+   "yellow": 255,
+   "gray": 260,
+   "spell": 1250778
+  },
+  {
+   "item": 9155,
+   "name": {
+    "en": "Arcane Elixir",
+    "ru": "Чародейский эликсир"
+   },
+   "q": 1,
+   "req": 37,
+   "kind": "elixir",
+   "eff": {
+    "sp": 20
+   },
+   "ms": 1800000,
+   "roles": [
+    "caster"
+   ],
+   "prof": "alchemy",
+   "yellow": 250,
+   "gray": 290,
+   "spell": 11461
+  },
+  {
+   "item": 9179,
+   "name": {
+    "en": "Elixir of Greater Intellect",
+    "ru": "Сильный эликсир интеллекта"
+   },
+   "q": 1,
+   "req": 37,
+   "kind": "elixir",
+   "eff": {
+    "int": 25
+   },
+   "ms": 3600000,
+   "roles": [
+    "healer"
+   ],
+   "prof": "alchemy",
+   "yellow": 250,
+   "gray": 290,
+   "spell": 11465
+  },
+  {
+   "item": 250942,
+   "name": {
+    "en": "Superior Frenzy Potion",
+    "ru": "Высшее зелье бешенства"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "elixir",
+   "eff": {
+    "ap": 56,
+    "rap": 56
+   },
+   "ms": 30000,
+   "roles": [
+    "melee",
+    "hunter"
+   ],
+   "prof": "alchemy",
+   "yellow": 245,
+   "gray": 250,
+   "spell": 1251739
+  },
+  {
+   "item": 250936,
+   "name": {
+    "en": "Superior Spellblasting Potion",
+    "ru": "Высшее зелье взрывных чар"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "elixir",
+   "eff": {
+    "sp": 33
+   },
+   "ms": 30000,
+   "roles": [
+    "caster"
+   ],
+   "prof": "alchemy",
+   "yellow": 240,
+   "gray": 245,
+   "spell": 1251733
+  },
+  {
+   "item": 250948,
+   "name": {
+    "en": "Superior Mender's Potion",
+    "ru": "Высшее зелье целителя"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "elixir",
+   "eff": {
+    "healing": 62
+   },
+   "ms": 30000,
+   "roles": [
+    "healer"
+   ],
+   "prof": "alchemy",
+   "yellow": 235,
+   "gray": 240,
+   "spell": 1251745
+  },
+  {
+   "item": 250335,
+   "name": {
+    "en": "Elixir of Greater Fortitude",
+    "ru": "Сильный эликсир стойкости"
+   },
+   "q": 1,
+   "req": 55,
+   "kind": "elixir",
+   "eff": {
+    "hp": 400
+   },
+   "ms": 1800000,
+   "roles": [
+    "tank"
+   ],
+   "prof": "alchemy",
+   "yellow": 205,
+   "gray": 210,
+   "spell": 1250784
+  },
+  {
+   "item": 250333,
+   "name": {
+    "en": "Greater Cleric's Elixir",
+    "ru": "Сильный эликсир священника"
+   },
+   "q": 1,
+   "req": 55,
+   "kind": "elixir",
+   "eff": {
+    "healing": 40
+   },
+   "ms": 1800000,
+   "roles": [
+    "healer"
+   ],
+   "prof": "alchemy",
+   "yellow": 200,
+   "gray": 205,
+   "spell": 1250782
+  },
+  {
+   "item": 250341,
+   "name": {
+    "en": "Greater Mageblood Elixir",
+    "ru": "Сильный эликсир крови волшебника"
+   },
+   "q": 1,
+   "req": 55,
+   "kind": "elixir",
+   "eff": {
+    "mp5": 20
+   },
+   "ms": 1800000,
+   "roles": [
+    "healer"
+   ],
+   "prof": "alchemy",
+   "yellow": 180,
+   "gray": 185,
+   "spell": 1250790
+  },
+  {
+   "item": 250347,
+   "name": {
+    "en": "Elixir of Greater Spirit",
+    "ru": "Сильный эликсир духа"
+   },
+   "q": 1,
+   "req": 55,
+   "kind": "elixir",
+   "eff": {
+    "spi": 18
+   },
+   "ms": 1800000,
+   "roles": [
+    "healer"
+   ],
+   "prof": "alchemy",
+   "yellow": 170,
+   "gray": 175,
+   "spell": 1250796
+  },
+  {
+   "item": 250334,
+   "name": {
+    "en": "Elixir of Fortitude",
+    "ru": "Эликсир стойкости"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "elixir",
+   "eff": {
+    "hp": 200
+   },
+   "ms": 1800000,
+   "roles": [
+    "tank"
+   ],
+   "prof": "alchemy",
+   "yellow": 155,
+   "gray": 160,
+   "spell": 1250783
+  },
+  {
+   "item": 250349,
+   "name": {
+    "en": "Elixir of Strength",
+    "ru": "Эликсир силы"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "elixir",
+   "eff": {
+    "str": 10
+   },
+   "ms": 1800000,
+   "roles": [
+    "melee"
+   ],
+   "prof": "alchemy",
+   "yellow": 155,
+   "gray": 160,
+   "spell": 1250798
+  },
+  {
+   "item": 250332,
+   "name": {
+    "en": "Cleric's Elixir",
+    "ru": "Эликсир священника"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "elixir",
+   "eff": {
+    "healing": 30
+   },
+   "ms": 1800000,
+   "roles": [
+    "healer"
+   ],
+   "prof": "alchemy",
+   "yellow": 150,
+   "gray": 155,
+   "spell": 1250781
+  },
+  {
+   "item": 250354,
+   "name": {
+    "en": "Elixir of Intellect",
+    "ru": "Эликсир интеллекта"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "elixir",
+   "eff": {
+    "int": 10
+   },
+   "ms": 1800000,
+   "roles": [
+    "healer"
+   ],
+   "prof": "alchemy",
+   "yellow": 140,
+   "gray": 145,
+   "spell": 1250802
+  },
+  {
+   "item": 250346,
+   "name": {
+    "en": "Elixir of Spirit",
+    "ru": "Эликсир духа"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "elixir",
+   "eff": {
+    "spi": 10
+   },
+   "ms": 1800000,
+   "roles": [
+    "healer"
+   ],
+   "prof": "alchemy",
+   "yellow": 120,
+   "gray": 125,
+   "spell": 1250795
+  },
+  {
+   "item": 228978,
+   "name": {
+    "en": "Enchanted Sigil: Flowing Waters",
+    "ru": "Зачарованная печать: текущая вода"
+   },
+   "q": 3,
+   "req": 60,
+   "kind": "elixir",
+   "eff": {
+    "sp": 30,
+    "ap": 30,
+    "healing": 30,
+    "rap": 30
+   },
+   "ms": 3600000,
+   "roles": [
+    "caster",
+    "healer",
+    "melee",
+    "hunter"
+   ],
+   "prof": "enchanting",
+   "yellow": 305,
+   "gray": 320,
+   "spell": 463866
+  },
+  {
+   "item": 20452,
+   "name": {
+    "en": "Smoked Desert Dumplings",
+    "ru": "Копченые пустынные клецки"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "food",
+   "eff": {
+    "str": 20
+   },
+   "ms": 900000,
+   "roles": [
+    "melee"
+   ],
+   "prof": "cooking",
+   "yellow": 325,
+   "gray": 365,
+   "spell": 24801
+  },
+  {
+   "item": 13933,
+   "name": {
+    "en": "Lobster Stew",
+    "ru": "Похлебка из омаров"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "food",
+   "eff": {
+    "sp": 28
+   },
+   "ms": 900000,
+   "roles": [
+    "caster"
+   ],
+   "prof": "cooking",
+   "yellow": 315,
+   "gray": 355,
+   "spell": 18245
+  },
+  {
+   "item": 13934,
+   "name": {
+    "en": "Mightfish Steak",
+    "ru": "Стейк из мощь-рыбы"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "food",
+   "eff": {
+    "ap": 40,
+    "rap": 40
+   },
+   "ms": 900000,
+   "roles": [
+    "melee",
+    "hunter"
+   ],
+   "prof": "cooking",
+   "yellow": 315,
+   "gray": 355,
+   "spell": 18246
+  },
+  {
+   "item": 13935,
+   "name": {
+    "en": "Baked Salmon",
+    "ru": "Запеченный лосось"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "food",
+   "eff": {
+    "sp": 28
+   },
+   "ms": 900000,
+   "roles": [
+    "caster"
+   ],
+   "prof": "cooking",
+   "yellow": 315,
+   "gray": 355,
+   "spell": 18247
+  },
+  {
+   "item": 18254,
+   "name": {
+    "en": "Runn Tum Tuber Surprise",
+    "ru": "Десерт из корня Рун-Тум"
+   },
+   "q": 1,
+   "req": 35,
+   "kind": "food",
+   "eff": {
+    "int": 15
+   },
+   "ms": 900000,
+   "roles": [
+    "healer"
+   ],
+   "prof": "cooking",
+   "yellow": 315,
+   "gray": 355,
+   "spell": 22761
+  },
+  {
+   "item": 13931,
+   "name": {
+    "en": "Nightfin Soup",
+    "ru": "Суп из ночницы"
+   },
+   "q": 1,
+   "req": 35,
+   "kind": "food",
+   "eff": {
+    "sp": 22
+   },
+   "ms": 900000,
+   "roles": [
+    "caster"
+   ],
+   "prof": "cooking",
+   "yellow": 290,
+   "gray": 330,
+   "spell": 18243
+  },
+  {
+   "item": 13932,
+   "name": {
+    "en": "Poached Sunscale Salmon",
+    "ru": "Вареный радужный лосось"
+   },
+   "q": 1,
+   "req": 35,
+   "kind": "food",
+   "eff": {
+    "ap": 40,
+    "rap": 40
+   },
+   "ms": 900000,
+   "roles": [
+    "melee",
+    "hunter"
+   ],
+   "prof": "cooking",
+   "yellow": 290,
+   "gray": 330,
+   "spell": 18244
+  },
+  {
+   "item": 250069,
+   "name": {
+    "en": "Flank au Poivre",
+    "ru": "Перченое мясо с бока"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "food",
+   "eff": {
+    "agi": 20
+   },
+   "ms": 900000,
+   "roles": [
+    "melee",
+    "hunter"
+   ],
+   "prof": "cooking",
+   "yellow": 285,
+   "gray": 315,
+   "spell": 1250146
+  },
+  {
+   "item": 13928,
+   "name": {
+    "en": "Grilled Squid",
+    "ru": "Жареный кальмар"
+   },
+   "q": 1,
+   "req": 35,
+   "kind": "food",
+   "eff": {
+    "crit": 1
+   },
+   "ms": 900000,
+   "roles": [
+    "melee"
+   ],
+   "prof": "cooking",
+   "yellow": 280,
+   "gray": 320,
+   "spell": 18240
+  },
+  {
+   "item": 13929,
+   "name": {
+    "en": "Hot Smoked Bass",
+    "ru": "Острый копченый окунь"
+   },
+   "q": 1,
+   "req": 35,
+   "kind": "food",
+   "eff": {
+    "crit": 1
+   },
+   "ms": 900000,
+   "roles": [
+    "melee"
+   ],
+   "prof": "cooking",
+   "yellow": 280,
+   "gray": 320,
+   "spell": 18242
+  },
+  {
+   "item": 250066,
+   "name": {
+    "en": "Soaring Pamplona",
+    "ru": "Парящая памплона"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "food",
+   "eff": {
+    "int": 20
+   },
+   "ms": 900000,
+   "roles": [
+    "healer"
+   ],
+   "prof": "cooking",
+   "yellow": 280,
+   "gray": 310,
+   "spell": 1250143
+  },
+  {
+   "item": 250067,
+   "name": {
+    "en": "Bat Hachee",
+    "ru": "Хаше из нетопырей"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "food",
+   "eff": {
+    "int": 20
+   },
+   "ms": 900000,
+   "roles": [
+    "healer"
+   ],
+   "prof": "cooking",
+   "yellow": 280,
+   "gray": 310,
+   "spell": 1250144
+  },
+  {
+   "item": 250068,
+   "name": {
+    "en": "Savory Turtle Stew",
+    "ru": "Вкусная черепашья похлебка"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "food",
+   "eff": {
+    "sta": 20
+   },
+   "ms": 900000,
+   "roles": [
+    "tank"
+   ],
+   "prof": "cooking",
+   "yellow": 280,
+   "gray": 310,
+   "spell": 1250145
+  },
+  {
+   "item": 250070,
+   "name": {
+    "en": "Bear Bruscitti",
+    "ru": "Брускетта с медвежатиной"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "food",
+   "eff": {
+    "str": 20
+   },
+   "ms": 900000,
+   "roles": [
+    "melee"
+   ],
+   "prof": "cooking",
+   "yellow": 280,
+   "gray": 310,
+   "spell": 1250147
+  },
+  {
+   "item": 250071,
+   "name": {
+    "en": "Steaming Stag Steak",
+    "ru": "Дымящийся стейк из оленины"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "food",
+   "eff": {
+    "str": 20
+   },
+   "ms": 900000,
+   "roles": [
+    "melee"
+   ],
+   "prof": "cooking",
+   "yellow": 280,
+   "gray": 310,
+   "spell": 1250148
+  },
+  {
+   "item": 250072,
+   "name": {
+    "en": "Swiftstrike Steak",
+    "ru": "Стейк молниеносного удара"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "food",
+   "eff": {
+    "agi": 20
+   },
+   "ms": 900000,
+   "roles": [
+    "melee",
+    "hunter"
+   ],
+   "prof": "cooking",
+   "yellow": 280,
+   "gray": 310,
+   "spell": 1250149
+  },
+  {
+   "item": 250073,
+   "name": {
+    "en": "Raging Raptor Ribs",
+    "ru": "Ребрышки разъяренного ящера"
+   },
+   "q": 1,
+   "req": 25,
+   "kind": "food",
+   "eff": {
+    "int": 10
+   },
+   "ms": 900000,
+   "roles": [
+    "healer"
+   ],
+   "prof": "cooking",
+   "yellow": 280,
+   "gray": 310,
+   "spell": 1250150
+  },
+  {
+   "item": 250075,
+   "name": {
+    "en": "Prehistoric Pulled Raptor",
+    "ru": "Томленое мясо доисторического ящера"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "food",
+   "eff": {
+    "int": 20
+   },
+   "ms": 900000,
+   "roles": [
+    "healer"
+   ],
+   "prof": "cooking",
+   "yellow": 280,
+   "gray": 310,
+   "spell": 1250152
+  },
+  {
+   "item": 12216,
+   "name": {
+    "en": "Spiced Chili Crab",
+    "ru": "Острое крабовое чили"
+   },
+   "q": 1,
+   "req": 25,
+   "kind": "food",
+   "eff": {
+    "int": 10
+   },
+   "ms": 900000,
+   "roles": [
+    "healer"
+   ],
+   "prof": "cooking",
+   "yellow": 265,
+   "gray": 305,
+   "spell": 15915
+  },
+  {
+   "item": 12218,
+   "name": {
+    "en": "Monster Omelet",
+    "ru": "Чудовищный омлет"
+   },
+   "q": 1,
+   "req": 35,
+   "kind": "food",
+   "eff": {
+    "sta": 15
+   },
+   "ms": 900000,
+   "roles": [
+    "tank"
+   ],
+   "prof": "cooking",
+   "yellow": 265,
+   "gray": 305,
+   "spell": 15933
+  },
+  {
+   "item": 13927,
+   "name": {
+    "en": "Cooked Glossy Mightfish",
+    "ru": "Мощь-рыба в кляре"
+   },
+   "q": 1,
+   "req": 35,
+   "kind": "food",
+   "eff": {
+    "ap": 30,
+    "rap": 30
+   },
+   "ms": 900000,
+   "roles": [
+    "melee",
+    "hunter"
+   ],
+   "prof": "cooking",
+   "yellow": 265,
+   "gray": 305,
+   "spell": 18239
+  },
+  {
+   "item": 6887,
+   "name": {
+    "en": "Spotted Yellowtail",
+    "ru": "Пятнистый желтохвост"
+   },
+   "q": 1,
+   "req": 35,
+   "kind": "food",
+   "eff": {
+    "sp": 22
+   },
+   "ms": 900000,
+   "roles": [
+    "caster"
+   ],
+   "prof": "cooking",
+   "yellow": 265,
+   "gray": 305,
+   "spell": 18238
+  },
+  {
+   "item": 18045,
+   "name": {
+    "en": "Tender Wolf Steak",
+    "ru": "Сочный стейк из волчатины"
+   },
+   "q": 1,
+   "req": 35,
+   "kind": "food",
+   "eff": {
+    "agi": 15
+   },
+   "ms": 900000,
+   "roles": [
+    "melee",
+    "hunter"
+   ],
+   "prof": "cooking",
+   "yellow": 265,
+   "gray": 305,
+   "spell": 22480
+  },
+  {
+   "item": 249870,
+   "name": {
+    "en": "Sage's Tea",
+    "ru": "Чай мудреца"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "food",
+   "eff": {
+    "healing": 44
+   },
+   "ms": 900000,
+   "roles": [
+    "healer"
+   ],
+   "prof": "cooking",
+   "yellow": 260,
+   "gray": 290,
+   "spell": 1249962
+  },
+  {
+   "item": 249876,
+   "name": {
+    "en": "Wicked Smoothie",
+    "ru": "Порочный смузи"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "food",
+   "eff": {
+    "spi": 20
+   },
+   "ms": 900000,
+   "roles": [
+    "healer"
+   ],
+   "prof": "cooking",
+   "yellow": 255,
+   "gray": 270,
+   "spell": 1249968
+  },
+  {
+   "item": 12215,
+   "name": {
+    "en": "Heavy Kodo Stew",
+    "ru": "Сытная похлебка из кодо"
+   },
+   "q": 1,
+   "req": 25,
+   "kind": "food",
+   "eff": {
+    "sta": 10
+   },
+   "ms": 900000,
+   "roles": [
+    "tank"
+   ],
+   "prof": "cooking",
+   "yellow": 240,
+   "gray": 280,
+   "spell": 15910
+  },
+  {
+   "item": 17222,
+   "name": {
+    "en": "Spider Sausage",
+    "ru": "Паучья колбаска"
+   },
+   "q": 1,
+   "req": 35,
+   "kind": "food",
+   "eff": {
+    "sta": 15
+   },
+   "ms": 900000,
+   "roles": [
+    "tank"
+   ],
+   "prof": "cooking",
+   "yellow": 240,
+   "gray": 280,
+   "spell": 21175
+  },
+  {
+   "item": 13444,
+   "name": {
+    "en": "Major Mana Potion",
+    "ru": "Сильнейшее зелье маны"
+   },
+   "q": 1,
+   "req": 49,
+   "kind": "potion",
+   "eff": {
+    "mana_now": 1800
+   },
+   "ms": null,
+   "roles": [
+    "healer",
+    "caster"
+   ],
+   "prof": "alchemy",
+   "yellow": 310,
+   "gray": 350,
+   "spell": 17580
+  },
+  {
+   "item": 18253,
+   "name": {
+    "en": "Major Rejuvenation Potion",
+    "ru": "Сильнейшее зелье омоложения"
+   },
+   "q": 1,
+   "req": 50,
+   "kind": "potion",
+   "eff": {
+    "mana_now": 1600,
+    "heal_now": 1600
+   },
+   "ms": null,
+   "roles": [
+    "healer",
+    "all",
+    "caster"
+   ],
+   "prof": "alchemy",
+   "yellow": 310,
+   "gray": 330,
+   "spell": 22732
+  },
+  {
+   "item": 20002,
+   "name": {
+    "en": "Greater Dreamless Sleep Potion",
+    "ru": "Сильное зелье спокойного сна"
+   },
+   "q": 1,
+   "req": 55,
+   "kind": "potion",
+   "eff": {
+    "hot": 525,
+    "mp5": 875.0
+   },
+   "ms": 12000,
+   "roles": [
+    "healer",
+    "all"
+   ],
+   "prof": "alchemy",
+   "yellow": 290,
+   "gray": 330,
+   "spell": 24366
+  },
+  {
+   "item": 241650,
+   "name": {
+    "en": "Major Discolored Healing Potion",
+    "ru": "Сильнейшее бесцветное лечебное зелье"
+   },
+   "q": 1,
+   "req": 60,
+   "kind": "potion",
+   "eff": {
+    "heal_now": 2800
+   },
+   "ms": null,
+   "roles": [
+    "all"
+   ],
+   "prof": "alchemy",
+   "yellow": 290,
+   "gray": 330,
+   "spell": 1231583
+  },
+  {
+   "item": 13443,
+   "name": {
+    "en": "Superior Mana Potion",
+    "ru": "Высшее зелье маны"
+   },
+   "q": 1,
+   "req": 41,
+   "kind": "potion",
+   "eff": {
+    "mana_now": 1200
+   },
+   "ms": null,
+   "roles": [
+    "healer",
+    "caster"
+   ],
+   "prof": "alchemy",
+   "yellow": 275,
+   "gray": 315,
+   "spell": 17553
+  },
+  {
+   "item": 12190,
+   "name": {
+    "en": "Dreamless Sleep Potion",
+    "ru": "Зелье спокойного сна"
+   },
+   "q": 1,
+   "req": 35,
+   "kind": "potion",
+   "eff": {
+    "hot": 300,
+    "mp5": 500.0
+   },
+   "ms": 12000,
+   "roles": [
+    "healer",
+    "all"
+   ],
+   "prof": "alchemy",
+   "yellow": 245,
+   "gray": 285,
+   "spell": 15833
+  },
+  {
+   "item": 13446,
+   "name": {
+    "en": "Major Healing Potion",
+    "ru": "Сильнейшее лечебное зелье"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "potion",
+   "eff": {
+    "heal_now": 1400
+   },
+   "ms": null,
+   "roles": [
+    "all"
+   ],
+   "prof": "first-aid",
+   "yellow": 290,
+   "gray": 330,
+   "spell": 1244436
+  },
+  {
+   "item": 13513,
+   "name": {
+    "en": "Flask of Chromatic Resistance",
+    "ru": "Настой всецветного сопротивления"
+   },
+   "q": 1,
+   "req": 50,
+   "kind": "protection",
+   "eff": {
+    "res": {
+     "holy": 25,
+     "fire": 25,
+     "nature": 25,
+     "frost": 25,
+     "shadow": 25,
+     "arcane": 25
+    }
+   },
+   "ms": 7200000,
+   "roles": [
+    "all"
+   ],
+   "prof": "alchemy",
+   "yellow": 315,
+   "gray": 330,
+   "spell": 17638
+  },
+  {
+   "item": 13457,
+   "name": {
+    "en": "Greater Fire Protection Potion",
+    "ru": "Сильное зелье защиты от огня"
+   },
+   "q": 1,
+   "req": 48,
+   "kind": "protection",
+   "eff": {
+    "absorb": {
+     "fire": 2600
+    }
+   },
+   "ms": 120000,
+   "roles": [
+    "all"
+   ],
+   "prof": "alchemy",
+   "yellow": 305,
+   "gray": 345,
+   "spell": 17574
+  },
+  {
+   "item": 13456,
+   "name": {
+    "en": "Greater Frost Protection Potion",
+    "ru": "Сильное зелье защиты от магии льда"
+   },
+   "q": 1,
+   "req": 48,
+   "kind": "protection",
+   "eff": {
+    "absorb": {
+     "frost": 2600
+    }
+   },
+   "ms": 120000,
+   "roles": [
+    "all"
+   ],
+   "prof": "alchemy",
+   "yellow": 305,
+   "gray": 345,
+   "spell": 17575
+  },
+  {
+   "item": 13458,
+   "name": {
+    "en": "Greater Nature Protection Potion",
+    "ru": "Сильное зелье защиты от сил природы"
+   },
+   "q": 1,
+   "req": 48,
+   "kind": "protection",
+   "eff": {
+    "absorb": {
+     "nature": 2600
+    }
+   },
+   "ms": 120000,
+   "roles": [
+    "all"
+   ],
+   "prof": "alchemy",
+   "yellow": 305,
+   "gray": 345,
+   "spell": 17576
+  },
+  {
+   "item": 13461,
+   "name": {
+    "en": "Greater Arcane Protection Potion",
+    "ru": "Сильное зелье защиты от тайной магии"
+   },
+   "q": 1,
+   "req": 48,
+   "kind": "protection",
+   "eff": {
+    "absorb": {
+     "arcane": 2600
+    }
+   },
+   "ms": 120000,
+   "roles": [
+    "all"
+   ],
+   "prof": "alchemy",
+   "yellow": 305,
+   "gray": 345,
+   "spell": 17577
+  },
+  {
+   "item": 13459,
+   "name": {
+    "en": "Greater Shadow Protection Potion",
+    "ru": "Сильное зелье защиты от темной магии"
+   },
+   "q": 1,
+   "req": 48,
+   "kind": "protection",
+   "eff": {
+    "absorb": {
+     "shadow": 2600
+    }
+   },
+   "ms": 120000,
+   "roles": [
+    "all"
+   ],
+   "prof": "alchemy",
+   "yellow": 305,
+   "gray": 345,
+   "spell": 17578
+  },
+  {
+   "item": 13460,
+   "name": {
+    "en": "Greater Holy Protection Potion",
+    "ru": "Сильное зелье священной защиты"
+   },
+   "q": 1,
+   "req": 48,
+   "kind": "protection",
+   "eff": {
+    "absorb": {
+     "holy": 2600
+    }
+   },
+   "ms": 120000,
+   "roles": [
+    "all"
+   ],
+   "prof": "alchemy",
+   "yellow": 305,
+   "gray": 345,
+   "spell": 17579
+  },
+  {
+   "item": 9088,
+   "name": {
+    "en": "Gift of Arthas",
+    "ru": "Эликсир \"Дар Артаса\""
+   },
+   "q": 1,
+   "req": 38,
+   "kind": "protection",
+   "eff": {
+    "res": {
+     "shadow": 10
+    }
+   },
+   "ms": 1800000,
+   "roles": [
+    "all"
+   ],
+   "prof": "alchemy",
+   "yellow": 255,
+   "gray": 295,
+   "spell": 11466
+  },
+  {
+   "item": 18262,
+   "name": {
+    "en": "Elemental Sharpening Stone",
+    "ru": "Точильный камень стихий"
+   },
+   "q": 2,
+   "req": 50,
+   "kind": "weapon",
+   "eff": {
+    "crit": 2
+   },
+   "ms": 1800000,
+   "roles": [
+    "melee"
+   ],
+   "prof": "blacksmithing",
+   "yellow": 275,
+   "gray": 295,
+   "spell": 22757
+  },
+  {
+   "item": 20749,
+   "name": {
+    "en": "Brilliant Wizard Oil",
+    "ru": "Сверкающее волшебное масло"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "weapon",
+   "eff": {
+    "sp": 36,
+    "healing": 36,
+    "crit": 1
+   },
+   "ms": 1800000,
+   "roles": [
+    "caster",
+    "healer"
+   ],
+   "prof": "enchanting",
+   "yellow": 310,
+   "gray": 330,
+   "spell": 25129
+  },
+  {
+   "item": 20748,
+   "name": {
+    "en": "Brilliant Mana Oil",
+    "ru": "Сверкающее масло маны"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "weapon",
+   "eff": {
+    "mp5": 15,
+    "healing": 30
+   },
+   "ms": 1800000,
+   "roles": [
+    "healer"
+   ],
+   "prof": "enchanting",
+   "yellow": 310,
+   "gray": 330,
+   "spell": 25130
+  },
+  {
+   "item": 232611,
+   "name": {
+    "en": "Magnificent Trollshine",
+    "ru": "Чудесная тролльская полироль"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "weapon",
+   "eff": {
+    "sp": 36,
+    "healing": 36,
+    "crit": 1
+   },
+   "ms": 1800000,
+   "roles": [
+    "caster",
+    "healer"
+   ],
+   "prof": "enchanting",
+   "yellow": 310,
+   "gray": 330,
+   "spell": 471400
+  },
+  {
+   "item": 20750,
+   "name": {
+    "en": "Wizard Oil",
+    "ru": "Волшебное масло"
+   },
+   "q": 1,
+   "req": 40,
+   "kind": "weapon",
+   "eff": {
+    "sp": 24,
+    "healing": 24
+   },
+   "ms": 1800000,
+   "roles": [
+    "caster",
+    "healer"
+   ],
+   "prof": "enchanting",
+   "yellow": 285,
+   "gray": 305,
+   "spell": 25128
+  },
+  {
+   "item": 228980,
+   "name": {
+    "en": "Conductive Shield Coating",
+    "ru": "Проводящее покрытие для щита"
+   },
+   "q": 1,
+   "req": 40,
+   "kind": "weapon",
+   "eff": {
+    "sp": 24,
+    "healing": 24
+   },
+   "ms": 1800000,
+   "roles": [
+    "caster",
+    "healer"
+   ],
+   "prof": "enchanting",
+   "yellow": 285,
+   "gray": 305,
+   "spell": 463869
+  },
+  {
+   "item": 232433,
+   "name": {
+    "en": "Dense Runecloth Bandage",
+    "ru": "Крепкие бинты из рунической ткани"
+   },
+   "q": 1,
+   "req": 50,
+   "kind": "bandage",
+   "eff": {
+    "hot": 425
+   },
+   "ms": 8000,
+   "roles": [
+    "all"
+   ],
+   "prof": "first-aid",
+   "yellow": 315,
+   "gray": 340,
+   "spell": 470349
+  },
+  {
+   "item": 23684,
+   "name": {
+    "en": "Crystal Infused Bandage",
+    "ru": "Бинты Хрустального дара"
+   },
+   "q": 1,
+   "req": 0,
+   "kind": "bandage",
+   "eff": {
+    "hot": 250
+   },
+   "ms": 10000,
+   "roles": [
+    "all"
+   ],
+   "prof": "first-aid",
+   "yellow": 300,
+   "gray": 360,
+   "spell": 30021
+  },
+  {
+   "item": 14530,
+   "name": {
+    "en": "Heavy Runecloth Bandage",
+    "ru": "Плотные бинты из рунной ткани"
+   },
+   "q": 1,
+   "req": 0,
+   "kind": "bandage",
+   "eff": {
+    "hot": 250
+   },
+   "ms": 8000,
+   "roles": [
+    "all"
+   ],
+   "prof": "first-aid",
+   "yellow": 290,
+   "gray": 350,
+   "spell": 18630
+  },
+  {
+   "item": 14529,
+   "name": {
+    "en": "Runecloth Bandage",
+    "ru": "Бинты из рунной ткани"
+   },
+   "q": 1,
+   "req": 0,
+   "kind": "bandage",
+   "eff": {
+    "hot": 170
+   },
+   "ms": 8000,
+   "roles": [
+    "all"
+   ],
+   "prof": "first-aid",
+   "yellow": 260,
+   "gray": 320,
+   "spell": 18629
+  },
+  {
+   "item": 8545,
+   "name": {
+    "en": "Heavy Mageweave Bandage",
+    "ru": "Плотные бинты из магической ткани"
+   },
+   "q": 1,
+   "req": 0,
+   "kind": "bandage",
+   "eff": {
+    "hot": 138
+   },
+   "ms": 8000,
+   "roles": [
+    "all"
+   ],
+   "prof": "first-aid",
+   "yellow": 240,
+   "gray": 300,
+   "spell": 10841
+  }
+ ]
+}

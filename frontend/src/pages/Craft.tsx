@@ -12,6 +12,7 @@ import { CharProfPicker, ProfIcon, profKey } from "../components/CharProfPicker"
 import { ClassIcon } from "./Characters";
 import { SourcePanel } from "../components/SourcePanel";
 import { ProfGear } from "./craft/ProfGear";
+import { RaidCraft } from "./craft/RaidCraft";
 import { Money, parseMoney } from "../components/Wow";
 import { markSeen, signalKey, useSeen, useSignals } from "../lib/signals";
 import { fmtDate, useI18n, type Key } from "../lib/i18n";
@@ -63,6 +64,7 @@ export function Craft() {
         <>
           <ProfOverview />
           <Section id="gear" title={t("pg_title")} hint={t("pg_hint")}><ProfGear onOpen={setPanel} /></Section>
+          <Section id="raid" title={t("rc_title")} hint={t("rc_hint")}><RaidCraft onOpen={setPanel} /></Section>
           <SignalsBlock onOpen={setPanel} />
           <Profitable rows={d.rows || []} onOpen={setPanel} />
           <Leveling rows={d.rows || []} onOpen={setPanel} />
