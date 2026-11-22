@@ -1,4 +1,4 @@
-"""Where wearable items drop, from the CMaNGOS classic database (github.com/cmangos/classic-db, GPL v3): which
+"""Where wearable items and recipes drop, from the CMaNGOS classic database (github.com/cmangos/classic-db, GPL v3): which
 creatures drop each item and how often, where they are (a dungeon, or a zone with the spot on its map), whether the
 creature is a boss or a rare, and when an item is a world drop (shared loot tables that hundreds of creatures use).
 
@@ -109,8 +109,10 @@ def main() -> None:
     sql = gzip.open(dump, "rt", encoding="utf-8", errors="replace").read()
     t = tables(sql, {"creature_template", "creature", "creature_loot_template", "reference_loot_template", "quest_template"})
     ru = {int(m.group(1)): m.group(2) for m in re.finditer(r"VALUES \((\d+), '((?:[^'\\]|\\.)*)'", open(locales, encoding="utf-8").read())}
-    kind = {int(r["ID"]): int(r["InventoryType"]) for r in csv.DictReader(open(csvdir / "Item.enUS.csv"))}
-    wanted = {i for i, it in kind.items() if it in WEARABLE}
+    rows_ = list(csv.DictReader(open(csvdir / "Item.enUS.csv")))
+    kind = {int(r["ID"]): int(r["InventoryType"]) for r in rows_}
+    # wearable items, and recipes (item class 9): who drops a recipe is the question "where to learn it" leaves open
+    wanted = {i for i, it in kind.items() if it in WEARABLE} | {int(r["ID"]) for r in rows_ if r.get("ClassID") == "9"}
 
     # where each creature is: its first spawn, and the zone it stands in on the open-world continents
     assign = [r for r in csv.DictReader(open(csvdir / "UiMapAssignment.enUS.csv"))]

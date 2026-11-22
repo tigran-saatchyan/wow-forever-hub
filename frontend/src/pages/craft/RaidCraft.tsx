@@ -26,6 +26,7 @@ interface Row {
   item: { id: number; name: string; q?: number | null }; who: { cid: number; name: string; state: "known" | "learn" | "low"; skill: number | null }[];
   cost: number | null; made: number; sale: { ah: number | null; vendor: number | null; best: number | null; qty: number } | null; profit: number | null;
   recipe: { name: string; item: { id: number; name: string; q?: number | null } | null; source: string | null };
+  drops: { id: number; name: string; rank?: string | null; instance: string | null; zone: string | null; chance: number | null }[];
   learn: { ways: string[]; skill: number | null; vendors: { npc: number; name: string; zone: string | null; x: number | null; y: number | null;
     price: number | null; seen: boolean | null; costs: { name: string; amount: number }[] }[] } | null;
 }
@@ -36,9 +37,11 @@ function HowToGet({ x }: { x: Row }) {
   const tip = useEdgeTip();
   const ways = x.learn?.ways?.length ? x.learn.ways : x.recipe.source ? [x.recipe.source] : [];
   const v = x.learn?.vendors?.[0];
+  const dr = x.drops?.[0];
+  const pct = (c: number | null) => (c == null ? "" : ` ${c >= 1 ? Math.round(c) : c.toFixed(2)}%`);
   return (
     <span {...tip.bind} tabIndex={0} className="mt-0.5 block cursor-help text-[11px] text-[#9fd0ff]">
-      📜 {ways.map((w) => t(`cr_way_${w}` as Key)).join(", ") || t("rc_get_unknown")}{v ? ` · ${v.name}${v.zone ? `, ${v.zone}` : ""}` : ""}
+      📜 {ways.map((w) => t(`cr_way_${w}` as Key)).join(", ") || t("rc_get_unknown")}{v ? ` · ${v.name}${v.zone ? `, ${v.zone}` : ""}` : dr ? ` · ${dr.name}${dr.instance || dr.zone ? `, ${dr.instance || dr.zone}` : ""}${pct(dr.chance)}` : ""}
       <EdgeTip anchor={tip.anchor} open={tip.open}>
         <span className="block max-w-[22rem] text-[13px]">
           <span className="block text-[#ffd100]">{x.recipe.name}</span>
@@ -47,6 +50,10 @@ function HowToGet({ x }: { x: Row }) {
             <span className="mt-1 flex items-center gap-1.5"><ItemIcon itemId={x.recipe.item.id} size={16} />{x.recipe.item.name}</span>
           )}
           <span className="mt-1 block text-muted">{t("rc_where")}: {ways.map((w) => t(`cr_way_${w}` as Key)).join(", ") || t("rc_get_unknown")}</span>
+          {x.drops?.length > 0 && <span className="mt-1 block text-muted">{t("rc_drops")}:</span>}
+          {(x.drops || []).map((c) => (
+            <span key={c.id} className="block text-xs">{c.name}{c.instance || c.zone ? ` · ${c.instance || c.zone}` : ""}{pct(c.chance)}</span>
+          ))}
           {(x.learn?.vendors || []).map((u) => (
             <span key={u.npc} className="block text-xs">
               {u.name}{u.zone ? ` · ${u.zone}` : ""}{u.x != null ? ` ${u.x.toFixed(0)}, ${u.y?.toFixed(0)}` : ""}
