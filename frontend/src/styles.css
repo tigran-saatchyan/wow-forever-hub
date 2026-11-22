@@ -1745,3 +1745,8 @@ button.prebis-fold-chip:hover { border-color: rgb(var(--gold) / .5); }
 .pg-row { display: flex; align-items: center; gap: .55rem; padding: .25rem .4rem; border-radius: .35rem; color: rgb(var(--muted)); }
 .pg-row:hover { background: rgb(var(--accent) / .08); }
 .pg-row.owned { color: rgb(var(--ink)); background: rgb(64 192 64 / .06); }
+
+/* the dungeon set: a slot's Tier 0 piece over its Tier 0.5 ones */
+.t5-slot { display: grid; gap: .3rem; padding: .55rem .6rem; border: 1px solid rgb(var(--edge)); border-radius: .45rem; background: rgb(var(--bg) / .35); }
+.t5-piece { display: flex; align-items: center; gap: .5rem; padding: .2rem .3rem; border-radius: .35rem; color: rgb(var(--muted)); }
+.t5-piece.owned { color: rgb(var(--ink)); background: rgb(64 192 64 / .07); }

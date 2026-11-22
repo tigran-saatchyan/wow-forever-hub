@@ -10,6 +10,8 @@
  * spells differently from the quest titles are given in English.
  */
 
+import { T05_CHAINS } from "./t05chain";
+
 export type L = { ru: string; en: string };
 export interface Place { who: L; map: number; x: number; y: number; note?: L }
 export interface ChainStep {
@@ -48,7 +50,7 @@ export const STAGES: Stage[] = [
     note: { ru: "в классике — фаза 6, последний рейд; задания есть в клиенте", en: "phase 6 in the original game, the last raid; the quests are in the client" } },
 ];
 
-export type Category = "attune" | "key" | "rep" | "legendary" | "class";
+export type Category = "attune" | "key" | "rep" | "legendary" | "class" | "set";
 /** What has to be in hand before a chain can be finished. `chain`: another chain done; `quest`: one quest done
  * (both checked against the character's completed quests); the rest is only told. */
 export interface Need { text: L; chain?: string; quest?: number; level?: number }
@@ -464,6 +466,9 @@ export function needMet(n: Need, ids: Set<number>, level: number | null | undefi
   if (n.level) return level == null ? null : level >= n.level;
   return null;
 }
+
+// the Dungeon Set 2 chain, built from its data file (lib/t05chain.ts)
+CHAINS.push(...T05_CHAINS);
 
 /** The chains in the order to do them: stage by stage, as listed. */
 export const ORDERED = [...CHAINS].sort((a, b) => a.stage - b.stage);

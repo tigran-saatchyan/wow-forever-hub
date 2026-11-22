@@ -18,6 +18,7 @@ import { AhChip } from "../components/AhChip";
 import { ItemHover, ItemIcon } from "../components/Wow";
 import { useTab } from "./characters/ArmoryTabs";
 import { PreRaid } from "./raids/PreRaid";
+import { T05 } from "./raids/T05";
 
 const OPENS = Date.UTC(2026, 11, 9, 4, 0); // 9 December, the weekly reset in Europe (Wednesday morning)
 
@@ -66,6 +67,7 @@ export function Raids() {
       </motion.section>
 
       <PreRaid char={char} />
+      <T05 char={char} />
       <Matrix chars={chars} extra={all.length > 1 && (
         <button className={`${favOn ? "btn-primary" : "btn"} shrink-0 py-1 text-sm`} aria-pressed={favOn} onClick={favToggle} title={t("rd_favs_h")}>{t("rd_favs")}</button>
       )} />

@@ -300,3 +300,42 @@ def test_fishing_gear(client):
             await s.delete(await s.get(Character, cid))
             await s.commit()
     asyncio.run(clean())
+
+
+def test_tier05(client):
+    import asyncio
+
+    from app.db import Character, SessionLocal, User
+    from sqlalchemy import select
+
+    login(client)
+    me = client.get("/api/auth/me").json()
+
+    async def seed():
+        async with SessionLocal() as s:
+            uid = (await s.execute(select(User.id).where(User.email == me["email"]))).scalar_one()
+            c = Character(user_id=uid, region="eu", slug="t", name="T", profile={
+                "summary": {"en": {"classId": 5, "level": 58, "faction": "HORDE"}},
+                "equipment": {"ru": [{"slot": "WRIST", "id": 16697}]}})
+            s.add(c)
+            await s.commit()
+            return c.id
+    cid = asyncio.run(seed())
+    d = client.get(f"/api/t05/{cid}").json()
+    assert d["available"] and d["key"] == "5:HORDE" and len(d["slots"]) == 8
+    wrist = next(x for x in d["slots"] if x["slot"] == "WRIST")
+    assert wrist["t0"]["id"] == 16697 and wrist["t0"]["worn"] and wrist["t05"]["id"] == 22079 and wrist["quest"] == 8916
+    mats = {m["id"]: m for m in d["materials"]}
+    assert mats[13423]["count"] == 10 and 22338 not in mats  # Stonescale Oil to collect; Volcanic Ash drops on the quest
+    assert any(m["id"] == 22338 for m in d["questItems"]) and d["gold"] == 600000  # copper: 20 + 40 gold
+    client.put(f"/api/t05/{cid}/mark", json={"item_id": 13423, "on": True, "kind": "have"})
+    client.put(f"/api/t05/{cid}/mark", json={"item_id": 16696, "on": True})
+    d = client.get(f"/api/t05/{cid}").json()
+    assert next(m for m in d["materials"] if m["id"] == 13423)["have"]
+    assert next(x for x in d["slots"] if x["slot"] == "WAIST")["t0"]["owned"]
+
+    async def clean():
+        async with SessionLocal() as s:
+            await s.delete(await s.get(Character, cid))
+            await s.commit()
+    asyncio.run(clean())

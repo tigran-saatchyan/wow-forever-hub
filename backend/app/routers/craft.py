@@ -80,7 +80,12 @@ async def overview(user: CurrentUser, session: Session, lang: str = "ru"):
     prices, market = await _prices(session)
     rows, used = await _rows(session, user, ds, prices, lang)
     item = _namer(ds, lang)
-    advice = [{**item(a["id"]), **a, "de": _de(a["id"], prices)} for a in craft.advice(ds["items"], prices, used)]
+    # Tier 0 pieces and the Tier 0.5 chain's materials are kept for the chain, never advised for selling
+    from .t05 import keep_ids
+
+    keep = keep_ids()
+    advice = [{**item(a["id"]), **a, "de": _de(a["id"], prices)} for a in craft.advice(ds["items"], prices, used)
+              if a["id"] not in keep]
     return {"status": "ready", "market": market, "rows": rows, "advice": advice}
 
 

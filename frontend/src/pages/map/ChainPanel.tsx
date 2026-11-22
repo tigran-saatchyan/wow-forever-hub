@@ -2,6 +2,7 @@
  * The chain side of the map page: which chain to show (stage by stage, in the order to do them), what the
  * chosen one is and why, what it needs first, and how far every character has come in it.
  */
+import { setActiveChar } from "../../lib/activeChar";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence } from "framer-motion";
 import { useRef, useState } from "react";
@@ -10,7 +11,6 @@ import { ItemHover, ItemIcon } from "../../components/Wow";
 import { Compare, type BisItem } from "../throne/Bis";
 import { CHAINS, STAGES, fits, needMet, progress, type Chain } from "../../lib/chains";
 import { useI18n, type Key } from "../../lib/i18n";
-import { store } from "../../lib/store";
 import { fullName, wowApi, type Character } from "../../lib/wowApi";
 import { ClassIcon } from "../Characters";
 import { useTab } from "../characters/ArmoryTabs";
@@ -157,7 +157,7 @@ function CharRow({ c, ch, on, choose }: { c: Chain; ch: Character; on: boolean; 
 
 /** A link to a chain on the map, following one character. */
 export function ChainLink({ chain, char, children }: { chain: string; char?: number; children: React.ReactNode }) {
-  return <Link to={`/map?chain=${chain}`} onClick={() => char && store.set("mapChar", char)} className="hover:underline">{children}</Link>;
+  return <Link to={`/map?chain=${chain}`} onClick={() => char && setActiveChar(char)} className="hover:underline">{children}</Link>;
 }
 
 /** A chain's reward on its chip: gear the character can wear compares with what it wears (as on the throne room);
