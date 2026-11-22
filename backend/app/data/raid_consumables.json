@@ -205,29 +205,6 @@
    "spell": 17571
   },
   {
-   "item": 250943,
-   "name": {
-    "en": "Major Frenzy Potion",
-    "ru": "Большое зелье бешенства"
-   },
-   "q": 1,
-   "req": 55,
-   "kind": "elixir",
-   "eff": {
-    "ap": 80,
-    "rap": 80
-   },
-   "ms": 30000,
-   "roles": [
-    "melee",
-    "hunter"
-   ],
-   "prof": "alchemy",
-   "yellow": 295,
-   "gray": 300,
-   "spell": 1251740
-  },
-  {
    "item": 13453,
    "name": {
     "en": "Elixir of Brute Force",
@@ -316,27 +293,6 @@
    "spell": 1250792
   },
   {
-   "item": 250937,
-   "name": {
-    "en": "Major Spellblasting Potion",
-    "ru": "Большое зелье взрывных чар"
-   },
-   "q": 1,
-   "req": 55,
-   "kind": "elixir",
-   "eff": {
-    "sp": 47
-   },
-   "ms": 30000,
-   "roles": [
-    "caster"
-   ],
-   "prof": "alchemy",
-   "yellow": 290,
-   "gray": 295,
-   "spell": 1251734
-  },
-  {
    "item": 13447,
    "name": {
     "en": "Elixir of the Sages",
@@ -380,27 +336,6 @@
    "yellow": 285,
    "gray": 290,
    "spell": 1250786
-  },
-  {
-   "item": 250949,
-   "name": {
-    "en": "Major Mender's Potion",
-    "ru": "Большое зелье целителя"
-   },
-   "q": 1,
-   "req": 55,
-   "kind": "elixir",
-   "eff": {
-    "healing": 88
-   },
-   "ms": 30000,
-   "roles": [
-    "healer"
-   ],
-   "prof": "alchemy",
-   "yellow": 285,
-   "gray": 290,
-   "spell": 1251747
   },
   {
    "item": 250328,
@@ -494,27 +429,6 @@
    "yellow": 280,
    "gray": 285,
    "spell": 1250799
-  },
-  {
-   "item": 13442,
-   "name": {
-    "en": "Mighty Rage Potion",
-    "ru": "Мощное зелье ярости"
-   },
-   "q": 1,
-   "req": 46,
-   "kind": "elixir",
-   "eff": {
-    "str": 60
-   },
-   "ms": 20000,
-   "roles": [
-    "melee"
-   ],
-   "prof": "alchemy",
-   "yellow": 270,
-   "gray": 310,
-   "spell": 17552
   },
   {
    "item": 9264,
@@ -688,71 +602,6 @@
    "yellow": 250,
    "gray": 290,
    "spell": 11465
-  },
-  {
-   "item": 250942,
-   "name": {
-    "en": "Superior Frenzy Potion",
-    "ru": "Высшее зелье бешенства"
-   },
-   "q": 1,
-   "req": 45,
-   "kind": "elixir",
-   "eff": {
-    "ap": 56,
-    "rap": 56
-   },
-   "ms": 30000,
-   "roles": [
-    "melee",
-    "hunter"
-   ],
-   "prof": "alchemy",
-   "yellow": 245,
-   "gray": 250,
-   "spell": 1251739
-  },
-  {
-   "item": 250936,
-   "name": {
-    "en": "Superior Spellblasting Potion",
-    "ru": "Высшее зелье взрывных чар"
-   },
-   "q": 1,
-   "req": 45,
-   "kind": "elixir",
-   "eff": {
-    "sp": 33
-   },
-   "ms": 30000,
-   "roles": [
-    "caster"
-   ],
-   "prof": "alchemy",
-   "yellow": 240,
-   "gray": 245,
-   "spell": 1251733
-  },
-  {
-   "item": 250948,
-   "name": {
-    "en": "Superior Mender's Potion",
-    "ru": "Высшее зелье целителя"
-   },
-   "q": 1,
-   "req": 45,
-   "kind": "elixir",
-   "eff": {
-    "healing": 62
-   },
-   "ms": 30000,
-   "roles": [
-    "healer"
-   ],
-   "prof": "alchemy",
-   "yellow": 235,
-   "gray": 240,
-   "spell": 1251745
   },
   {
    "item": 250335,
@@ -1593,6 +1442,29 @@
    "spell": 22732
   },
   {
+   "item": 250943,
+   "name": {
+    "en": "Major Frenzy Potion",
+    "ru": "Большое зелье бешенства"
+   },
+   "q": 1,
+   "req": 55,
+   "kind": "potion",
+   "eff": {
+    "ap": 80,
+    "rap": 80
+   },
+   "ms": 30000,
+   "roles": [
+    "melee",
+    "hunter"
+   ],
+   "prof": "alchemy",
+   "yellow": 295,
+   "gray": 300,
+   "spell": 1251740
+  },
+  {
    "item": 20002,
    "name": {
     "en": "Greater Dreamless Sleep Potion",
@@ -1637,6 +1509,48 @@
    "spell": 1231583
   },
   {
+   "item": 250937,
+   "name": {
+    "en": "Major Spellblasting Potion",
+    "ru": "Большое зелье взрывных чар"
+   },
+   "q": 1,
+   "req": 55,
+   "kind": "potion",
+   "eff": {
+    "sp": 47
+   },
+   "ms": 30000,
+   "roles": [
+    "caster"
+   ],
+   "prof": "alchemy",
+   "yellow": 290,
+   "gray": 295,
+   "spell": 1251734
+  },
+  {
+   "item": 250949,
+   "name": {
+    "en": "Major Mender's Potion",
+    "ru": "Большое зелье целителя"
+   },
+   "q": 1,
+   "req": 55,
+   "kind": "potion",
+   "eff": {
+    "healing": 88
+   },
+   "ms": 30000,
+   "roles": [
+    "healer"
+   ],
+   "prof": "alchemy",
+   "yellow": 285,
+   "gray": 290,
+   "spell": 1251747
+  },
+  {
    "item": 13443,
    "name": {
     "en": "Superior Mana Potion",
@@ -1657,6 +1571,27 @@
    "yellow": 275,
    "gray": 315,
    "spell": 17553
+  },
+  {
+   "item": 13442,
+   "name": {
+    "en": "Mighty Rage Potion",
+    "ru": "Мощное зелье ярости"
+   },
+   "q": 1,
+   "req": 46,
+   "kind": "potion",
+   "eff": {
+    "str": 60
+   },
+   "ms": 20000,
+   "roles": [
+    "melee"
+   ],
+   "prof": "alchemy",
+   "yellow": 270,
+   "gray": 310,
+   "spell": 17552
   },
   {
    "item": 12190,
@@ -1680,6 +1615,71 @@
    "yellow": 245,
    "gray": 285,
    "spell": 15833
+  },
+  {
+   "item": 250942,
+   "name": {
+    "en": "Superior Frenzy Potion",
+    "ru": "Высшее зелье бешенства"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "potion",
+   "eff": {
+    "ap": 56,
+    "rap": 56
+   },
+   "ms": 30000,
+   "roles": [
+    "melee",
+    "hunter"
+   ],
+   "prof": "alchemy",
+   "yellow": 245,
+   "gray": 250,
+   "spell": 1251739
+  },
+  {
+   "item": 250936,
+   "name": {
+    "en": "Superior Spellblasting Potion",
+    "ru": "Высшее зелье взрывных чар"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "potion",
+   "eff": {
+    "sp": 33
+   },
+   "ms": 30000,
+   "roles": [
+    "caster"
+   ],
+   "prof": "alchemy",
+   "yellow": 240,
+   "gray": 245,
+   "spell": 1251733
+  },
+  {
+   "item": 250948,
+   "name": {
+    "en": "Superior Mender's Potion",
+    "ru": "Высшее зелье целителя"
+   },
+   "q": 1,
+   "req": 45,
+   "kind": "potion",
+   "eff": {
+    "healing": 62
+   },
+   "ms": 30000,
+   "roles": [
+    "healer"
+   ],
+   "prof": "alchemy",
+   "yellow": 235,
+   "gray": 240,
+   "spell": 1251745
   },
   {
    "item": 13446,

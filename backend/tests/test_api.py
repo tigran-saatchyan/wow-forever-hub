@@ -371,3 +371,12 @@ def test_hidden_item_tooltip_from_reference():
     finally:
         fdb_gear._extra.pop("99990016693", None)
         bis_routes._merged = (None, {})
+
+
+def test_raid_consumables_only_the_best():
+    from app.routers.craft import _raid_items, top_ids
+
+    xs = {x["item"]: x for x in _raid_items()}
+    top = top_ids(list(xs.values()))
+    assert 13454 in top and 9155 not in top  # Greater Arcane Elixir kept, the Arcane Elixir (+20) beaten
+    assert 13444 in top and 13443 not in top  # Major Mana Potion kept, the Superior one beaten

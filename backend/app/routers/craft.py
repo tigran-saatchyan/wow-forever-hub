@@ -239,6 +239,39 @@ def _raid_items() -> list[dict]:
     return _RAID
 
 
+def _flat(eff: dict) -> dict[str, float]:
+    """A consumable's effects as one level: {"sp": 35, "school.shadow": 40, "absorb.fire": 2600, ...}."""
+    out: dict[str, float] = {}
+    for k, v in eff.items():
+        if isinstance(v, dict):
+            out.update({f"{k}.{s}": n for s, n in v.items()})
+        else:
+            out[k] = v
+    return out
+
+
+def top_ids(items: list[dict]) -> set[int]:
+    """What a raid buys: of each kind, every consumable no other one beats. One is beaten when another of its kind
+    gives everything it gives, as much or more and for as long or longer, and more of something (+10 Intellect food
+    beside +20 Intellect food, the Arcane Elixir beside the Greater). A value the server sets (0 in the client) counts as unknown, equal."""
+    flat = {x["item"]: _flat(x["eff"]) for x in items}
+    out = set()
+    for x in items:
+        a = flat[x["item"]]
+        beaten = False
+        for y in items:
+            if y is x or y["kind"] != x["kind"] or (y.get("ms") or 0) < (x.get("ms") or 0):
+                continue  # a shorter one does not replace a longer one (an hour's elixir beside half an hour's)
+            b = flat[y["item"]]
+            if all(k in b and (b[k] >= a[k] or not a[k] or not b[k]) for k in a) and (
+                    any(b.get(k, 0) > a[k] for k in a) or len(b) > len(a)):
+                beaten = True
+                break
+        if not beaten:
+            out.add(x["item"])
+    return out
+
+
 @router.get("/raid")
 async def raid_consumables(user: CurrentUser, session: Session, lang: str = "ru"):
     """Every raid consumable a profession makes: what it gives and who it suits, the recipe's profession and skill,
@@ -257,7 +290,10 @@ async def raid_consumables(user: CurrentUser, session: Session, lang: str = "ru"
     fac = next((((c.profile or {}).get("summary") or {}).get("en") or {}).get("faction") for c in chars) if chars else None
     side = "alliance" if (fac or "").upper() == "ALLIANCE" else "horde"
     rows = []
+    top = top_ids(_raid_items())
     for x in _raid_items():
+        if x["item"] not in top:
+            continue  # beaten by another of its kind: nobody buys it for a raid
         hit = by_spell.get(x["spell"])
         r = hit[2] if hit else None
         need = craft.need(r)[0] if r else x["yellow"]
@@ -279,6 +315,9 @@ async def raid_consumables(user: CurrentUser, session: Session, lang: str = "ru"
             "profName": ((hit[1].get("name") or {}).get(lang) if hit else None) or x["prof"],
             "who": who, "cost": e["cost"] if e else None, "parts": [{**item(y["id"]), "count": y["count"], "unit": y["unit"]} for y in e["parts"]] if e else [],
             "made": e["made"] if e else 1, "sale": e["sale"] if e else None, "profit": e["profit"] if e else None,
-            "learn": {"ways": learn["ways"], "vendors": (learn.get("vendors") or {}).get(side, [])[:2]} if learn else None,
+            "learn": {"ways": learn["ways"], "skill": learn.get("skill"), "vendors": (learn.get("vendors") or {}).get(side, [])[:3]} if learn else None,
+            # the recipe itself: its name, and the item that teaches it when there is one
+            "recipe": {"name": (r["name"].get(lang) or r["name"]["en"]) if r else x["name"][lang],
+                       "item": item(r.get("recipeItem")) if r and r.get("recipeItem") else None, "source": r.get("source") if r else None},
         })
     return {"status": "ready", "market": market, "items": rows}

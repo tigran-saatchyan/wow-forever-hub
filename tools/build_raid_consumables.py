@@ -179,8 +179,10 @@ def main() -> None:
             ms = duration(sid)
             if e.get("absorb") or e.get("res") and not e.get("sp"):
                 kind = "protection"
-            elif e.get("heal_now") or e.get("mana_now"):
-                kind = "potion"
+            elif e.get("hot") and bandage:
+                kind = "bandage"
+            elif e.get("heal_now") or e.get("mana_now") or (ms and 0 < ms <= 120000):
+                kind = "potion"  # restores at once, or a short burst drunk at the pull (30 sec of spell power)
             elif e.get("hot") and bandage:
                 kind = "bandage"
             elif e.get("hot"):

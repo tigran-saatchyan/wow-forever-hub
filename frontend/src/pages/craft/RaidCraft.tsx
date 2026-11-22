@@ -7,6 +7,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { AhChip } from "../../components/AhChip";
+import { EdgeTip, useEdgeTip } from "../../components/EdgeTip";
 import { ProfIcon } from "../../components/CharProfPicker";
 import { ItemHover, ItemIcon, Money } from "../../components/Wow";
 import { req } from "../../lib/api";
@@ -24,6 +25,39 @@ interface Row {
   kind: string; eff: Eff; ms: number | null; roles: string[]; prof: string; profName: string; spell: number; need: number;
   item: { id: number; name: string; q?: number | null }; who: { cid: number; name: string; state: "known" | "learn" | "low"; skill: number | null }[];
   cost: number | null; made: number; sale: { ah: number | null; vendor: number | null; best: number | null; qty: number } | null; profit: number | null;
+  recipe: { name: string; item: { id: number; name: string; q?: number | null } | null; source: string | null };
+  learn: { ways: string[]; skill: number | null; vendors: { npc: number; name: string; zone: string | null; x: number | null; y: number | null;
+    price: number | null; seen: boolean | null; costs: { name: string; amount: number }[] }[] } | null;
+}
+
+/** How to get a recipe one lacks: a line (where, and the first vendor), the details on hover. */
+function HowToGet({ x }: { x: Row }) {
+  const { t } = useI18n();
+  const tip = useEdgeTip();
+  const ways = x.learn?.ways?.length ? x.learn.ways : x.recipe.source ? [x.recipe.source] : [];
+  const v = x.learn?.vendors?.[0];
+  return (
+    <span {...tip.bind} tabIndex={0} className="mt-0.5 block cursor-help text-[11px] text-[#9fd0ff]">
+      📜 {ways.map((w) => t(`cr_way_${w}` as Key)).join(", ") || t("rc_get_unknown")}{v ? ` · ${v.name}${v.zone ? `, ${v.zone}` : ""}` : ""}
+      <EdgeTip anchor={tip.anchor} open={tip.open}>
+        <span className="block max-w-[22rem] text-[13px]">
+          <span className="block text-[#ffd100]">{x.recipe.name}</span>
+          <span className="block">{t("rc_get_skill", { p: x.profName, n: x.learn?.skill ?? x.need })}</span>
+          {x.recipe.item && (
+            <span className="mt-1 flex items-center gap-1.5"><ItemIcon itemId={x.recipe.item.id} size={16} />{x.recipe.item.name}</span>
+          )}
+          <span className="mt-1 block text-muted">{t("rc_where")}: {ways.map((w) => t(`cr_way_${w}` as Key)).join(", ") || t("rc_get_unknown")}</span>
+          {(x.learn?.vendors || []).map((u) => (
+            <span key={u.npc} className="block text-xs">
+              {u.name}{u.zone ? ` · ${u.zone}` : ""}{u.x != null ? ` ${u.x.toFixed(0)}, ${u.y?.toFixed(0)}` : ""}
+              {u.costs.length ? ` · ${u.costs.map((c) => `${c.amount} ${c.name}`).join(", ")}` : u.price ? <> · <Money c={u.price} /></> : null}
+              {u.seen ? <span className="text-good"> · {t("so_seen_forever")}</span> : null}
+            </span>
+          ))}
+        </span>
+      </EdgeTip>
+    </span>
+  );
 }
 interface Resp { status: string; market?: { configured: boolean }; items?: Row[] }
 
@@ -137,6 +171,7 @@ export function RaidCraft({ onOpen }: { onOpen: (x: RefItem) => void }) {
                   <td className="p-1.5 text-xs">{x.roles.map((r) => t(`rc_role_${r}` as Key)).join(", ")}</td>
                   <td className="p-1.5 text-xs">
                     <span className="flex items-center gap-1.5"><ProfIcon id={PROF_ID[x.prof] ?? 0} size={14} />{x.profName} {x.need}</span>
+                    {!whoOf(x).some((w) => w.state === "known") && <HowToGet x={x} />}
                     {whoOf(x).map((w) => (
                       <span key={w.cid} className={`block ${w.state === "known" ? "text-good" : w.state === "learn" ? "text-[#ffd100]" : "text-bad"}`}>
                         {w.name}: {t(`rc_state_${w.state}` as Key, { n: w.skill ?? "?" })}
