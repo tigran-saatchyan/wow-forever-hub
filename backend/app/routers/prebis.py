@@ -231,7 +231,7 @@ async def consumables(c, s: dict, g: dict, lang: str, ah: dict) -> list[dict]:
     """The guide's consumables, each with its auction house state and, when a profession makes it, the recipe: the
     profession and skill it needs, the character's skill and whether they know it, where to learn it (the vendors
     of the character's side, by ForeverDB) and the reagents."""
-    from .. import craft, fdb_sources
+    from .. import craft, fdb_sources, recipe_sources
     from .craft import _namer, _reference
 
     try:
@@ -259,6 +259,7 @@ async def consumables(c, s: dict, g: dict, lang: str, ah: dict) -> list[dict]:
                 "learn": {"ways": fdb["ways"], "skill": fdb.get("skill"), "vendors": (fdb.get("vendors") or {}).get(side, [])[:3]}
                 if fdb else None,
                 "reagents": [{**(item(i) or {"id": i}), "count": n} for i, n in r.get("reagents") or []] if item else [],
+                "how": recipe_sources.how(r["spell"], r.get("recipeItem"), int(pid), r.get("source"), side, lang),
             }
             break
         out.append(row)

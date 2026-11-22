@@ -5,7 +5,8 @@
  */
 import { ProfIcon } from "../../components/CharProfPicker";
 import { EdgeTip, useEdgeTip } from "../../components/EdgeTip";
-import { ItemIcon, Money } from "../../components/Wow";
+import { RecipeHow } from "../../components/RecipeHow";
+import { ItemIcon } from "../../components/Wow";
 import { useI18n, type Key } from "../../lib/i18n";
 import type { ConsRecipe } from "../../lib/wowApi";
 
@@ -17,6 +18,7 @@ export function RecipeBadge({ r }: { r: ConsRecipe }) {
   const state = r.known ? "known" : !has ? "noprof" : low ? "low" : "learn";
   const color = state === "known" ? "text-good" : state === "noprof" ? "text-muted" : "text-[#ffb070]";
   return (
+    <>
     <span {...tip.bind} className="rc-badge" tabIndex={0}>
       <ProfIcon id={r.profession.id} size={14} />
       <span className={color}>
@@ -28,22 +30,6 @@ export function RecipeBadge({ r }: { r: ConsRecipe }) {
         <span className="block text-[#ffd100]">{r.name}</span>
         <span className="block">{t("rc_needs", { p: r.profession.name, n: r.skill })}{has ? ` · ${t("rc_have", { n: r.have! })}` : ` · ${t("rc_noprof")}`}</span>
         <span className={`block ${color}`}>{t(`rc_${state}_h` as Key, { n: Math.max(0, r.skill - (r.have ?? 0)) })}</span>
-        {!r.known && r.learn && (
-          <span className="mt-1.5 block">
-            <span className="block text-muted">{t("rc_where")}: {r.learn.ways.map((w) => t(`cr_way_${w}` as Key)).join(", ")}</span>
-            {r.recipeItem && <span className="flex items-center gap-1.5"><ItemIcon itemId={r.recipeItem.id} size={16} />{r.recipeItem.name}</span>}
-            {r.learn.vendors.map((v) => (
-              <span key={v.npc} className="block text-xs">
-                {v.name}{v.zone ? ` · ${v.zone}` : ""}{v.x != null ? ` ${v.x.toFixed(0)}, ${v.y?.toFixed(0)}` : ""}
-                {v.costs.length ? ` · ${v.costs.map((c) => `${c.amount} ${c.name}`).join(", ")}` : v.price ? <> · <Money c={v.price} /></> : null}
-                {v.seen ? <span className="text-good"> · {t("so_seen_forever")}</span> : null}
-              </span>
-            ))}
-          </span>
-        )}
-        {!r.known && !r.learn && r.recipeItem && (
-          <span className="mt-1.5 flex items-center gap-1.5"><ItemIcon itemId={r.recipeItem.id} size={16} />{r.recipeItem.name}</span>
-        )}
         {r.reagents.length > 0 && (
           <span className="mt-1.5 block">
             <span className="block text-muted">{t("rc_reagents")}:</span>
@@ -54,5 +40,7 @@ export function RecipeBadge({ r }: { r: ConsRecipe }) {
         )}
       </span></EdgeTip>
     </span>
+    {!r.known && r.how && <RecipeHow how={r.how} recipe={r.name} item={r.recipeItem} skill={t("rc_needs", { p: r.profession.name, n: r.skill })} />}
+    </>
   );
 }

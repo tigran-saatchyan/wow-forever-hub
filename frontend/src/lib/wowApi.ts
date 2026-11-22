@@ -104,6 +104,7 @@ export interface ConsRecipe {
   learn: { ways: string[]; skill: number | null; vendors: { npc: number; name: string; zone: string | null; x: number | null; y: number | null;
     price: number | null; seen: boolean | null; costs: { name: string; amount: number }[] }[] } | null;
   reagents: { id: number; name?: string; count: number }[];
+  how?: import("../components/RecipeHow").RecipeHowData;
 }
 /** An item on the chosen auction house: its latest price (none when no lot is up) and whether a list follows it. */
 export interface AhState { price: { min: number; median: number; quantity: number; ts: string } | null; tracked: boolean }

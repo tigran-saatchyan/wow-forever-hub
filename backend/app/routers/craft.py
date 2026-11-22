@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .. import craft, fdb_sources, item_sources
+from .. import craft, fdb_sources, item_sources, recipe_sources
 from ..auth import CurrentUser
 from ..config import get_settings
 from ..db import AhLatest, Character, Setting, get_session, utcnow
@@ -319,7 +319,8 @@ async def raid_consumables(user: CurrentUser, session: Session, lang: str = "ru"
             # the recipe itself: its name, and the item that teaches it when there is one
             "recipe": {"name": (r["name"].get(lang) or r["name"]["en"]) if r else x["name"][lang],
                        "item": item(r.get("recipeItem")) if r and r.get("recipeItem") else None, "source": r.get("source") if r else None},
-            # who drops the recipe item (the original game's loot tables): ForeverDB only says "a drop"
-            "drops": (item_sources.drops(r["recipeItem"], lang) or {}).get("top", [])[:4] if r and r.get("recipeItem") else [],
+            # every way to get the recipe, with places, for the characters' side (app/recipe_sources.py)
+            "how": recipe_sources.how(x["spell"], r.get("recipeItem") if r else None, int(hit[0]) if hit else None,
+                                      r.get("source") if r else None, side, lang),
         })
     return {"status": "ready", "market": market, "items": rows}
