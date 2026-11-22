@@ -12,7 +12,7 @@ import { ItemHover, ItemIcon, Money } from "../../components/Wow";
 import { req } from "../../lib/api";
 import { useI18n, type Key } from "../../lib/i18n";
 import { store } from "../../lib/store";
-import { qColor, type RefItem } from "../../lib/wowApi";
+import { fullName, qColor, useCharacters, type RefItem } from "../../lib/wowApi";
 
 const Q = ["POOR", "COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY"];
 const ROLES = ["caster", "healer", "melee", "hunter", "tank", "all"] as const;
@@ -52,17 +52,45 @@ export function RaidCraft({ onOpen }: { onOpen: (x: RefItem) => void }) {
   const [kind, setKind] = useState<string>(() => store.get("rcKind", "all"));
   const [mine, setMine] = useState<boolean>(() => store.get("rcMine", false));
   const [sort, setSort] = useState<string>(() => store.get("rcSort", "profit"));
+  const [prof, setProf] = useState<string>(() => store.get("rcProf", "all"));
+  const [pick, setPick] = useState<number | null>(() => store.get<number | null>("rcChar", null));
+  const chars = (useCharacters().data || []).filter((c) => !c.error);
   const set = <T,>(k: string, f: (v: T) => void) => (v: T) => (store.set(k, v), f(v));
   const d = q.data;
   if (!d || d.status !== "ready") return <p className="text-sm text-muted">{t("pf_building")}</p>;
   const market = !!d.market?.configured;
+  // the professions of the list; the user's characters that have the chosen one (picked by itself when one)
+  const profs = [...new Set((d.items || []).map((x) => x.prof))];
+  const hasProf = (cid: number, slug: string) => (chars.find((c) => c.id === cid)?.profs?.[lang] || []).some((p) => p.id === PROF_ID[slug]);
+  const makers = prof === "all" ? [] : chars.filter((c) => hasProf(c.id, prof));
+  const maker = makers.find((c) => c.id === pick) ?? makers[0] ?? null;
+  const whoOf = (x: Row) => (maker ? x.who.filter((w) => w.cid === maker.id) : x.who);
   let rows = (d.items || []).filter((x) => (role === "all" || x.roles.includes(role)) && (kind === "all" || x.kind === kind)
-    && (!mine || x.who.some((w) => w.state !== "low")));
+    && (prof === "all" || x.prof === prof) && (!mine || whoOf(x).some((w) => w.state !== "low")));
   const key = (x: Row) => sort === "profit" ? -(x.profit ?? -1e12) : sort === "price" ? -(x.sale?.ah ?? -1) : sort === "scarce" ? (x.sale?.qty ?? 0) : 0;
   rows = [...rows].sort((a, b) => key(a) - key(b));
   const chip = (on: boolean) => `chip ${on ? "border-gold/60 text-gold" : ""}`;
   return (
     <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="mr-1 text-xs text-muted">{t("rc_prof")}</span>
+        <button className={chip(prof === "all")} onClick={() => set("rcProf", setProf)("all")}>{t("rc_kind_all")}</button>
+        {profs.map((p) => {
+          const mineToo = chars.some((c) => hasProf(c.id, p));
+          const name = (d.items || []).find((x) => x.prof === p)?.profName ?? p;
+          return (
+            <button key={p} className={`${chip(prof === p)} flex items-center gap-1.5 ${mineToo ? "" : "opacity-60"}`}
+              title={mineToo ? undefined : t("rc_prof_none")} onClick={() => set("rcProf", setProf)(p)}>
+              <ProfIcon id={PROF_ID[p] ?? 0} size={14} />{name}{mineToo && <span className="text-good">•</span>}
+            </button>
+          );
+        })}
+        {prof !== "all" && (makers.length > 1 ? (
+          <select className="input ml-2 w-auto py-1 text-sm" value={maker?.id ?? ""} onChange={(e) => set<number | null>("rcChar", setPick)(+e.target.value)}>
+            {makers.map((c) => <option key={c.id} value={c.id}>{fullName(c, lang)}</option>)}
+          </select>
+        ) : maker ? <span className="ml-2 text-sm">{fullName(maker, lang)}</span> : <span className="ml-2 text-xs text-muted">{t("rc_prof_none")}</span>)}
+      </div>
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="mr-1 text-xs text-muted">{t("rc_for")}</span>
         {["all", ...ROLES.filter((r) => r !== "all")].map((r) => (
@@ -74,7 +102,7 @@ export function RaidCraft({ onOpen }: { onOpen: (x: RefItem) => void }) {
         {["all", ...KINDS].map((k) => (
           <button key={k} className={chip(kind === k)} onClick={() => set("rcKind", setKind)(k)}>{t(`rc_kind_${k}` as Key)}</button>
         ))}
-        <label className="chip ml-2 cursor-pointer"><input type="checkbox" className="mr-1.5" checked={mine} onChange={() => set("rcMine", setMine)(!mine)} />{t("rc_mine")}</label>
+        <label className="chip ml-2 cursor-pointer"><input type="checkbox" className="mr-1.5" checked={mine} onChange={() => set("rcMine", setMine)(!mine)} />{t(maker ? "rc_mine_one" : "rc_mine")}</label>
         <select className="input ml-auto w-auto py-1 text-sm" value={sort} onChange={(e) => set("rcSort", setSort)(e.target.value)}>
           {["profit", "price", "scarce"].map((s) => <option key={s} value={s}>{t(`rc_sort_${s}` as Key)}</option>)}
         </select>
@@ -109,7 +137,7 @@ export function RaidCraft({ onOpen }: { onOpen: (x: RefItem) => void }) {
                   <td className="p-1.5 text-xs">{x.roles.map((r) => t(`rc_role_${r}` as Key)).join(", ")}</td>
                   <td className="p-1.5 text-xs">
                     <span className="flex items-center gap-1.5"><ProfIcon id={PROF_ID[x.prof] ?? 0} size={14} />{x.profName} {x.need}</span>
-                    {x.who.map((w) => (
+                    {whoOf(x).map((w) => (
                       <span key={w.cid} className={`block ${w.state === "known" ? "text-good" : w.state === "learn" ? "text-[#ffd100]" : "text-bad"}`}>
                         {w.name}: {t(`rc_state_${w.state}` as Key, { n: w.skill ?? "?" })}
                       </span>
