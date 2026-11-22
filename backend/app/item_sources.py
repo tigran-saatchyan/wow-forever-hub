@@ -53,6 +53,25 @@ def _chain() -> frozenset:
     return frozenset(_loot().get("chain") or [])
 
 
+# the classic instance names where the hub's dungeon list calls them otherwise
+_ALIAS = {"the stockade": "stormwind stockade", "the deadmines": "deadmines"}
+
+
+@lru_cache(maxsize=1)
+def _levels() -> dict[str, list[int]]:
+    """A dungeon's level range by its English name, from the hub's dungeon list (data/dungeons.json)."""
+    p = DATA / "dungeons.json"
+    xs = json.loads(p.read_text("utf-8"))["dungeons"] if p.is_file() else []
+    return {x["en"].lower(): x["levels"] for x in xs if x.get("levels")}
+
+
+def instance_levels(name_en: str | None) -> list[int] | None:
+    if not name_en:
+        return None
+    n = name_en.lower()
+    return _levels().get(_ALIAS.get(n, n)) or next((v for k, v in _levels().items() if n in k or k in n), None)
+
+
 def _creature(entry: int, chance: float, lang: str) -> dict:
     c = _loot()["creatures"].get(str(entry)) or {}
     inst = INSTANCES.get(c.get("map"))
@@ -63,6 +82,8 @@ def _creature(entry: int, chance: float, lang: str) -> dict:
         "instanceId": c.get("map") if inst else None,
         "zone": zone[1] if lang == "ru" else zone[0], "zoneId": c.get("zone"), "x": c.get("x"), "y": c.get("y"),
         "chance": chance,
+        # what level it takes: the dungeon's range, or the creature's own level out in the world
+        "levels": instance_levels(inst[0]) if inst else c.get("lvl"),
     }
 
 

@@ -7,6 +7,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { AhChip } from "../../components/AhChip";
+import { LevelTag } from "../../components/LevelTag";
 import { EdgeTip, useEdgeTip } from "../../components/EdgeTip";
 import { ProfIcon } from "../../components/CharProfPicker";
 import { ItemHover, ItemIcon, Money } from "../../components/Wow";
@@ -26,13 +27,13 @@ interface Row {
   item: { id: number; name: string; q?: number | null }; who: { cid: number; name: string; state: "known" | "learn" | "low"; skill: number | null }[];
   cost: number | null; made: number; sale: { ah: number | null; vendor: number | null; best: number | null; qty: number } | null; profit: number | null;
   recipe: { name: string; item: { id: number; name: string; q?: number | null } | null; source: string | null };
-  drops: { id: number; name: string; rank?: string | null; instance: string | null; zone: string | null; chance: number | null }[];
+  drops: { id: number; name: string; rank?: string | null; instance: string | null; zone: string | null; chance: number | null; levels?: number[] | null }[];
   learn: { ways: string[]; skill: number | null; vendors: { npc: number; name: string; zone: string | null; x: number | null; y: number | null;
     price: number | null; seen: boolean | null; costs: { name: string; amount: number }[] }[] } | null;
 }
 
 /** How to get a recipe one lacks: a line (where, and the first vendor), the details on hover. */
-function HowToGet({ x }: { x: Row }) {
+function HowToGet({ x, me }: { x: Row; me: number | null }) {
   const { t } = useI18n();
   const tip = useEdgeTip();
   const ways = x.learn?.ways?.length ? x.learn.ways : x.recipe.source ? [x.recipe.source] : [];
@@ -41,7 +42,7 @@ function HowToGet({ x }: { x: Row }) {
   const pct = (c: number | null) => (c == null ? "" : ` ${c >= 1 ? Math.round(c) : c.toFixed(2)}%`);
   return (
     <span {...tip.bind} tabIndex={0} className="mt-0.5 block cursor-help text-[11px] text-[#9fd0ff]">
-      📜 {ways.map((w) => t(`cr_way_${w}` as Key)).join(", ") || t("rc_get_unknown")}{v ? ` · ${v.name}${v.zone ? `, ${v.zone}` : ""}` : dr ? ` · ${dr.name}${dr.instance || dr.zone ? `, ${dr.instance || dr.zone}` : ""}${pct(dr.chance)}` : ""}
+      📜 {ways.map((w) => t(`cr_way_${w}` as Key)).join(", ") || t("rc_get_unknown")}{v ? ` · ${v.name}${v.zone ? `, ${v.zone}` : ""}` : dr ? <>{` · ${dr.name}${dr.instance || dr.zone ? `, ${dr.instance || dr.zone}` : ""} `}<LevelTag lv={dr.levels} me={me} dungeon={!!dr.instance} />{pct(dr.chance)}</> : ""}
       <EdgeTip anchor={tip.anchor} open={tip.open}>
         <span className="block max-w-[22rem] text-[13px]">
           <span className="block text-[#ffd100]">{x.recipe.name}</span>
@@ -52,7 +53,7 @@ function HowToGet({ x }: { x: Row }) {
           <span className="mt-1 block text-muted">{t("rc_where")}: {ways.map((w) => t(`cr_way_${w}` as Key)).join(", ") || t("rc_get_unknown")}</span>
           {x.drops?.length > 0 && <span className="mt-1 block text-muted">{t("rc_drops")}:</span>}
           {(x.drops || []).map((c) => (
-            <span key={c.id} className="block text-xs">{c.name}{c.instance || c.zone ? ` · ${c.instance || c.zone}` : ""}{pct(c.chance)}</span>
+            <span key={c.id} className="block text-xs">{c.name}{c.instance || c.zone ? ` · ${c.instance || c.zone} ` : " "}<LevelTag lv={c.levels} me={me} dungeon={!!c.instance} />{pct(c.chance)}</span>
           ))}
           {(x.learn?.vendors || []).map((u) => (
             <span key={u.npc} className="block text-xs">
@@ -178,7 +179,7 @@ export function RaidCraft({ onOpen }: { onOpen: (x: RefItem) => void }) {
                   <td className="p-1.5 text-xs">{x.roles.map((r) => t(`rc_role_${r}` as Key)).join(", ")}</td>
                   <td className="p-1.5 text-xs">
                     <span className="flex items-center gap-1.5"><ProfIcon id={PROF_ID[x.prof] ?? 0} size={14} />{x.profName} {x.need}</span>
-                    {!whoOf(x).some((w) => w.state === "known") && <HowToGet x={x} />}
+                    {!whoOf(x).some((w) => w.state === "known") && <HowToGet x={x} me={maker?.summary?.[lang]?.level ?? null} />}
                     {whoOf(x).map((w) => (
                       <span key={w.cid} className={`block ${w.state === "known" ? "text-good" : w.state === "learn" ? "text-[#ffd100]" : "text-bad"}`}>
                         {w.name}: {t(`rc_state_${w.state}` as Key, { n: w.skill ?? "?" })}

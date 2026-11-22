@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { fmtDate, useI18n, type Key } from "../lib/i18n";
 import { qColor, wowApi } from "../lib/wowApi";
 import { ItemIcon, ItemTip, Money } from "./Wow";
+import { LevelTag } from "./LevelTag";
 
 const wh = (lang: string, kind: "item" | "npc" | "quest", id: number) =>
   `https://www.wowhead.com/classic/${lang === "ru" ? "ru/" : ""}${kind}=${id}`;
@@ -87,7 +88,7 @@ function Body({ id, fallbackName, onClose }: { id: number; fallbackName?: string
                         <td className="py-1.5 pr-2">
                           {npc({ npc: x.id, name: x.name })}
                           {x.rank && <span className="ml-1.5 text-[10px] uppercase text-[#ff9a3c]">{t(`so_rank_${x.rank}` as Key)}</span>}
-                          <div className="text-[11px] text-muted">{x.instance ?? x.zone ?? ""}{x.x != null && !x.instance ? ` ${x.x.toFixed(0)}, ${x.y?.toFixed(0)}` : ""}{x.level ? ` · ${x.level[0] === x.level[1] ? x.level[0] : `${x.level[0]}–${x.level[1]}`} ${t("so_lvl")}` : ""}</div>
+                          <div className="text-[11px] text-muted">{x.instance ?? x.zone ?? ""}{x.x != null && !x.instance ? ` ${x.x.toFixed(0)}, ${x.y?.toFixed(0)}` : ""}{x.levels || x.level ? <> · <LevelTag lv={x.levels ?? x.level} dungeon={!!x.instance} /></> : null}</div>
                         </td>
                         <td className="py-1.5 text-right font-mono">{x.chance >= 10 ? x.chance.toFixed(0) : x.chance.toFixed(x.chance < 1 ? 2 : 1)}%</td>
                       </tr>
