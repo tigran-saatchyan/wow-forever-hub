@@ -26,9 +26,14 @@ from .prebis import auction
 router = APIRouter(prefix="/api/profgear", tags=["profgear"])
 Session = Annotated[AsyncSession, Depends(get_session)]
 DATA = Path(__file__).resolve().parent.parent / "data" / "prof_gear.json"
-PROFS = {"fishing": 356}
-# "Equip: Increased Fishing +25." / "Рыбная ловля +25" in the item's description
-BONUS = re.compile(r"(?:fishing|рыбн\w*\s+ловл\w*)\D{0,24}?\+?\s*(\d+)", re.I)
+PROFS = {"fishing": 356, "alchemy": 171, "herbalism": 182, "cooking": 185, "first-aid": 129, "mining": 186,
+         "skinning": 393, "blacksmithing": 164, "leatherworking": 165, "tailoring": 197, "engineering": 202,
+         "enchanting": 333}
+# the profession as an item's description names it ("Equip: Increased Fishing +25." / "Рыбная ловля +25")
+NAMES = {"fishing": r"fishing|рыбн\w*\s+ловл\w*", "mining": r"mining|горн\w*\s+дел\w*", "herbalism": r"herbalism|травничеств\w*",
+         "skinning": r"skinning|снят\w*\s+шкур", "alchemy": r"alchemy|алхими\w*", "blacksmithing": r"blacksmithing|кузнечн\w*",
+         "engineering": r"engineering|инженерн\w*", "enchanting": r"enchanting|наложени\w*\s+чар", "cooking": r"cooking|кулинари\w*",
+         "first-aid": r"first aid|перв\w*\s+помощ\w*", "leatherworking": r"leatherworking|кожевничеств\w*", "tailoring": r"tailoring|портняжн\w*"}
 
 
 @lru_cache(maxsize=1)
@@ -36,9 +41,10 @@ def gear() -> dict:
     return json.loads(DATA.read_text("utf-8")) if DATA.is_file() else {}
 
 
-def bonus_of(texts: list[str]) -> int | None:
+def bonus_of(texts: list[str], prof: str = "fishing") -> int | None:
+    rx = re.compile(rf"(?:{NAMES[prof]})\D{{0,24}}?\+?\s*(\d+)", re.I)
     for t in texts:
-        m = BONUS.search(t)
+        m = rx.search(t)
         if m:
             return int(m.group(1))
     return None
@@ -60,6 +66,9 @@ async def prof_gear(cid: int, prof: str, user: CurrentUser, session: Session, la
     worn = {x["id"] for x in (p.get("equipment") or {}).get(lang) or []}
     marked = await _marked(session, cid)
     rows = gear().get(prof) or []
+    if not rows:
+        return {"prof": prof, "level": s.get("level"), "skill": mine.get("skill") if mine else None,
+                "max": mine.get("max") if mine else None, "market": False, "items": []}
     ah = await auction(session, user, [x["id"] for x in rows])
     out = []
     for x in rows:
@@ -69,7 +78,7 @@ async def prof_gear(cid: int, prof: str, user: CurrentUser, session: Session, la
                 info = await get_item(session, x["id"], lang)
             except Exception:  # noqa: BLE001 - Blizzard not answering: the bonus stays unknown
                 info = None
-            b = bonus_of((info or {}).get("spells") or [])
+            b = bonus_of((info or {}).get("spells") or [], prof)
         price = ah["items"].get(x["id"])
         out.append({**x, "name": x["name"][lang], "bonus": b, "worn": x["id"] in worn, "marked": x["id"] in marked,
                     "owned": x["id"] in worn or x["id"] in marked, "ah": price if price and price["price"] else None})

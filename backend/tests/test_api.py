@@ -293,7 +293,9 @@ def test_fishing_gear(client):
     assert by[6533]["bonus"] == 100 and by[6533]["minutes"] == 5 and by[6533]["skill"] == 100  # the lure, from the client
     assert client.put(f"/api/profgear/{cid}/owned", json={"item_id": 6530, "owned": True}).json() == {"owned": [6530]}
     assert {x["id"] for x in client.get(f"/api/profgear/{cid}/fishing").json()["items"] if x["owned"]} == {6365, 6530}
-    assert client.get(f"/api/profgear/{cid}/mining").status_code == 404
+    assert client.get(f"/api/profgear/{cid}/juggling").status_code == 404
+    mining = client.get(f"/api/profgear/{cid}/mining").json()["items"]
+    assert any(x["id"] == 2901 and x["kind"] == "tool" for x in mining)  # the Mining Pick, from the client
 
     async def clean():
         async with SessionLocal() as s:

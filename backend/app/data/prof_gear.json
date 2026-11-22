@@ -309,5 +309,373 @@
    "minutes": null,
    "lure": false
   }
+ ],
+ "alchemy": [
+  {
+   "id": 9149,
+   "kind": "tool",
+   "name": {
+    "en": "Philosopher's Stone",
+    "ru": "Философский камень"
+   },
+   "q": 1,
+   "req": 0,
+   "skill": 0,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 13503,
+   "kind": "tool",
+   "name": {
+    "en": "Alchemist's Stone",
+    "ru": "Алхимический камень"
+   },
+   "q": 2,
+   "req": 45,
+   "skill": 275,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  }
+ ],
+ "herbalism": [
+  {
+   "id": 273494,
+   "kind": "extra",
+   "name": {
+    "en": "Enchant Gloves - Herbalism",
+    "ru": "Чары для перчаток: травничество"
+   },
+   "q": 1,
+   "req": 1,
+   "skill": 0,
+   "bonus": 2,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 273527,
+   "kind": "extra",
+   "name": {
+    "en": "Enchant Gloves - Advanced Herbalism",
+    "ru": "Чары для перчаток: улучшенное травничество"
+   },
+   "q": 1,
+   "req": 1,
+   "skill": 0,
+   "bonus": 5,
+   "minutes": null,
+   "lure": false
+  }
+ ],
+ "cooking": [],
+ "first-aid": [],
+ "mining": [
+  {
+   "id": 2901,
+   "kind": "tool",
+   "name": {
+    "en": "Mining Pick",
+    "ru": "Шахтерская кирка"
+   },
+   "q": 1,
+   "req": 1,
+   "skill": 0,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 259229,
+   "kind": "tool",
+   "name": {
+    "en": "Vindael's Spectral Pickaxe",
+    "ru": "Призрачная кирка Виндела"
+   },
+   "q": 1,
+   "req": 1,
+   "skill": 0,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 6206,
+   "kind": "tool",
+   "name": {
+    "en": "Rock Chipper",
+    "ru": "Кайло"
+   },
+   "q": 1,
+   "req": 12,
+   "skill": 0,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 273493,
+   "kind": "extra",
+   "name": {
+    "en": "Enchant Gloves - Mining",
+    "ru": "Чары для перчаток: горное дело"
+   },
+   "q": 1,
+   "req": 1,
+   "skill": 0,
+   "bonus": 2,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 273524,
+   "kind": "extra",
+   "name": {
+    "en": "Enchant Gloves - Advanced Mining",
+    "ru": "Чары для перчаток: улучшенное горное дело"
+   },
+   "q": 1,
+   "req": 1,
+   "skill": 0,
+   "bonus": 5,
+   "minutes": null,
+   "lure": false
+  }
+ ],
+ "skinning": [
+  {
+   "id": 269716,
+   "kind": "tool",
+   "name": {
+    "en": "Keen Skinning Knife",
+    "ru": "Острый нож для снятия шкур"
+   },
+   "q": 2,
+   "req": 0,
+   "skill": 0,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 7005,
+   "kind": "tool",
+   "name": {
+    "en": "Skinning Knife",
+    "ru": "Нож для снятия шкур"
+   },
+   "q": 1,
+   "req": 1,
+   "skill": 0,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 273516,
+   "kind": "extra",
+   "name": {
+    "en": "Enchant Gloves - Skinning",
+    "ru": "Чары для перчаток: снятие шкур"
+   },
+   "q": 1,
+   "req": 1,
+   "skill": 0,
+   "bonus": 5,
+   "minutes": null,
+   "lure": false
+  }
+ ],
+ "blacksmithing": [
+  {
+   "id": 5956,
+   "kind": "tool",
+   "name": {
+    "en": "Blacksmith Hammer",
+    "ru": "Кузнечный молот"
+   },
+   "q": 1,
+   "req": 1,
+   "skill": 0,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 285280,
+   "kind": "tool",
+   "name": {
+    "en": "Mithril Blacksmith Hammer",
+    "ru": "Мифриловый кузнечный молот"
+   },
+   "q": 2,
+   "req": 34,
+   "skill": 0,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 285281,
+   "kind": "tool",
+   "name": {
+    "en": "Arcanite Blacksmith Hammer",
+    "ru": "Арканитовый кузнечный молот"
+   },
+   "q": 3,
+   "req": 49,
+   "skill": 0,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  }
+ ],
+ "leatherworking": [],
+ "tailoring": [],
+ "engineering": [
+  {
+   "id": 5956,
+   "kind": "tool",
+   "name": {
+    "en": "Blacksmith Hammer",
+    "ru": "Кузнечный молот"
+   },
+   "q": 1,
+   "req": 1,
+   "skill": 0,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 10498,
+   "kind": "tool",
+   "name": {
+    "en": "Gyromatic Micro-Adjustor",
+    "ru": "Шлицевой гироинструмент"
+   },
+   "q": 1,
+   "req": 1,
+   "skill": 0,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 285280,
+   "kind": "tool",
+   "name": {
+    "en": "Mithril Blacksmith Hammer",
+    "ru": "Мифриловый кузнечный молот"
+   },
+   "q": 2,
+   "req": 34,
+   "skill": 0,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 285281,
+   "kind": "tool",
+   "name": {
+    "en": "Arcanite Blacksmith Hammer",
+    "ru": "Арканитовый кузнечный молот"
+   },
+   "q": 3,
+   "req": 49,
+   "skill": 0,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 6219,
+   "kind": "tool",
+   "name": {
+    "en": "Arclight Spanner",
+    "ru": "Тангенциальный вращатель"
+   },
+   "q": 1,
+   "req": 0,
+   "skill": 50,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  }
+ ],
+ "enchanting": [
+  {
+   "id": 11130,
+   "kind": "tool",
+   "name": {
+    "en": "Runed Golden Rod",
+    "ru": "Рунический золотой жезл"
+   },
+   "q": 1,
+   "req": 0,
+   "skill": 0,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 11145,
+   "kind": "tool",
+   "name": {
+    "en": "Runed Truesilver Rod",
+    "ru": "Рунический жезл из истинного серебра"
+   },
+   "q": 1,
+   "req": 0,
+   "skill": 0,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 16207,
+   "kind": "tool",
+   "name": {
+    "en": "Runed Arcanite Rod",
+    "ru": "Рунный арканитовый жезл"
+   },
+   "q": 1,
+   "req": 0,
+   "skill": 0,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 6218,
+   "kind": "tool",
+   "name": {
+    "en": "Runed Copper Rod",
+    "ru": "Рунический медный жезл"
+   },
+   "q": 1,
+   "req": 1,
+   "skill": 0,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  },
+  {
+   "id": 6339,
+   "kind": "tool",
+   "name": {
+    "en": "Runed Silver Rod",
+    "ru": "Рунный серебряный жезл"
+   },
+   "q": 1,
+   "req": 1,
+   "skill": 0,
+   "bonus": null,
+   "minutes": null,
+   "lure": false
+  }
  ]
 }

@@ -7,6 +7,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { AhChip } from "../../components/AhChip";
+import { ProfIcon } from "../../components/CharProfPicker";
 import { ItemHover, ItemIcon } from "../../components/Wow";
 import { useActiveCharId } from "../../lib/activeChar";
 import { req } from "../../lib/api";
@@ -15,7 +16,10 @@ import { store } from "../../lib/store";
 import { fullName, qColor, useCharacters, type AhState, type RefItem } from "../../lib/wowApi";
 
 const Q = ["POOR", "COMMON", "UNCOMMON", "RARE", "EPIC", "LEGENDARY"];
-const KINDS = ["pole", "lure", "clothes", "extra"] as const;
+const KINDS = ["tool", "pole", "lure", "clothes", "extra"] as const;
+// the professions by their skill line, as the server names them
+const SLUG: Record<number, string> = { 171: "alchemy", 182: "herbalism", 185: "cooking", 129: "first-aid", 186: "mining", 393: "skinning",
+  164: "blacksmithing", 165: "leatherworking", 197: "tailoring", 202: "engineering", 333: "enchanting", 356: "fishing" };
 
 interface GearItem {
   id: number; kind: (typeof KINDS)[number]; name: string; q: number; req: number; skill: number; bonus: number | null;
@@ -42,24 +46,37 @@ function reach(d: Gear): { total: number; parts: { name: string; n: number }[] }
 
 export function ProfGear({ onOpen }: { onOpen: (x: RefItem) => void }) {
   const { t, lang } = useI18n();
-  const all = (useCharacters().data || []).filter((c) => !c.error && (c.profs?.[lang] || []).some((p) => p.id === 356));
+  const all = (useCharacters().data || []).filter((c) => !c.error && (c.profs?.[lang] || []).some((p) => p.id && SLUG[p.id]));
   const active = useActiveCharId();
   const [sel, setSel] = useState<number | null>(() => store.get<number | null>("crGearChar", null));
-  const cid = (all.find((c) => c.id === sel) ?? all.find((c) => c.id === active) ?? all[0])?.id ?? null;
-  const q = useQuery({ queryKey: ["profgear", cid, "fishing", lang], enabled: cid != null,
-    queryFn: () => req<Gear>(`/api/profgear/${cid}/fishing?lang=${lang}`), staleTime: 5 * 60e3 });
+  const ch = all.find((c) => c.id === sel) ?? all.find((c) => c.id === active) ?? all[0];
+  const cid = ch?.id ?? null;
+  // the character's professions, primary first
+  const profs = [...(ch?.profs?.[lang] || [])].filter((p) => p.id && SLUG[p.id])
+    .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "primary" ? -1 : 1));
+  const [tab, setTab] = useState<string>(() => store.get("crGearTab", "fishing"));
+  const prof = profs.find((p) => SLUG[p.id!] === tab) ? tab : profs[0] ? SLUG[profs[0].id!] : "fishing";
+  const q = useQuery({ queryKey: ["profgear", cid, prof, lang], enabled: cid != null,
+    queryFn: () => req<Gear>(`/api/profgear/${cid}/${prof}?lang=${lang}`), staleTime: 5 * 60e3 });
   if (!all.length) return <p className="text-sm text-muted">{t("pg_none")}</p>;
   const d = q.data;
   const r = d ? reach(d) : null;
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-3">
-        <span className="chip border-gold/60 text-gold">{t("pg_fishing")}</span>
         {all.length > 1 ? (
           <select className="input w-auto py-1 text-sm" value={cid ?? ""} onChange={(e) => (store.set("crGearChar", +e.target.value), setSel(+e.target.value))}>
             {all.map((c) => <option key={c.id} value={c.id}>{fullName(c, lang)}</option>)}
           </select>
         ) : <span className="text-sm text-muted">{fullName(all[0], lang)}</span>}
+        <span className="flex flex-wrap gap-1">
+          {profs.map((p) => (
+            <button key={p.id} className={`chip flex items-center gap-1.5 ${prof === SLUG[p.id!] ? "border-gold/60 text-gold" : ""}`}
+              onClick={() => (store.set("crGearTab", SLUG[p.id!]), setTab(SLUG[p.id!]))}>
+              <ProfIcon id={p.id!} size={16} />{p.name}
+            </button>
+          ))}
+        </span>
         {d?.skill != null && <span className="text-sm">{t("pg_skill", { n: d.skill, m: d.max ?? "?" })}</span>}
         {r && r.parts.length > 0 && (
           <span className="text-sm text-good" title={r.parts.map((p) => `${p.name} +${p.n}`).join(", ")}>
@@ -67,7 +84,7 @@ export function ProfGear({ onOpen }: { onOpen: (x: RefItem) => void }) {
           </span>
         )}
       </div>
-      {!d ? <p className="text-sm text-muted">…</p> : (
+      {!d ? <p className="text-sm text-muted">…</p> : !d.items.length ? <p className="text-sm text-muted">{t("pg_empty")}</p> : (
         <div className="grid gap-x-6 gap-y-4 lg:grid-cols-2">
           {KINDS.map((k) => {
             const xs = d.items.filter((x) => x.kind === k);
@@ -75,7 +92,7 @@ export function ProfGear({ onOpen }: { onOpen: (x: RefItem) => void }) {
             return (
               <section key={k}>
                 <div className="pg-head">{t(`pg_k_${k}` as Key)}</div>
-                <ul className="space-y-1">{xs.map((x) => <Row key={x.id} x={x} d={d} cid={cid!} onOpen={onOpen} />)}</ul>
+                <ul className="space-y-1">{xs.map((x) => <Row key={x.id} x={x} d={d} cid={cid!} prof={prof} profName={profs.find((p) => SLUG[p.id!] === prof)?.name ?? ""} onOpen={onOpen} />)}</ul>
               </section>
             );
           })}
@@ -86,12 +103,12 @@ export function ProfGear({ onOpen }: { onOpen: (x: RefItem) => void }) {
   );
 }
 
-function Row({ x, d, cid, onOpen }: { x: GearItem; d: Gear; cid: number; onOpen: (x: RefItem) => void }) {
+function Row({ x, d, cid, prof, profName, onOpen }: { x: GearItem; d: Gear; cid: number; prof: string; profName: string; onOpen: (x: RefItem) => void }) {
   const { t, lang } = useI18n();
   const qc = useQueryClient();
   const mark = useMutation({
     mutationFn: () => req(`/api/profgear/${cid}/owned`, { method: "PUT", body: JSON.stringify({ item_id: x.id, owned: !x.marked }) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["profgear", cid, "fishing", lang] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["profgear", cid, prof, lang] }),
   });
   const lowSkill = x.skill > 0 && (d.skill ?? 0) < x.skill;
   const lowLevel = x.req > 0 && (d.level ?? 0) < x.req;
@@ -102,14 +119,14 @@ function Row({ x, d, cid, onOpen }: { x: GearItem; d: Gear; cid: number; onOpen:
         <button type="button" className="truncate text-left hover:underline" style={{ color: x.owned ? qColor(Q[x.q]) : undefined }}
           onClick={() => onOpen({ id: x.id, name: x.name, q: x.q })} title={t("pg_where")}>{x.name}</button>
         <span className="text-[11px] text-muted">
-          {x.skill > 0 && <span className={lowSkill ? "text-bad" : ""}>{t("pg_need_skill", { n: x.skill })}</span>}
+          {x.skill > 0 && <span className={lowSkill ? "text-bad" : ""}>{t("pg_need_skill", { p: profName, n: x.skill })}</span>}
           {x.skill > 0 && x.req > 0 && " · "}
           {x.req > 0 && <span className={lowLevel ? "text-bad" : ""}>{t("pg_need_level", { n: x.req })}</span>}
           {x.minutes ? `${x.skill > 0 || x.req > 0 ? " · " : ""}${t("pg_minutes", { n: x.minutes })}` : ""}
           {x.lure && x.kind === "clothes" ? ` · ${t("pg_with_lure")}` : ""}
         </span>
       </span>
-      <span className={`w-12 shrink-0 text-right tabular-nums ${x.owned ? "text-good" : "text-muted"}`}>{x.bonus != null ? `+${x.bonus}` : "+?"}</span>
+      <span className={`w-12 shrink-0 text-right tabular-nums ${x.owned ? "text-good" : "text-muted"}`}>{x.bonus != null ? `+${x.bonus}` : x.kind === "tool" ? "" : "+?"}</span>
       {d.market && x.ah && !x.owned && <AhChip id={x.id} ah={x.ah} />}
       {x.worn ? <span className="shrink-0 text-xs text-good">✓ {t("bis_worn_tag")}</span> : (
         <button className={`prebis-mark shrink-0 ${x.marked ? "on" : ""}`} disabled={mark.isPending} onClick={() => mark.mutate()}>
