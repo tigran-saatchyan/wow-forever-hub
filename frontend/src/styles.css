@@ -1750,3 +1750,6 @@ button.prebis-fold-chip:hover { border-color: rgb(var(--gold) / .5); }
 .t5-slot { display: grid; gap: .3rem; padding: .55rem .6rem; border: 1px solid rgb(var(--edge)); border-radius: .45rem; background: rgb(var(--bg) / .35); }
 .t5-piece { display: flex; align-items: center; gap: .5rem; padding: .2rem .3rem; border-radius: .35rem; color: rgb(var(--muted)); }
 .t5-piece.owned { color: rgb(var(--ink)); background: rgb(64 192 64 / .07); }
+
+/* the page's scrollbar keeps its place: a tab long enough to scroll beside a short one doesn't shift the page sideways */
+html { scrollbar-gutter: stable; }
